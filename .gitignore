@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Build outputs in subprojects
+**/build/
+
 # Generated localization output (legacy path)
 lib/l10n/app_localizations*.dart
 
