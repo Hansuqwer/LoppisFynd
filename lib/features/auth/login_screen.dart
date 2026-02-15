@@ -94,10 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Loppisfynd',
                     style: AppTypography.accentFrom(
-                      Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppColors.textOnDark,
-                          ) ??
-                          const TextStyle(color: AppColors.textOnDark),
+                      Theme.of(context).textTheme.headlineLarge!.copyWith(
+                        color: AppColors.textOnDark,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),

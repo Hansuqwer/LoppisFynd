@@ -3,6 +3,9 @@ import 'package:drift/drift.dart';
 class Hauls extends Table {
   TextColumn get id => text()();
 
+  // Optional. When Supabase auth is enabled, local data is scoped to a user id.
+  TextColumn get userId => text().nullable()();
+
   TextColumn get title => text().withLength(min: 1, max: 120)();
 
   DateTimeColumn get startedAt => dateTime().withDefault(currentDateAndTime)();

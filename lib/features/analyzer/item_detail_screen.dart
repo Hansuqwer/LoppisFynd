@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,11 @@ import '../../core/database/tables/scan_items.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
+import '../../services/ai/inference/ai_types.dart';
+import '../../services/ai/inference/inference_isolate_service.dart';
+import '../drafts/draft_editor_screen.dart';
+import '../../core/navigation/spring_route.dart';
+import '../../gen/app_localizations.dart';
 import 'flip_factor.dart';
 import 'profit_calculator.dart';
 
@@ -24,14 +30,29 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
 
 class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   final _purchaseController = TextEditingController();
+  final _fixedFeesController = TextEditingController();
+  final _shippingController = TextEditingController();
   final _queryController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _notesController = TextEditingController();
   double? _lastPurchase;
+  double? _lastFixedFees;
+  double? _lastShipping;
   String? _lastQuery;
+  String? _lastCategory;
+  String? _lastNotes;
+
+  var _identifying = false;
+  AiCancelToken? _identifyCancel;
 
   @override
   void dispose() {
     _purchaseController.dispose();
+    _fixedFeesController.dispose();
+    _shippingController.dispose();
     _queryController.dispose();
+    _categoryController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -44,6 +65,27 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
   }
 
+  Future<void> _saveFees(AppDatabase db) async {
+    double? parseNullable(String text) {
+      final trimmed = text.trim();
+      return trimmed.isEmpty ? null : double.tryParse(trimmed);
+    }
+
+    await db.scanItemsDao.setFees(
+      id: widget.scanItemId,
+      fixedFeesSek: parseNullable(_fixedFeesController.text),
+      shippingPaidBySellerSek: parseNullable(_shippingController.text),
+    );
+  }
+
+  Future<void> _saveNotes(AppDatabase db, String text) {
+    return db.scanItemsDao.setNotes(id: widget.scanItemId, notes: text);
+  }
+
+  Future<void> _saveCategory(AppDatabase db, String text) {
+    return db.scanItemsDao.setCategory(id: widget.scanItemId, category: text);
+  }
+
   Future<void> _queueSync(AppDatabase db) async {
     final query = _queryController.text.trim();
     if (query.isEmpty) return;
@@ -53,6 +95,74 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       id: widget.scanItemId,
       to: ScanItemStatus.pendingSync,
     );
+  }
+
+  Future<String?> _identifyNow({
+    required AppDatabase db,
+    required AiInferenceIsolateService ai,
+    required String scanItemId,
+    required String? userId,
+    required String? imagePath,
+  }) async {
+    if (_identifying) return null;
+    if (imagePath == null || imagePath.trim().isEmpty) return 'No image.';
+
+    final file = File(imagePath);
+    if (!await file.exists()) return 'No image.';
+
+    final modeKey = userId == null
+        ? 'ai_accuracy_mode_guest'
+        : 'ai_accuracy_mode_$userId';
+    final mode = await db.appSettingsDao.getInt(modeKey) ?? 1;
+    final maxTokens = mode == 0 ? 384 : 1024;
+
+    final token = AiCancelToken();
+    setState(() {
+      _identifying = true;
+      _identifyCancel = token;
+    });
+
+    String? outcome;
+    try {
+      final result = await ai.run(
+        AiInferenceRequest(
+          task: const SingleItemTask(),
+          imageFile: file,
+          maxTokens: maxTokens,
+        ),
+        cancelToken: token,
+      );
+
+      if (result is SingleItemInferenceResult) {
+        await db.scanItemsDao.setAiResult(
+          id: scanItemId,
+          aiJson: result.value.rawJson,
+          query: result.value.query,
+          desc: result.value.desc,
+          confidence: result.value.confidence,
+        );
+        await db.scanItemsDao.transitionStatus(
+          id: scanItemId,
+          to: ScanItemStatus.pendingSync,
+        );
+      }
+      outcome = 'Keywords updated.';
+    } on AiCancelledException {
+      outcome = 'Cancelled.';
+    } on ModelNotInstalledException {
+      outcome = 'Model not installed.';
+    } catch (e) {
+      outcome = 'Identify failed: $e';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _identifying = false;
+          _identifyCancel = null;
+        });
+      }
+    }
+
+    return outcome;
   }
 
   Future<void> _setQuery(AppDatabase db, String query) {
@@ -110,12 +220,14 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
     final syncScheduler = ref.watch(syncSchedulerProvider);
+    final userId = ref.watch(activeUserIdProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Item')),
+      appBar: AppBar(title: Text(l10n.itemDetailTitle)),
       body: SafeArea(
         child: StreamBuilder<ScanItem?>(
-          stream: db.scanItemsDao.watchById(widget.scanItemId),
+          stream: db.scanItemsDao.watchById(widget.scanItemId, userId: userId),
           builder: (context, snapshot) {
             final item = snapshot.data;
             if (item == null) {
@@ -130,10 +242,38 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                   : purchase.toStringAsFixed(purchase % 1 == 0 ? 0 : 2);
             }
 
+            final fixedFees = item.fixedFeesSek;
+            if (fixedFees != _lastFixedFees) {
+              _lastFixedFees = fixedFees;
+              _fixedFeesController.text = fixedFees == null
+                  ? ''
+                  : fixedFees.toStringAsFixed(fixedFees % 1 == 0 ? 0 : 2);
+            }
+
+            final shipping = item.shippingPaidBySellerSek;
+            if (shipping != _lastShipping) {
+              _lastShipping = shipping;
+              _shippingController.text = shipping == null
+                  ? ''
+                  : shipping.toStringAsFixed(shipping % 1 == 0 ? 0 : 2);
+            }
+
             final query = item.query;
             if (query != _lastQuery) {
               _lastQuery = query;
               _queryController.text = query ?? '';
+            }
+
+            final category = item.category;
+            if (category != _lastCategory) {
+              _lastCategory = category;
+              _categoryController.text = category ?? '';
+            }
+
+            final notes = item.notes;
+            if (notes != _lastNotes) {
+              _lastNotes = notes;
+              _notesController.text = notes ?? '';
             }
 
             final expected = item.medianPrice;
@@ -147,6 +287,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             final netProfit = ProfitCalculator.netProfit(
               purchasePrice: purchase,
               expectedSalePrice: adjustedExpected,
+              fixedFeesSek: fixedFees ?? 0,
+              shippingPaidBySellerSek: shipping ?? 0,
             );
             final grade = (purchase != null && expected != null)
                 ? FlipFactor.grade(
@@ -226,11 +368,25 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
+                      if (item.confidence != null) ...[
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          'AI confidence: ${(item.confidence! * 100).toStringAsFixed(0)}%',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.sm),
-                      _PriceChart(
-                        min: item.minPrice,
-                        median: item.medianPrice,
-                        max: item.maxPrice,
+                      StreamBuilder(
+                        stream: db.scanItemCompsDao.watchByScanItemId(item.id),
+                        builder: (context, snapshot) {
+                          final comps = snapshot.data;
+                          return _PriceChart(
+                            min: item.minPrice,
+                            median: item.medianPrice,
+                            max: item.maxPrice,
+                            compsRawJson: comps?.rawJson,
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -254,6 +410,64 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GlassButton(
+                              label: _identifying
+                                  ? 'Identifying…'
+                                  : 'Identify now',
+                              icon: const Icon(Icons.psychology_alt_rounded),
+                              onPressed: _identifying
+                                  ? null
+                                  : () async {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      final msg = await _identifyNow(
+                                        db: db,
+                                        ai: ref.read(aiInferenceProvider),
+                                        scanItemId: item.id,
+                                        userId: userId,
+                                        imagePath: item.imagePath,
+                                      );
+                                      if (!mounted) return;
+                                      if (msg != null) {
+                                        messenger.showSnackBar(
+                                          SnackBar(content: Text(msg)),
+                                        );
+                                      }
+                                    },
+                            ),
+                          ),
+                          if (_identifying) ...[
+                            const SizedBox(width: AppSpacing.sm),
+                            GlassButton(
+                              label: 'Cancel',
+                              tone: GlassButtonTone.neutral,
+                              icon: const Icon(Icons.stop_rounded),
+                              onPressed: () {
+                                _identifyCancel?.cancel();
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      GlassButton(
+                        label: 'Draft listing',
+                        tone: GlassButtonTone.neutral,
+                        icon: const Icon(Icons.edit_note_rounded),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            SpringRoute(
+                              builder: (_) =>
+                                  DraftEditorScreen(scanItemId: item.id),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _KeywordChips(
@@ -367,6 +581,42 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         onEditingComplete: () =>
                             _savePurchasePrice(db, _purchaseController.text),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _fixedFeesController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: 'Fixed fees (SEK)',
+                                hintText: '0',
+                              ),
+                              onSubmitted: (_) => _saveFees(db),
+                              onEditingComplete: () => _saveFees(db),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: TextField(
+                              controller: _shippingController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: 'Shipping (seller) (SEK)',
+                                hintText: '0',
+                              ),
+                              onSubmitted: (_) => _saveFees(db),
+                              onEditingComplete: () => _saveFees(db),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       _ConditionAdjuster(
                         value: item.conditionMultiplier,
@@ -376,6 +626,30 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             conditionMultiplier: v,
                           );
                         },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextField(
+                        controller: _categoryController,
+                        decoration: InputDecoration(
+                          labelText: l10n.itemDetailCategoryLabel,
+                          hintText: l10n.itemDetailCategoryHint,
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: (v) => _saveCategory(db, v),
+                        onEditingComplete: () =>
+                            _saveCategory(db, _categoryController.text),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          hintText: 'e.g. defects, missing parts, color',
+                        ),
+                        onSubmitted: (v) => _saveNotes(db, v),
+                        onEditingComplete: () =>
+                            _saveNotes(db, _notesController.text),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -552,14 +826,97 @@ class _PriceChart extends StatelessWidget {
     required this.min,
     required this.median,
     required this.max,
+    required this.compsRawJson,
   });
 
   final double? min;
   final double? median;
   final double? max;
+  final String? compsRawJson;
+
+  List<({DateTime at, double priceSek})> _salePointsFromRawJson(
+    String rawJson,
+  ) {
+    try {
+      final decoded = jsonDecode(rawJson);
+      if (decoded is! Map) return const [];
+      final salesAny = decoded['sales'];
+      if (salesAny is! List) return const [];
+
+      final out = <({DateTime at, double priceSek})>[];
+      for (final s in salesAny) {
+        if (s is! Map) continue;
+        final priceAny = s['priceSek'];
+        final endAny = s['endDate'];
+        final price = priceAny is num ? priceAny.toDouble() : null;
+        final at = endAny is String ? DateTime.tryParse(endAny) : null;
+        if (price == null || at == null) continue;
+        out.add((at: at, priceSek: price));
+      }
+
+      out.sort((a, b) => a.at.compareTo(b.at));
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final raw = compsRawJson;
+    final sales = raw == null
+        ? const <({DateTime at, double priceSek})>[]
+        : _salePointsFromRawJson(raw);
+
+    if (sales.length >= 2) {
+      final spots = <FlSpot>[];
+      for (var i = 0; i < sales.length; i += 1) {
+        spots.add(FlSpot(i.toDouble(), sales[i].priceSek));
+      }
+
+      final minY = sales.map((p) => p.priceSek).reduce((a, b) => a < b ? a : b);
+      final maxY = sales.map((p) => p.priceSek).reduce((a, b) => a > b ? a : b);
+
+      return SizedBox(
+        height: 160,
+        child: LineChart(
+          LineChartData(
+            minY: (minY * 0.9).clamp(0, double.infinity),
+            maxY: (maxY * 1.1).clamp(0, double.infinity),
+            backgroundColor: Colors.transparent,
+            borderData: FlBorderData(show: false),
+            gridData: const FlGridData(show: false),
+            titlesData: const FlTitlesData(show: false),
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: AppColors.deepSapphire,
+                barWidth: 3,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    return FlDotCirclePainter(
+                      radius: 3.5,
+                      color: AppColors.primaryAction,
+                      strokeWidth: 2,
+                      strokeColor: AppColors.cloudDancer,
+                    );
+                  },
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: AppColors.deepSapphire.withValues(alpha: 0.08),
+                ),
+              ),
+            ],
+          ),
+          duration: AppMotion.normal,
+          curve: AppMotion.curve,
+        ),
+      );
+    }
+
     if (min == null || median == null || max == null) {
       return Container(
         height: 160,

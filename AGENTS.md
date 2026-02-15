@@ -20,6 +20,10 @@ For each ticket:
 4) Ensure `flutter test` passes.
 5) Update docs if you changed architecture.
 
+## Handoffs & notes
+- Keep durable context in `.sisyphus/handoffs/`.
+- Keep short research notes in `.sisyphus/notepads/`.
+
 ## UX rules (Nature Distilled)
 - Use AppTokens for all colors/radius/spacing.
 - Prefer Bento cards, soft shadows, 24px radii.

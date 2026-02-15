@@ -272,6 +272,12 @@ abstract class AppLocalizations {
   /// **'Haul'**
   String get commonHaul;
 
+  /// No description provided for @commonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get commonSave;
+
   /// No description provided for @errorCameraTitle.
   ///
   /// In en, this message translates to:
@@ -320,6 +326,12 @@ abstract class AppLocalizations {
   /// **'Suggest name'**
   String get historySuggestNameTooltip;
 
+  /// No description provided for @historySuggestNameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not suggest a name.'**
+  String get historySuggestNameFailed;
+
   /// No description provided for @historyEnterLatLngFirst.
   ///
   /// In en, this message translates to:
@@ -337,6 +349,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Longitude (optional)'**
   String get historyHaulLongitudeOptionalLabel;
+
+  /// No description provided for @historyLocationOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is optional. It helps pin hauls on the map and suggest names.'**
+  String get historyLocationOptionalHint;
+
+  /// No description provided for @historyUseCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current'**
+  String get historyUseCurrentLocation;
+
+  /// No description provided for @historyLocationFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating…'**
+  String get historyLocationFetching;
+
+  /// No description provided for @historyLocationPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission'**
+  String get historyLocationPermissionTitle;
+
+  /// No description provided for @historyLocationPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable location to pin hauls on the map and auto-suggest haul names. You can still use the app without it.'**
+  String get historyLocationPermissionBody;
+
+  /// No description provided for @historyLocationPermissionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get historyLocationPermissionContinue;
+
+  /// No description provided for @historyLocationPermissionNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get historyLocationPermissionNotNow;
+
+  /// No description provided for @historyLocationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is required to use current location.'**
+  String get historyLocationPermissionDenied;
+
+  /// No description provided for @historyLocationPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is disabled. Open system settings to enable it.'**
+  String get historyLocationPermissionPermanentlyDenied;
 
   /// No description provided for @historyFilterAll.
   ///
@@ -356,6 +422,54 @@ abstract class AppLocalizations {
   /// **'Loss'**
   String get historyFilterLoss;
 
+  /// No description provided for @historyViewBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get historyViewBoth;
+
+  /// No description provided for @historyViewMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get historyViewMap;
+
+  /// No description provided for @historyViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get historyViewList;
+
+  /// No description provided for @historySortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get historySortRecent;
+
+  /// No description provided for @historySortProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Best margin'**
+  String get historySortProfit;
+
+  /// No description provided for @historySearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get historySearchLabel;
+
+  /// No description provided for @historySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search hauls…'**
+  String get historySearchHint;
+
+  /// No description provided for @historyCategoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get historyCategoryAll;
+
   /// No description provided for @historyPinnedHaulsCount.
   ///
   /// In en, this message translates to:
@@ -367,6 +481,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No pinned hauls yet.'**
   String get historyNoPinnedHaulsYet;
+
+  /// No description provided for @historyHaulsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hauls'**
+  String get historyHaulsTitle;
+
+  /// No description provided for @historyNoMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get historyNoMatchesTitle;
+
+  /// No description provided for @historyNoMatchesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing your search or filters.'**
+  String get historyNoMatchesMessage;
 
   /// No description provided for @dashboardTitle.
   ///
@@ -391,6 +523,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Haul Summary'**
   String get dashboardHaulSummary;
+
+  /// No description provided for @dashboardDraftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get dashboardDraftsTitle;
+
+  /// No description provided for @dashboardSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get dashboardSeeAll;
+
+  /// No description provided for @dashboardNoDraftsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No drafts yet.'**
+  String get dashboardNoDraftsYet;
+
+  /// No description provided for @dashboardUntitledDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled draft'**
+  String get dashboardUntitledDraft;
 
   /// No description provided for @scannerTitle.
   ///
@@ -439,6 +595,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No cameras available on this device.'**
   String get scannerNoCamerasAvailable;
+
+  /// No description provided for @scannerCameraPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission'**
+  String get scannerCameraPermissionTitle;
+
+  /// No description provided for @scannerCameraPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Loppisfynd needs camera access to scan items. Photos stay on your device unless you enable cloud sync.'**
+  String get scannerCameraPermissionBody;
+
+  /// No description provided for @scannerCameraPermissionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get scannerCameraPermissionContinue;
+
+  /// No description provided for @scannerCameraPermissionNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get scannerCameraPermissionNotNow;
+
+  /// No description provided for @scannerCameraPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is required to scan. You can enable it later.'**
+  String get scannerCameraPermissionDenied;
+
+  /// No description provided for @scannerCameraPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is disabled. Open system settings to enable it.'**
+  String get scannerCameraPermissionPermanentlyDenied;
+
+  /// No description provided for @scannerCameraPermissionOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get scannerCameraPermissionOpenSettings;
 
   /// No description provided for @scannerCameraInitFailed.
   ///
@@ -661,6 +859,888 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo sync failed: {error}'**
   String settingsPhotoSyncFailed(Object error);
+
+  /// No description provided for @settingsAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settingsAccountTitle;
+
+  /// No description provided for @settingsSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get settingsSignOut;
+
+  /// No description provided for @settingsSigningOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out…'**
+  String get settingsSigningOut;
+
+  /// No description provided for @settingsSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out.'**
+  String get settingsSignedOut;
+
+  /// No description provided for @settingsSignOutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out failed: {error}'**
+  String settingsSignOutFailed(Object error);
+
+  /// No description provided for @settingsDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get settingsDeleteAccount;
+
+  /// No description provided for @settingsDisplayNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get settingsDisplayNameLabel;
+
+  /// No description provided for @settingsDisplayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get settingsDisplayNameHint;
+
+  /// No description provided for @settingsSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save profile'**
+  String get settingsSaveProfile;
+
+  /// No description provided for @settingsProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved profile.'**
+  String get settingsProfileSaved;
+
+  /// No description provided for @settingsAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get settingsAiTitle;
+
+  /// No description provided for @settingsAiModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get settingsAiModeLabel;
+
+  /// No description provided for @settingsAiEco.
+  ///
+  /// In en, this message translates to:
+  /// **'Eco'**
+  String get settingsAiEco;
+
+  /// No description provided for @settingsAiQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get settingsAiQuality;
+
+  /// No description provided for @settingsAiModeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved AI mode.'**
+  String get settingsAiModeSaved;
+
+  /// No description provided for @settingsPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & data'**
+  String get settingsPrivacyTitle;
+
+  /// No description provided for @settingsPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your data, delete local/cloud data, and review what’s stored.'**
+  String get settingsPrivacySubtitle;
+
+  /// No description provided for @settingsOpenPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Open privacy'**
+  String get settingsOpenPrivacy;
+
+  /// No description provided for @settingsSyncStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get settingsSyncStatusTitle;
+
+  /// No description provided for @settingsSyncStatusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See sync health, errors, and conflicts.'**
+  String get settingsSyncStatusSubtitle;
+
+  /// No description provided for @settingsOpenSyncStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sync status'**
+  String get settingsOpenSyncStatus;
+
+  /// No description provided for @draftEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft listing'**
+  String get draftEditorTitle;
+
+  /// No description provided for @draftEditorFieldsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft fields'**
+  String get draftEditorFieldsTitle;
+
+  /// No description provided for @draftEditorItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get draftEditorItemTitle;
+
+  /// No description provided for @draftEditorOpenAnalyzer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open analyzer'**
+  String get draftEditorOpenAnalyzer;
+
+  /// No description provided for @draftEditorNoKeywordsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No keywords yet.'**
+  String get draftEditorNoKeywordsYet;
+
+  /// No description provided for @draftEditorNoPhotosYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos yet.'**
+  String get draftEditorNoPhotosYet;
+
+  /// No description provided for @draftEditorTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get draftEditorTitleLabel;
+
+  /// No description provided for @draftEditorTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Rorstrand Mon Amie plate'**
+  String get draftEditorTitleHint;
+
+  /// No description provided for @draftEditorDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get draftEditorDescriptionLabel;
+
+  /// No description provided for @draftEditorDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition, size, defects…'**
+  String get draftEditorDescriptionHint;
+
+  /// No description provided for @draftEditorAskingPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Asking price (SEK)'**
+  String get draftEditorAskingPriceLabel;
+
+  /// No description provided for @draftEditorAskingPriceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0'**
+  String get draftEditorAskingPriceHint;
+
+  /// No description provided for @draftEditorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save draft'**
+  String get draftEditorSave;
+
+  /// No description provided for @draftEditorSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft saved.'**
+  String get draftEditorSaved;
+
+  /// No description provided for @draftEditorDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get draftEditorDelete;
+
+  /// No description provided for @draftEditorDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft deleted.'**
+  String get draftEditorDeleted;
+
+  /// No description provided for @draftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get draftsTitle;
+
+  /// No description provided for @draftsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No drafts yet'**
+  String get draftsEmptyTitle;
+
+  /// No description provided for @draftsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a draft from any item to keep your listing text and price together.'**
+  String get draftsEmptyMessage;
+
+  /// No description provided for @draftsUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled'**
+  String get draftsUntitled;
+
+  /// No description provided for @draftsItemFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed item'**
+  String get draftsItemFallback;
+
+  /// No description provided for @draftsOpenAnalyzer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open analyzer'**
+  String get draftsOpenAnalyzer;
+
+  /// No description provided for @draftsAskingPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Asking {sek} SEK'**
+  String draftsAskingPrice(Object sek);
+
+  /// No description provided for @itemDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get itemDetailTitle;
+
+  /// No description provided for @itemDetailCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get itemDetailCategoryLabel;
+
+  /// No description provided for @itemDetailCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ceramics'**
+  String get itemDetailCategoryHint;
+
+  /// No description provided for @haulSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Haul Summary'**
+  String get haulSummaryTitle;
+
+  /// No description provided for @haulSummaryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in this haul'**
+  String get haulSummaryEmptyTitle;
+
+  /// No description provided for @haulSummaryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan items to see totals, profit estimates, and drafts.'**
+  String get haulSummaryEmptyMessage;
+
+  /// No description provided for @haulSummaryTotalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get haulSummaryTotalsTitle;
+
+  /// No description provided for @haulSummaryItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get haulSummaryItems;
+
+  /// No description provided for @haulSummaryInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Invested'**
+  String get haulSummaryInvested;
+
+  /// No description provided for @haulSummaryValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get haulSummaryValue;
+
+  /// No description provided for @haulSummaryNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get haulSummaryNet;
+
+  /// No description provided for @haulSummaryStatusComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get haulSummaryStatusComplete;
+
+  /// No description provided for @haulSummaryStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get haulSummaryStatusPending;
+
+  /// No description provided for @haulSummaryStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get haulSummaryStatusFailed;
+
+  /// No description provided for @haulSummaryFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get haulSummaryFiltersTitle;
+
+  /// No description provided for @haulSummaryShowingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {count}'**
+  String haulSummaryShowingCount(Object count);
+
+  /// No description provided for @haulSummaryDraftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get haulSummaryDraftsTitle;
+
+  /// No description provided for @haulSummaryNoDraftsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No drafts yet for this haul.'**
+  String get haulSummaryNoDraftsYet;
+
+  /// No description provided for @haulSummaryInventoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get haulSummaryInventoryTitle;
+
+  /// No description provided for @haulSummaryNoMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get haulSummaryNoMatchesTitle;
+
+  /// No description provided for @haulSummaryNoMatchesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing your filters.'**
+  String get haulSummaryNoMatchesMessage;
+
+  /// No description provided for @haulSummaryUnnamedItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed item'**
+  String get haulSummaryUnnamedItem;
+
+  /// No description provided for @haulSummaryDaysToSell.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String haulSummaryDaysToSell(Object days);
+
+  /// No description provided for @filterStatusAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterStatusAll;
+
+  /// No description provided for @filterStatusComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get filterStatusComplete;
+
+  /// No description provided for @filterStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get filterStatusPending;
+
+  /// No description provided for @filterStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get filterStatusFailed;
+
+  /// No description provided for @filterMarginAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All margins'**
+  String get filterMarginAll;
+
+  /// No description provided for @filterMarginProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get filterMarginProfit;
+
+  /// No description provided for @filterMarginHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High margin'**
+  String get filterMarginHigh;
+
+  /// No description provided for @filterMarginNeedsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs data'**
+  String get filterMarginNeedsData;
+
+  /// No description provided for @filterHorizonAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All horizons'**
+  String get filterHorizonAll;
+
+  /// No description provided for @filterHorizonFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get filterHorizonFast;
+
+  /// No description provided for @filterHorizonLongTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-term'**
+  String get filterHorizonLongTerm;
+
+  /// No description provided for @filterHorizonUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get filterHorizonUnknown;
+
+  /// No description provided for @filterCategoryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet.'**
+  String get filterCategoryNone;
+
+  /// No description provided for @filterCategoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get filterCategoryAll;
+
+  /// No description provided for @haulEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit haul'**
+  String get haulEditTitle;
+
+  /// No description provided for @haulEditNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get haulEditNameLabel;
+
+  /// No description provided for @haulEditDateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {year}-{month}-{day}'**
+  String haulEditDateValue(Object year, Object month, Object day);
+
+  /// No description provided for @haulEditPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick date'**
+  String get haulEditPickDate;
+
+  /// No description provided for @haulEditLatitudeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude (optional)'**
+  String get haulEditLatitudeOptional;
+
+  /// No description provided for @haulEditLongitudeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude (optional)'**
+  String get haulEditLongitudeOptional;
+
+  /// No description provided for @accountDeletionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get accountDeletionTitle;
+
+  /// No description provided for @accountDeletionHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion'**
+  String get accountDeletionHeadline;
+
+  /// No description provided for @accountDeletionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your cloud data and permanently delete your account. This action cannot be undone.'**
+  String get accountDeletionBody;
+
+  /// No description provided for @accountDeletionLocalOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud account deletion requires Supabase to be configured. You can still delete local data from Privacy & data.'**
+  String get accountDeletionLocalOnlyHint;
+
+  /// No description provided for @accountDeletionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get accountDeletionConfirm;
+
+  /// No description provided for @accountDeletionConfirmCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete account'**
+  String get accountDeletionConfirmCta;
+
+  /// No description provided for @accountDeletionNoAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to delete your account.'**
+  String get accountDeletionNoAuth;
+
+  /// No description provided for @accountDeletionNoCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud is not configured.'**
+  String get accountDeletionNoCloud;
+
+  /// No description provided for @accountDeletionDangerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete account?'**
+  String get accountDeletionDangerTitle;
+
+  /// No description provided for @accountDeletionDangerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete your cloud data and your account. You will be signed out.'**
+  String get accountDeletionDangerBody;
+
+  /// No description provided for @accountDeletionDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion requested.'**
+  String get accountDeletionDone;
+
+  /// No description provided for @accountDeletionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion failed: {error}'**
+  String accountDeletionFailed(Object error);
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & data'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What’s stored'**
+  String get privacyStorageTitle;
+
+  /// No description provided for @privacyStorageBodyLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Your hauls, items, drafts, and photos are stored on this device. Price comps and sync are disabled when you’re offline.'**
+  String get privacyStorageBodyLocalOnly;
+
+  /// No description provided for @privacyStorageBodyCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is stored locally. If cloud sync is enabled, haul/item metadata and scan photos can also be synced to Supabase.'**
+  String get privacyStorageBodyCloud;
+
+  /// No description provided for @privacyExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get privacyExportTitle;
+
+  /// No description provided for @privacyExportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports are written to a file and the file path is copied to your clipboard.'**
+  String get privacyExportBody;
+
+  /// No description provided for @privacyExportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export JSON'**
+  String get privacyExportJson;
+
+  /// No description provided for @privacyExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get privacyExportCsv;
+
+  /// No description provided for @privacyExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting…'**
+  String get privacyExporting;
+
+  /// No description provided for @privacyExportedPathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported. Path copied: {path}'**
+  String privacyExportedPathCopied(Object path);
+
+  /// No description provided for @privacyExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String privacyExportFailed(Object error);
+
+  /// No description provided for @privacyToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get privacyToolsTitle;
+
+  /// No description provided for @privacyToolsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance and diagnostics for troubleshooting.'**
+  String get privacyToolsBody;
+
+  /// No description provided for @privacyClearScanCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear scan cache'**
+  String get privacyClearScanCache;
+
+  /// No description provided for @privacyCacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared {count} cached file(s).'**
+  String privacyCacheCleared(Object count);
+
+  /// No description provided for @privacyCacheClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache clear failed: {error}'**
+  String privacyCacheClearFailed(Object error);
+
+  /// No description provided for @privacyCopyDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy diagnostics'**
+  String get privacyCopyDiagnostics;
+
+  /// No description provided for @privacyDiagnosticsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics copied.'**
+  String get privacyDiagnosticsCopied;
+
+  /// No description provided for @privacyDiagnosticsCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy failed: {error}'**
+  String privacyDiagnosticsCopyFailed(Object error);
+
+  /// No description provided for @privacyClearing.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing…'**
+  String get privacyClearing;
+
+  /// No description provided for @privacyCopying.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying…'**
+  String get privacyCopying;
+
+  /// No description provided for @privacyDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get privacyDeleteTitle;
+
+  /// No description provided for @privacyDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting is permanent. Local delete removes your on-device data. Cloud delete removes your synced data from Supabase.'**
+  String get privacyDeleteBody;
+
+  /// No description provided for @privacyDeleteLocalCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete local data'**
+  String get privacyDeleteLocalCta;
+
+  /// No description provided for @privacyDeleteCloudCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete cloud data'**
+  String get privacyDeleteCloudCta;
+
+  /// No description provided for @privacyDeleteAccountCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get privacyDeleteAccountCta;
+
+  /// No description provided for @privacyDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get privacyDeleting;
+
+  /// No description provided for @privacyDeleteLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete local data?'**
+  String get privacyDeleteLocalTitle;
+
+  /// No description provided for @privacyDeleteLocalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all hauls, items, drafts, and scan photos stored on this device for the current profile.'**
+  String get privacyDeleteLocalBody;
+
+  /// No description provided for @privacyDeleteLocalDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data deleted.'**
+  String get privacyDeleteLocalDone;
+
+  /// No description provided for @privacyDeleteCloudTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete cloud data?'**
+  String get privacyDeleteCloudTitle;
+
+  /// No description provided for @privacyDeleteCloudBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete synced hauls/items and attempt to remove scan photos from cloud storage.'**
+  String get privacyDeleteCloudBody;
+
+  /// No description provided for @privacyDeleteCloudDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud delete done. Items: {items}, Hauls: {hauls}, Photos: {objects}'**
+  String privacyDeleteCloudDone(Object items, Object hauls, Object objects);
+
+  /// No description provided for @privacyDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed: {error}'**
+  String privacyDeleteFailed(Object error);
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyPolicySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A short, plain-language summary of how Loppisfynd handles your data.'**
+  String get privacyPolicySubtitle;
+
+  /// No description provided for @privacyPolicyOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Read policy'**
+  String get privacyPolicyOpen;
+
+  /// No description provided for @privacyPolicyCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get privacyPolicyCopy;
+
+  /// No description provided for @privacyPolicyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy copied.'**
+  String get privacyPolicyCopied;
+
+  /// No description provided for @privacyPolicyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Loppisfynd stores your hauls, items, drafts, and scan photos on your device.\n\nIf you enable cloud sync, haul/item metadata and scan photos may be uploaded to your Supabase project so you can restore them after reinstall and use sync features.\n\nPrice comps are fetched from Tradera via a proxy when you are online.\n\nYou can export your data and delete local and cloud data from the Privacy & data screen.'**
+  String get privacyPolicyBody;
+
+  /// No description provided for @syncStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get syncStatusTitle;
+
+  /// No description provided for @syncStatusActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get syncStatusActionsTitle;
+
+  /// No description provided for @syncStatusOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get syncStatusOnline;
+
+  /// No description provided for @syncStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncStatusOffline;
+
+  /// No description provided for @syncStatusSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncStatusSyncNow;
+
+  /// No description provided for @syncStatusAllGoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All good'**
+  String get syncStatusAllGoodTitle;
+
+  /// No description provided for @syncStatusAllGoodMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync problems detected.'**
+  String get syncStatusAllGoodMessage;
+
+  /// No description provided for @syncStatusProblemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Problems'**
+  String get syncStatusProblemsTitle;
 
   /// No description provided for @settingsOnDeviceModelTitle.
   ///

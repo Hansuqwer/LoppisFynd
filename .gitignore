@@ -54,3 +54,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android signing (never commit)
+android/key.properties
+android/app/*.jks
+
+# OpenCode scratch (keep handoffs/notes only)
+.sisyphus/*
+!.sisyphus/README.md
+!.sisyphus/handoffs/
+!.sisyphus/handoffs/**
+!.sisyphus/notepads/
+!.sisyphus/notepads/**

@@ -7,6 +7,7 @@ import '../../core/database/app_database.dart';
 import '../../core/storage/scan_image_storage.dart';
 import '../../core/database/tables/scan_items.dart';
 import 'cloud_photo_paths.dart';
+import 'cloud/entity_keys.dart';
 
 class CloudPhotoSyncService {
   CloudPhotoSyncService({
@@ -32,34 +33,74 @@ class CloudPhotoSyncService {
       CloudPhotoPaths.bucketId,
     );
 
-    final scanItems = await _db.scanItemsDao.listAll();
-    for (final item in scanItems) {
-      final imagePath = item.imagePath;
-      if (imagePath != null && await File(imagePath).exists()) {
-        await storage.upload(
-          CloudPhotoPaths.imagePath(userId: user.id, scanItemId: item.id),
-          File(imagePath),
-          fileOptions: const FileOptions(
-            upsert: true,
-            contentType: 'image/jpeg',
-            cacheControl: '3600',
-          ),
-        );
-      }
+    final dirty = await _db.pendingCloudSyncEntitiesDao.listByType(
+      'scan_photo',
+    );
+    if (dirty.isEmpty) return;
 
-      final thumbPath = item.thumbPath;
-      if (thumbPath != null && await File(thumbPath).exists()) {
-        await storage.upload(
-          CloudPhotoPaths.thumbPath(userId: user.id, scanItemId: item.id),
-          File(thumbPath),
-          fileOptions: const FileOptions(
-            upsert: true,
-            contentType: 'image/jpeg',
-            cacheControl: '3600',
-          ),
+    final ids = dirty
+        .map((d) => _idFromKey(prefix: 'scan_photo:', key: d.entityKey))
+        .whereType<String>()
+        .toList(growable: false);
+
+    final scanItems = await _db.scanItemsDao.listByIds(ids, userId: user.id);
+    for (final item in scanItems) {
+      await _db.entitySyncStatusesDao.set(
+        entityKey: scanPhotoEntityKey(item.id),
+        status: 'syncing',
+      );
+
+      final imagePath = item.imagePath;
+      try {
+        if (imagePath != null && await File(imagePath).exists()) {
+          await storage.upload(
+            CloudPhotoPaths.imagePath(userId: user.id, scanItemId: item.id),
+            File(imagePath),
+            fileOptions: const FileOptions(
+              upsert: true,
+              contentType: 'image/jpeg',
+              cacheControl: '3600',
+            ),
+          );
+        }
+
+        final thumbPath = item.thumbPath;
+        if (thumbPath != null && await File(thumbPath).exists()) {
+          await storage.upload(
+            CloudPhotoPaths.thumbPath(userId: user.id, scanItemId: item.id),
+            File(thumbPath),
+            fileOptions: const FileOptions(
+              upsert: true,
+              contentType: 'image/jpeg',
+              cacheControl: '3600',
+            ),
+          );
+        }
+
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanPhotoEntityKey(item.id),
+          status: 'synced',
+          lastError: null,
+        );
+
+        await _db.pendingCloudSyncEntitiesDao.deleteByKeys([
+          scanPhotoEntityKey(item.id),
+        ]);
+      } catch (e) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanPhotoEntityKey(item.id),
+          status: 'failed',
+          lastError: e.toString(),
         );
       }
     }
+  }
+
+  String? _idFromKey({required String prefix, required String key}) {
+    if (!key.startsWith(prefix)) return null;
+    final id = key.substring(prefix.length).trim();
+    if (id.isEmpty) return null;
+    return id;
   }
 
   Future<void> downloadMissingFromCloud() async {
@@ -68,13 +109,18 @@ class CloudPhotoSyncService {
       CloudPhotoPaths.bucketId,
     );
 
-    final scanItems = await _db.scanItemsDao.listAll();
+    final scanItems = await _db.scanItemsDao.listAll(userId: user.id);
     for (final item in scanItems) {
       if (item.imagePath != null && await File(item.imagePath!).exists()) {
         continue;
       }
 
       try {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanPhotoEntityKey(item.id),
+          status: 'syncing',
+        );
+
         final bytes = await storage.download(
           CloudPhotoPaths.imagePath(userId: user.id, scanItemId: item.id),
         );
@@ -100,8 +146,18 @@ class CloudPhotoSyncService {
             to: ScanItemStatus.pendingIdentify,
           );
         }
-      } catch (_) {
-        // Ignore download errors; metadata sync must still work offline.
+
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanPhotoEntityKey(item.id),
+          status: 'synced',
+          lastError: null,
+        );
+      } catch (e) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanPhotoEntityKey(item.id),
+          status: 'failed',
+          lastError: e.toString(),
+        );
       }
     }
   }

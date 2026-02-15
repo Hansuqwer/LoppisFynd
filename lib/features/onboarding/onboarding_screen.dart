@@ -68,10 +68,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Text(
                 l10n.appTitle,
                 style: AppTypography.accentFrom(
-                  Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.textPrimary,
-                      ) ??
-                      const TextStyle(color: AppColors.textPrimary),
+                  Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),

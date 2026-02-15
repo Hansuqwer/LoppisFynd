@@ -6,6 +6,8 @@ North star: `docs/FyndLoppis_OpenCode_Roadmap.md`.
 
 Platform setup notes: `docs/platform_setup.md`.
 
+Play Store release notes: `docs/release_playstore.md`.
+
 ## Run
 
 Required runtime config is provided via `--dart-define`:

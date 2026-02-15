@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/database/app_database.dart';
+import 'cloud/entity_keys.dart';
+import 'cloud/conflict_detector.dart';
 
 class CloudMetadataSyncService {
   CloudMetadataSyncService({required AppDatabase db, required AppConfig config})
@@ -11,13 +13,25 @@ class CloudMetadataSyncService {
   final AppDatabase _db;
   final AppConfig _config;
 
+  static const _kLastSyncMs = 'cloud_metadata_last_sync_ms';
+
+  static const _kTypeHaul = 'haul';
+  static const _kTypeScanItem = 'scan_item';
+
   Future<void> syncAll() async {
     await syncBidirectional();
   }
 
   Future<void> syncBidirectional() async {
+    final now = DateTime.now();
+    final lastMs = await _db.appSettingsDao.getInt(_kLastSyncMs) ?? 0;
+    final lastSync = lastMs <= 0
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(lastMs);
+
     await pushLocalToCloud();
-    await pullCloudToLocal();
+    await pullCloudToLocal(lastSync: lastSync);
+    await _db.appSettingsDao.setInt(_kLastSyncMs, now.millisecondsSinceEpoch);
   }
 
   Future<void> pushLocalToCloud() async {
@@ -31,8 +45,40 @@ class CloudMetadataSyncService {
       throw const _CloudSyncNotSignedIn();
     }
 
-    final hauls = await _db.haulsDao.listAll();
-    final scanItems = await _db.scanItemsDao.listAll();
+    final dirtyHauls = await _db.pendingCloudSyncEntitiesDao.listByType(
+      _kTypeHaul,
+    );
+    final dirtyScanItems = await _db.pendingCloudSyncEntitiesDao.listByType(
+      _kTypeScanItem,
+    );
+
+    final haulIds = dirtyHauls
+        .map((d) => _idFromKey(prefix: 'haul:', key: d.entityKey))
+        .whereType<String>()
+        .toList(growable: false);
+    final scanItemIds = dirtyScanItems
+        .map((d) => _idFromKey(prefix: 'scan_item:', key: d.entityKey))
+        .whereType<String>()
+        .toList(growable: false);
+
+    final hauls = await _db.haulsDao.listByIds(haulIds, userId: user.id);
+    final scanItems = await _db.scanItemsDao.listByIds(
+      scanItemIds,
+      userId: user.id,
+    );
+
+    for (final h in hauls) {
+      await _db.entitySyncStatusesDao.set(
+        entityKey: haulEntityKey(h.id),
+        status: 'syncing',
+      );
+    }
+    for (final s in scanItems) {
+      await _db.entitySyncStatusesDao.set(
+        entityKey: scanItemEntityKey(s.id),
+        status: 'syncing',
+      );
+    }
 
     final haulRows = hauls
         .map(
@@ -76,15 +122,63 @@ class CloudMetadataSyncService {
         )
         .toList();
 
-    if (haulRows.isNotEmpty) {
-      await client.from('hauls').upsert(haulRows, onConflict: 'id');
-    }
-    if (scanRows.isNotEmpty) {
-      await client.from('scan_items').upsert(scanRows, onConflict: 'id');
+    final dirtyKeys = <String>{
+      ...dirtyHauls.map((d) => d.entityKey),
+      ...dirtyScanItems.map((d) => d.entityKey),
+    };
+
+    try {
+      if (haulRows.isNotEmpty) {
+        await client.from('hauls').upsert(haulRows, onConflict: 'id');
+      }
+      if (scanRows.isNotEmpty) {
+        await client.from('scan_items').upsert(scanRows, onConflict: 'id');
+      }
+
+      await _db.pendingCloudSyncEntitiesDao.deleteByKeys(dirtyKeys);
+
+      for (final h in hauls) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: haulEntityKey(h.id),
+          status: 'synced',
+          lastError: null,
+        );
+      }
+      for (final s in scanItems) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanItemEntityKey(s.id),
+          status: 'synced',
+          lastError: null,
+        );
+      }
+    } catch (e) {
+      final err = e.toString();
+      for (final h in hauls) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: haulEntityKey(h.id),
+          status: 'failed',
+          lastError: err,
+        );
+      }
+      for (final s in scanItems) {
+        await _db.entitySyncStatusesDao.set(
+          entityKey: scanItemEntityKey(s.id),
+          status: 'failed',
+          lastError: err,
+        );
+      }
+      rethrow;
     }
   }
 
-  Future<void> pullCloudToLocal() async {
+  String? _idFromKey({required String prefix, required String key}) {
+    if (!key.startsWith(prefix)) return null;
+    final id = key.substring(prefix.length).trim();
+    if (id.isEmpty) return null;
+    return id;
+  }
+
+  Future<void> pullCloudToLocal({required DateTime? lastSync}) async {
     if (!_config.hasSupabase) {
       throw const _CloudSyncNotConfigured();
     }
@@ -122,13 +216,23 @@ class CloudMetadataSyncService {
       final co2SavedKg = _readNullableDouble(row['co2_saved_kg']);
       final updatedAt = _readDateTime(row['updated_at']);
 
-      final local = await _db.haulsDao.getById(id);
+      final local = await _db.haulsDao.getById(id, userId: user.id);
       if (local != null && !updatedAt.isAfter(local.updatedAt)) {
         continue;
       }
 
+      final conflict =
+          local != null &&
+          lastSync != null &&
+          isLwwConflict(
+            localUpdatedAt: local.updatedAt,
+            cloudUpdatedAt: updatedAt,
+            lastSyncAt: lastSync,
+          );
+
       await _db.haulsDao.upsertFromCloud(
         id: id,
+        userId: user.id,
         title: title,
         startedAt: startedAt,
         endedAt: endedAt,
@@ -140,6 +244,14 @@ class CloudMetadataSyncService {
         co2SavedKg: co2SavedKg,
         updatedAt: updatedAt,
       );
+
+      await _db.entitySyncStatusesDao.set(
+        entityKey: haulEntityKey(id),
+        status: conflict ? 'conflict' : 'synced',
+        lastError: conflict
+            ? 'Cloud overwrote local changes (LWW). Review this haul.'
+            : null,
+      );
     }
 
     final scanItems = _asList(scanResp);
@@ -149,13 +261,23 @@ class CloudMetadataSyncService {
       final haulId = _readString(row['haul_id']);
       final updatedAt = _readDateTime(row['updated_at']);
 
-      final local = await _db.scanItemsDao.getById(id);
+      final local = await _db.scanItemsDao.getById(id, userId: user.id);
       if (local != null && !updatedAt.isAfter(local.updatedAt)) {
         continue;
       }
 
+      final conflict =
+          local != null &&
+          lastSync != null &&
+          isLwwConflict(
+            localUpdatedAt: local.updatedAt,
+            cloudUpdatedAt: updatedAt,
+            lastSyncAt: lastSync,
+          );
+
       await _db.scanItemsDao.upsertFromCloud(
         id: id,
+        userId: user.id,
         haulId: haulId,
         aiJson: _readNullableString(row['ai_json']),
         query: _readNullableString(row['query']),
@@ -170,6 +292,14 @@ class CloudMetadataSyncService {
         daysToSellEst: _readNullableInt(row['days_to_sell_est']),
         status: _readNullableString(row['status']),
         updatedAt: updatedAt,
+      );
+
+      await _db.entitySyncStatusesDao.set(
+        entityKey: scanItemEntityKey(id),
+        status: conflict ? 'conflict' : 'synced',
+        lastError: conflict
+            ? 'Cloud overwrote local changes (LWW). Review this item.'
+            : null,
       );
     }
   }

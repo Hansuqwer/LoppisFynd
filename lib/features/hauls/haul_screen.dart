@@ -19,6 +19,7 @@ class HaulScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = ref.watch(appDatabaseProvider);
     final haulId = ref.watch(defaultHaulIdProvider);
+    final userId = ref.watch(activeUserIdProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
@@ -42,7 +43,7 @@ class HaulScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 StreamBuilder<List<ScanItem>>(
-                  stream: db.scanItemsDao.watchByHaulId(haulId),
+                  stream: db.scanItemsDao.watchByHaulId(haulId, userId: userId),
                   builder: (context, snapshot) {
                     final items = snapshot.data ?? const [];
 
@@ -115,6 +116,8 @@ class HaulScreen extends ConsumerWidget {
           (ProfitCalculator.netProfit(
             purchasePrice: p,
             expectedSalePrice: (m * it.conditionMultiplier),
+            fixedFeesSek: it.fixedFeesSek ?? 0,
+            shippingPaidBySellerSek: it.shippingPaidBySellerSek ?? 0,
           ) ??
           0);
     }

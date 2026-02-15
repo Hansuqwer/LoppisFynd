@@ -23,15 +23,17 @@ void main() {
 
     final db = AppDatabase.inMemory();
     addTearDown(db.close);
-    const defaultHaulId = 'default-haul';
 
-    await db.haulsDao.upsert(id: defaultHaulId, title: 'Current haul');
+    // Ensure the guest current haul exists.
+    await db.haulsDao.upsert(id: 'haul_current_guest', title: 'Current haul');
 
     const config = AppConfig(
+      appEnv: 'test',
       traderaProxyUrl: '',
       supabaseUrl: '',
       supabaseAnonKey: '',
       gemmaModelUrl: '',
+      sentryDsn: '',
     );
     final storage = ScanImageStorage(rootDir: root);
     final modelManager = ModelManager(
@@ -49,7 +51,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           scanImageStorageProvider.overrideWithValue(storage),
-          defaultHaulIdProvider.overrideWithValue(defaultHaulId),
           modelManagerProvider.overrideWithValue(modelManager),
           appConfigProvider.overrideWithValue(config),
           syncSchedulerProvider.overrideWithValue(syncScheduler),
@@ -73,5 +74,9 @@ void main() {
     expect(find.text('Fynd'), findsAtLeastNWidgets(1));
     expect(find.text('Historik'), findsAtLeastNWidgets(1));
     expect(find.text('Profil'), findsAtLeastNWidgets(1));
+
+    // Dispose the widget tree and flush any pending Drift timers.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 }

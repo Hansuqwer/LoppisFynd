@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Loppisfynd needs camera access to scan items in-store.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Loppisfynd can use your location to pin hauls on the map and suggest haul names. Location is optional.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

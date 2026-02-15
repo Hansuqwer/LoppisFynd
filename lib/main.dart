@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,32 +11,84 @@ import 'core/app/providers.dart';
 import 'core/config/app_config.dart';
 import 'core/database/app_database.dart';
 import 'core/storage/scan_image_storage.dart';
+import 'core/tokens/app_tokens.dart';
 import 'core/theme/app_theme.dart';
+import 'shared/widgets/bento_card.dart';
 import 'services/ai/model_manager.dart';
 import 'services/ai/inference/inference_isolate_service.dart';
 import 'services/market/market_bridge.dart';
 import 'services/market/market_data_source.dart';
 import 'services/market/tradera_client.dart';
 import 'services/sync/sync_scheduler.dart';
+import 'services/analytics/analytics_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/onboarding/onboarding_gate.dart';
+import 'features/onboarding/deep_link_gate.dart';
 import 'services/sync/background/background_sync.dart';
 import 'services/notifications/app_notifications.dart';
+import 'core/config/feature_flags.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  ErrorWidget.builder = (details) {
+    return Material(
+      color: AppColors.background,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: BentoCard(
+            child: Text(
+              'Something went wrong.\n\n${details.exceptionAsString()}',
+            ),
+          ),
+        ),
+      ),
+    );
+  };
+
   // Offline-first: require fonts to be bundled in assets.
   GoogleFonts.config.allowRuntimeFetching = false;
 
+  final config = AppConfig.fromEnvironment();
+
+  if (!config.hasSentry) {
+    await _bootstrapAndRun(config);
+    return;
+  }
+
+  final packageInfo = await PackageInfo.fromPlatform();
+  final release =
+      'fyndloppis@${packageInfo.version}+${packageInfo.buildNumber}';
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = config.sentryDsn;
+      options.environment = config.appEnv;
+      options.release = release;
+      options.sendDefaultPii = false;
+      options.tracesSampleRate = 0.0;
+    },
+    appRunner: () async {
+      await runZonedGuarded(
+        () async {
+          await _bootstrapAndRun(config);
+        },
+        (error, stackTrace) {
+          unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+        },
+      );
+    },
+  );
+}
+
+Future<void> _bootstrapAndRun(AppConfig config) async {
   final docsDir = await getApplicationDocumentsDirectory();
 
   final db = AppDatabase.open();
-  const defaultHaulId = 'default-haul';
-  await db.haulsDao.upsert(id: defaultHaulId, title: 'Current haul');
-
-  final config = AppConfig.fromEnvironment();
 
   if (config.hasSupabase) {
     await Supabase.initialize(
@@ -58,7 +112,20 @@ Future<void> main() async {
         )
       : const NoopMarketDataSource();
 
-  final syncScheduler = SyncScheduler(db: db, market: market);
+  final flags = FeatureFlags.fromEnvironment();
+  final analytics = (flags.enableAnalytics && config.hasSentry)
+      ? const SentryAnalyticsService()
+      : const NoopAnalyticsService();
+
+  final syncScheduler = SyncScheduler(
+    db: db,
+    market: market,
+    analytics: analytics,
+    userIdProvider: () {
+      if (!config.hasSupabase) return null;
+      return Supabase.instance.client.auth.currentUser?.id;
+    },
+  );
 
   final modelManager = ModelManager(
     spec: const ModelSpec(id: 'gemma_vision', fileName: 'gemma_vision.task'),
@@ -85,7 +152,6 @@ Future<void> main() async {
     _AppRoot(
       db: db,
       imageStorage: ScanImageStorage(rootDir: docsDir),
-      defaultHaulId: defaultHaulId,
       modelManager: modelManager,
       config: config,
       syncScheduler: syncScheduler,
@@ -98,7 +164,6 @@ class _AppRoot extends StatefulWidget {
   const _AppRoot({
     required this.db,
     required this.imageStorage,
-    required this.defaultHaulId,
     required this.modelManager,
     required this.config,
     required this.syncScheduler,
@@ -107,7 +172,6 @@ class _AppRoot extends StatefulWidget {
 
   final AppDatabase db;
   final ScanImageStorage imageStorage;
-  final String defaultHaulId;
   final ModelManager modelManager;
   final AppConfig config;
   final SyncScheduler syncScheduler;
@@ -130,7 +194,6 @@ class _AppRootState extends State<_AppRoot> {
       overrides: [
         appDatabaseProvider.overrideWithValue(widget.db),
         scanImageStorageProvider.overrideWithValue(widget.imageStorage),
-        defaultHaulIdProvider.overrideWithValue(widget.defaultHaulId),
         modelManagerProvider.overrideWithValue(widget.modelManager),
         appConfigProvider.overrideWithValue(widget.config),
         syncSchedulerProvider.overrideWithValue(widget.syncScheduler),
@@ -162,7 +225,57 @@ class LoppisfyndApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('sv'),
-      home: const OnboardingGate(),
+      onGenerateRoute: (settings) {
+        final name = settings.name ?? '/';
+        if (name == '/' || name.isEmpty) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => const OnboardingGate(),
+          );
+        }
+
+        // Deep-link skeleton (v1.0): map paths to the app shell.
+        switch (name) {
+          case '/home':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const DeepLinkGate(tabIndex: 0),
+            );
+          case '/scan':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const DeepLinkGate(tabIndex: 1),
+            );
+          case '/haul':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const DeepLinkGate(tabIndex: 2),
+            );
+          case '/history':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const DeepLinkGate(tabIndex: 3),
+            );
+          case '/profile':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const DeepLinkGate(tabIndex: 4),
+            );
+        }
+
+        if (name.startsWith('/item/')) {
+          final id = name.substring('/item/'.length);
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => DeepLinkGate(scanItemId: id),
+          );
+        }
+
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const OnboardingGate(),
+        );
+      },
     );
   }
 }

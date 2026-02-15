@@ -19,10 +19,15 @@ class _FakeClock implements Clock {
 
 class _FakeMarket implements MarketDataSource {
   _FakeMarket(this._result);
-  final MarketStats? _result;
+  final MarketComps? _result;
 
   @override
   Future<MarketStats?> fetchMarketStats({required String query}) async {
+    return _result?.stats;
+  }
+
+  @override
+  Future<MarketComps?> fetchComps({required String query}) async {
     return _result;
   }
 }
@@ -30,6 +35,11 @@ class _FakeMarket implements MarketDataSource {
 class _ThrowingMarket implements MarketDataSource {
   @override
   Future<MarketStats?> fetchMarketStats({required String query}) async {
+    throw StateError('network');
+  }
+
+  @override
+  Future<MarketComps?> fetchComps({required String query}) async {
     throw StateError('network');
   }
 }
@@ -57,7 +67,15 @@ void main() {
     final scheduler = SyncScheduler(
       db: db,
       market: _FakeMarket(
-        const MarketStats(count: 3, minSek: 100, medianSek: 200, maxSek: 500),
+        const MarketComps(
+          sales: [],
+          stats: MarketStats(
+            count: 3,
+            minSek: 100,
+            medianSek: 200,
+            maxSek: 500,
+          ),
+        ),
       ),
       clock: clock,
       maxCallsPerDay: 10,

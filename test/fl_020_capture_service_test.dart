@@ -6,6 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:fynd_loppis/core/database/app_database.dart';
 import 'package:fynd_loppis/core/storage/scan_image_storage.dart';
 import 'package:fynd_loppis/features/scanner/scan_capture_service.dart';
+import 'package:fynd_loppis/services/analytics/analytics_service.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
 
 void main() {
@@ -22,6 +23,7 @@ void main() {
       db: db,
       imageStorage: storage,
       aiInference: AiInferenceIsolateService(),
+      analytics: const NoopAnalyticsService(),
     );
 
     final sourceImage = img.Image(width: 640, height: 480);
@@ -31,6 +33,7 @@ void main() {
 
     final captured = await service.persistCapturedImage(
       haulId: 'haul-1',
+      userId: null,
       sourceImage: sourceFile,
       scanId: 'scan-1',
     );

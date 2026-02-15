@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
 import '../../core/time/clock.dart';
 import '../../core/utils/serial_task_queue.dart';
+import '../analytics/analytics_service.dart';
 import '../market/market_data_source.dart';
 import '../market/market_models.dart';
 import 'sync_events.dart';
@@ -13,15 +15,21 @@ class SyncScheduler {
   SyncScheduler({
     required AppDatabase db,
     required MarketDataSource market,
+    AnalyticsService analytics = const NoopAnalyticsService(),
+    String? Function()? userIdProvider,
     Clock clock = const SystemClock(),
     int maxCallsPerDay = 200,
   }) : _db = db,
        _market = market,
+       _analytics = analytics,
+       _userIdProvider = userIdProvider,
        _clock = clock,
        _maxCallsPerDay = maxCallsPerDay;
 
   final AppDatabase _db;
   final MarketDataSource _market;
+  final AnalyticsService _analytics;
+  final String? Function()? _userIdProvider;
   final Clock _clock;
   final int _maxCallsPerDay;
 
@@ -37,12 +45,16 @@ class SyncScheduler {
   Future<void> _syncOnceInternal() async {
     _events.add(const SyncRunStarted());
     try {
+      final sw = Stopwatch()..start();
       final now = _clock.now();
       final dayKey = _dayKey(now);
       var used = await _db.syncQuotasDao.getUsed(dayKey);
       if (used >= _maxCallsPerDay) return;
 
-      final pending = await _db.scanItemsDao.listPendingMarketSync();
+      final userId = _userIdProvider?.call();
+      final pending = await _db.scanItemsDao.listPendingMarketSync(
+        userId: userId,
+      );
       for (final item in pending) {
         if (used >= _maxCallsPerDay) break;
         final query = item.query;
@@ -61,17 +73,31 @@ class SyncScheduler {
             to: ScanItemStatus.syncing,
           );
 
-          MarketStats? stats;
+          MarketComps? comps;
           try {
-            stats = await _market.fetchMarketStats(query: query);
+            comps = await _analytics.measure(
+              'comps_fetch',
+              () => _market.fetchComps(query: query),
+            );
           } finally {
             await _db.syncQuotasDao.incrementUsed(dayKey, 1);
             used += 1;
           }
 
-          if (stats == null) {
+          if (comps == null) {
             throw const _NoMarketData();
           }
+
+          final stats = comps.stats;
+
+          await _db.scanItemCompsDao.upsert(
+            scanItemId: item.id,
+            rawJson: jsonEncode(comps.toJson()),
+            medianPrice: stats.medianSek.toDouble(),
+            minPrice: stats.minSek.toDouble(),
+            maxPrice: stats.maxSek.toDouble(),
+            fetchedAt: now,
+          );
 
           await _db.scanItemsDao.setMarketStats(
             id: item.id,
@@ -87,6 +113,7 @@ class SyncScheduler {
 
           await _db.scanItemSyncStatesDao.clear(item.id);
           _events.add(ScanItemSynced(scanItemId: item.id));
+          _analytics.event('comps_ready');
         } catch (e) {
           final attempts = (state?.attempts ?? 0) + 1;
           final delay = _backoff(attempts);
@@ -116,6 +143,12 @@ class SyncScheduler {
           );
         }
       }
+
+      sw.stop();
+      _analytics.event(
+        'sync_run_finished',
+        data: {'duration_ms': sw.elapsedMilliseconds},
+      );
     } finally {
       _events.add(const SyncRunFinished());
     }

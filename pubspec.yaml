@@ -52,12 +52,16 @@ dependencies:
   flutter_animate: ^4.5.2
   lucide_icons: ^0.257.0
   geocoding: ^3.0.0
+  geolocator: ^14.0.2
   connectivity_plus: ^6.1.4
   flutter_gemma: ^0.12.4
   google_mlkit_barcode_scanning: ^0.14.2
   supabase_flutter: ^2.12.0
   workmanager: ^0.9.0+3
   flutter_local_notifications: ^20.1.0
+  package_info_plus: ^9.0.0
+  sentry_flutter: ^9.13.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

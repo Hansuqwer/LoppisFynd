@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/app/providers.dart';
 import '../../core/tokens/app_tokens.dart';
@@ -43,6 +44,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   CameraController? _controller;
   String? _error;
+  var _cameraPermissionPermanentlyDenied = false;
+  var _cameraPermissionDenied = false;
   var _capturing = false;
 
   ScanCaptureService? _captureService;
@@ -51,6 +54,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   BarcodeDetectionFrame? _pendingOverlayFrame;
   BarcodeDetectionFrame? _overlayFrame;
   Timer? _overlayTimer;
+
+  var _aiWarmUpStarted = false;
 
   BarcodeScanner? _barcodeScanner;
   DateTime _lastBarcodeScanAt = DateTime.fromMillisecondsSinceEpoch(0);
@@ -74,6 +79,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _initCameraIfNeeded();
+
+    if (!_aiWarmUpStarted) {
+      _aiWarmUpStarted = true;
+      unawaited(ref.read(aiInferenceProvider).warmUp());
+    }
   }
 
   @override
@@ -146,6 +156,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     final l10n = AppLocalizations.of(context)!;
 
+    final hasPermission = await _ensureCameraPermission();
+    if (!hasPermission) return;
+
     try {
       final cameras = await availableCameras();
       if (!mounted) return;
@@ -173,6 +186,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       setState(() {
         _error = null;
+        _cameraPermissionDenied = false;
+        _cameraPermissionPermanentlyDenied = false;
         _controller = controller;
       });
     } catch (e) {
@@ -181,11 +196,91 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
+  Future<bool> _ensureCameraPermission() async {
+    final l10n = AppLocalizations.of(context)!;
+    final db = ref.read(appDatabaseProvider);
+
+    try {
+      final status = await Permission.camera.status;
+      if (status.isGranted) return true;
+
+      if (status.isPermanentlyDenied || status.isRestricted) {
+        if (!mounted) return false;
+        setState(() {
+          _cameraPermissionPermanentlyDenied = true;
+          _cameraPermissionDenied = false;
+          _error = l10n.scannerCameraPermissionPermanentlyDenied;
+        });
+        return false;
+      }
+
+      const educatedKey = 'camera_permission_educated_v1';
+      final educated = (await db.appSettingsDao.getInt(educatedKey)) == 1;
+      if (!educated && mounted) {
+        final proceed = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog.adaptive(
+              title: Text(l10n.scannerCameraPermissionTitle),
+              content: Text(l10n.scannerCameraPermissionBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(l10n.scannerCameraPermissionNotNow),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(l10n.scannerCameraPermissionContinue),
+                ),
+              ],
+            );
+          },
+        );
+
+        await db.appSettingsDao.setInt(educatedKey, 1);
+
+        if (proceed != true) {
+          if (!mounted) return false;
+          setState(() {
+            _cameraPermissionDenied = true;
+            _cameraPermissionPermanentlyDenied = false;
+            _error = l10n.scannerCameraPermissionDenied;
+          });
+          return false;
+        }
+      }
+
+      final requested = await Permission.camera.request();
+      if (requested.isGranted) return true;
+
+      if (!mounted) return false;
+      setState(() {
+        _cameraPermissionPermanentlyDenied =
+            requested.isPermanentlyDenied || requested.isRestricted;
+        _cameraPermissionDenied = !_cameraPermissionPermanentlyDenied;
+        _error = _cameraPermissionPermanentlyDenied
+            ? l10n.scannerCameraPermissionPermanentlyDenied
+            : l10n.scannerCameraPermissionDenied;
+      });
+      return false;
+    } catch (e) {
+      if (!mounted) return false;
+      setState(() {
+        _cameraPermissionDenied = true;
+        _cameraPermissionPermanentlyDenied = false;
+        _error = l10n.scannerCameraInitFailed('$e');
+      });
+      return false;
+    }
+  }
+
   Future<void> _capture() async {
     final db = ref.read(appDatabaseProvider);
     final imageStorage = ref.read(scanImageStorageProvider);
     final haulId = ref.read(defaultHaulIdProvider);
+    final userId = ref.read(activeUserIdProvider);
     final aiInference = ref.read(aiInferenceProvider);
+    final analytics = ref.read(analyticsProvider);
 
     final controller = _controller;
     final captureService = _captureService;
@@ -201,11 +296,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           db: db,
           imageStorage: imageStorage,
           aiInference: aiInference,
+          analytics: analytics,
         );
     _captureService ??= service;
 
     setState(() => _capturing = true);
     try {
+      analytics.event('scan_started');
       final resumeBarcodeStream =
           widget.barcodeOverlayListenable == null &&
           (controller.value.isStreamingImages);
@@ -216,6 +313,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       final file = await controller.takePicture();
       final captured = await service.persistCapturedImage(
         haulId: haulId,
+        userId: userId,
         sourceImage: File(file.path),
       );
       if (!mounted) return;
@@ -305,11 +403,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Future<void> _doneScanning() async {
     final db = ref.read(appDatabaseProvider);
     final haulId = ref.read(defaultHaulIdProvider);
+    final userId = ref.read(activeUserIdProvider);
     final l10n = AppLocalizations.of(context)!;
 
     try {
       final queued = await db.scanItemsDao.queueReadyToSyncInHaul(
         haulId: haulId,
+        userId: userId,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -327,6 +427,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
     final haulId = ref.watch(defaultHaulIdProvider);
+    final userId = ref.watch(activeUserIdProvider);
     final l10n = AppLocalizations.of(context)!;
     final controller = _controller;
     final cameraHeight = (MediaQuery.sizeOf(context).height * 0.42)
@@ -343,7 +444,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               children: [
                 Text(
                   l10n.scannerTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(l10n.scannerSubtitle),
@@ -360,8 +461,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       child: ErrorBanner(
                         title: AppLocalizations.of(context)!.errorCameraTitle,
                         message: _error!,
-                        onRetry: _initCameraIfNeeded,
-                        retryLabel: AppLocalizations.of(context)!.buttonRetry,
+                        onRetry: _cameraPermissionPermanentlyDenied
+                            ? () async {
+                                await openAppSettings();
+                              }
+                            : _initCameraIfNeeded,
+                        retryLabel: _cameraPermissionPermanentlyDenied
+                            ? l10n.scannerCameraPermissionOpenSettings
+                            : _cameraPermissionDenied
+                            ? l10n.scannerCameraPermissionContinue
+                            : AppLocalizations.of(context)!.buttonRetry,
                       ),
                     )
                   : controller == null || !controller.value.isInitialized
@@ -403,7 +512,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
           StreamBuilder(
-            stream: db.scanItemsDao.watchByHaulId(haulId),
+            stream: db.scanItemsDao.watchByHaulId(haulId, userId: userId),
             builder: (context, snapshot) {
               final items = snapshot.data ?? const [];
               return BatchTray(

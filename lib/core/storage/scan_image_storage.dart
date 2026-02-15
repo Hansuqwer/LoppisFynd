@@ -99,6 +99,33 @@ class ScanImageStorage {
       thumbPath: thumbFile.path,
     );
   }
+
+  Future<int> cleanupOrphanedScanFiles({
+    required Set<String> referencedPaths,
+    Duration olderThan = const Duration(days: 7),
+  }) async {
+    if (!await _scansDir.exists()) return 0;
+
+    final now = DateTime.now();
+    var deleted = 0;
+    await for (final entity in _scansDir.list()) {
+      if (entity is! File) continue;
+
+      final path = entity.path;
+      if (!path.endsWith('.jpg')) continue;
+      if (referencedPaths.contains(path)) continue;
+
+      try {
+        final stat = await entity.stat();
+        if (now.difference(stat.modified) < olderThan) continue;
+        await entity.delete();
+        deleted += 1;
+      } catch (_) {
+        // Best-effort cleanup.
+      }
+    }
+    return deleted;
+  }
 }
 
 String _sanitizeForFileName(String input) {

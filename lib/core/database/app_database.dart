@@ -7,13 +7,23 @@ import 'package:path_provider/path_provider.dart';
 
 import 'daos/hauls_dao.dart';
 import 'daos/app_settings_dao.dart';
+import 'daos/draft_listings_dao.dart';
+import 'daos/entity_sync_statuses_dao.dart';
 import 'daos/market_stats_cache_dao.dart';
+import 'daos/pending_cloud_sync_entities_dao.dart';
+import 'daos/scan_item_comps_dao.dart';
+import 'daos/scan_item_photos_dao.dart';
 import 'daos/scan_item_sync_states_dao.dart';
 import 'daos/scan_items_dao.dart';
 import 'daos/sync_quotas_dao.dart';
 import 'tables/app_settings.dart';
+import 'tables/draft_listings.dart';
+import 'tables/entity_sync_statuses.dart';
 import 'tables/market_stats_cache.dart';
 import 'tables/hauls.dart';
+import 'tables/pending_cloud_sync_entities.dart';
+import 'tables/scan_item_comps.dart';
+import 'tables/scan_item_photos.dart';
 import 'tables/scan_item_sync_states.dart';
 import 'tables/scan_items.dart';
 import 'tables/sync_quotas.dart';
@@ -24,18 +34,28 @@ part 'app_database.g.dart';
   tables: [
     Hauls,
     ScanItems,
+    ScanItemPhotos,
+    ScanItemComps,
     ScanItemSyncStates,
+    EntitySyncStatuses,
     SyncQuotas,
     AppSettings,
+    DraftListings,
     MarketStatsCache,
+    PendingCloudSyncEntities,
   ],
   daos: [
     HaulsDao,
     ScanItemsDao,
+    ScanItemPhotosDao,
+    ScanItemCompsDao,
     ScanItemSyncStatesDao,
+    EntitySyncStatusesDao,
     SyncQuotasDao,
     AppSettingsDao,
+    DraftListingsDao,
     MarketStatsCacheDao,
+    PendingCloudSyncEntitiesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -46,7 +66,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.inMemory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +97,41 @@ class AppDatabase extends _$AppDatabase {
 
       if (from < 7) {
         await m.createTable(marketStatsCache);
+      }
+
+      if (from < 8) {
+        await m.alterTable(TableMigration(appSettings));
+      }
+
+      if (from < 9) {
+        await m.alterTable(TableMigration(hauls));
+        await m.alterTable(TableMigration(scanItems));
+      }
+
+      if (from < 10) {
+        await m.createTable(scanItemPhotos);
+        await m.createTable(scanItemComps);
+        await m.createTable(entitySyncStatuses);
+      }
+
+      if (from < 11) {
+        await m.alterTable(TableMigration(scanItems));
+      }
+
+      if (from < 12) {
+        await m.alterTable(TableMigration(scanItems));
+      }
+
+      if (from < 13) {
+        await m.createTable(draftListings);
+      }
+
+      if (from < 14) {
+        await m.alterTable(TableMigration(scanItems));
+      }
+
+      if (from < 15) {
+        await m.createTable(pendingCloudSyncEntities);
       }
     },
     beforeOpen: (details) async {

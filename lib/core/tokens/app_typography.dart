@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
 abstract final class AppTypography {
   // Roadmap recommendation.
-  // These fonts are currently loaded via `google_fonts` (runtime fetch + cache).
-  // If you want strict offline fonts, vendor the TTFs and add `flutter: fonts:`.
+  // Fonts are vendored in `Assets/fonts/` and runtime fetching is disabled.
   static const uiFontFamily = 'Outfit';
   static const metricsFontFamily = 'Space Grotesk';
   static const accentFontFamily = 'Homemade Apple';
 
   static TextStyle uiFrom(TextStyle base) {
-    return GoogleFonts.outfit(textStyle: base);
+    return base.copyWith(fontFamily: uiFontFamily);
   }
 
   static TextStyle metricsFrom(TextStyle base) {
-    return GoogleFonts.spaceGrotesk(textStyle: base);
+    return base.copyWith(fontFamily: metricsFontFamily);
   }
 
   static TextStyle accentFrom(TextStyle base) {
-    return GoogleFonts.homemadeApple(textStyle: base);
+    return base.copyWith(fontFamily: accentFontFamily);
   }
 
   static final textTheme = TextTheme(

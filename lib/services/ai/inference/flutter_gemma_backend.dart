@@ -11,6 +11,7 @@ Future<String> inferJsonWithFlutterGemma({
   required String? modelPath,
   required String prompt,
   required String imagePath,
+  int? maxTokens,
 }) async {
   if (rootIsolateToken != null) {
     BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
@@ -35,7 +36,7 @@ Future<String> inferJsonWithFlutterGemma({
   ).fromFile(modelPath).install();
 
   final model = await FlutterGemma.getActiveModel(
-    maxTokens: 1024,
+    maxTokens: maxTokens ?? 1024,
     supportImage: true,
     maxNumImages: 1,
   );

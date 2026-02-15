@@ -22,6 +22,9 @@ class ScanItemStatusConverter extends TypeConverter<ScanItemStatus, String> {
 class ScanItems extends Table {
   TextColumn get id => text()();
 
+  // Optional. When Supabase auth is enabled, local data is scoped to a user id.
+  TextColumn get userId => text().nullable()();
+
   TextColumn get haulId =>
       text().references(Hauls, #id, onDelete: KeyAction.cascade)();
 
@@ -32,8 +35,15 @@ class ScanItems extends Table {
   TextColumn get query => text().nullable()();
   TextColumn get desc => text().nullable()();
 
+  // Optional. User-defined inventory category (free text).
+  TextColumn get category => text().nullable()();
+
+  TextColumn get notes => text().nullable()();
+
   RealColumn get confidence => real().nullable()();
   RealColumn get purchasePrice => real().nullable()();
+  RealColumn get fixedFeesSek => real().nullable()();
+  RealColumn get shippingPaidBySellerSek => real().nullable()();
 
   RealColumn get conditionMultiplier =>
       real().withDefault(const Constant(1.0))();

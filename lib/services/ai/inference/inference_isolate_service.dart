@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter/services.dart';
 
+import '../../../core/utils/serial_task_queue.dart';
 import 'ai_prompts.dart';
 import 'ai_types.dart';
 import 'ai_pipeline.dart';
@@ -41,21 +43,80 @@ class AiInferenceIsolateService {
   final AiBackendKind _backendKind;
   final AiPipeline _pipeline;
 
-  Future<AiInferenceResult> run(AiInferenceRequest request) async {
-    final prompt = switch (request.task) {
-      SingleItemTask() => AiPrompts.singleItemJsonPrompt(),
-      BatchShelfTask() => AiPrompts.batchShelfJsonPrompt(),
-    };
+  final _queue = SerialTaskQueue();
 
-    final resultRaw = await _runInIsolate(
-      _backendKind,
-      _rootIsolateToken,
-      _modelPath,
-      prompt,
-      request.imageFile.path,
-    );
+  Future<AiInferenceResult> run(
+    AiInferenceRequest request, {
+    AiCancelToken? cancelToken,
+  }) async {
+    return _queue.add(() async {
+      final prompt = switch (request.task) {
+        SingleItemTask() => AiPrompts.singleItemJsonPrompt(),
+        BatchShelfTask() => AiPrompts.batchShelfJsonPrompt(),
+      };
 
-    return _pipeline.process(task: request.task, modelOutput: resultRaw);
+      final resultRaw = await _runInIsolate(
+        _backendKind,
+        _rootIsolateToken,
+        _modelPath,
+        prompt,
+        request.imageFile.path,
+        request.maxTokens,
+        cancelToken,
+      );
+
+      return _pipeline.process(task: request.task, modelOutput: resultRaw);
+    });
+  }
+
+  Future<void> warmUp() {
+    return _queue.add(() async {
+      await _warmUpIsolate(_rootIsolateToken);
+    });
+  }
+}
+
+Future<void> _warmUpIsolate(RootIsolateToken? rootIsolateToken) async {
+  final ready = Completer<void>();
+  final receivePort = ReceivePort();
+
+  late final Isolate isolate;
+
+  receivePort.listen((message) {
+    if (message == true) {
+      ready.complete();
+      receivePort.close();
+      isolate.kill(priority: Isolate.immediate);
+    }
+  });
+
+  isolate = await Isolate.spawn(
+    _warmUpIsolateEntry,
+    _WarmUpArgs(
+      sendPort: receivePort.sendPort,
+      rootIsolateToken: rootIsolateToken,
+    ),
+  );
+
+  return ready.future;
+}
+
+class _WarmUpArgs {
+  const _WarmUpArgs({required this.sendPort, required this.rootIsolateToken});
+  final SendPort sendPort;
+  final RootIsolateToken? rootIsolateToken;
+}
+
+Future<void> _warmUpIsolateEntry(_WarmUpArgs args) async {
+  try {
+    if (args.rootIsolateToken != null) {
+      BackgroundIsolateBinaryMessenger.ensureInitialized(
+        args.rootIsolateToken!,
+      );
+    }
+    DartPluginRegistrant.ensureInitialized();
+  } finally {
+    args.sendPort.send(true);
   }
 }
 
@@ -65,11 +126,27 @@ Future<String> _runInIsolate(
   String? modelPath,
   String prompt,
   String imagePath,
+  int? maxTokens,
+  AiCancelToken? cancelToken,
 ) async {
+  final token = cancelToken;
+  if (token?.isCancelled ?? false) {
+    throw const AiCancelledException();
+  }
+
   final ready = Completer<String>();
   final receivePort = ReceivePort();
 
-  late final Isolate isolate;
+  Isolate? isolate;
+
+  var cancelled = false;
+  token?.cancelled.then((_) {
+    cancelled = true;
+    if (ready.isCompleted) return;
+    receivePort.close();
+    isolate?.kill(priority: Isolate.immediate);
+    ready.completeError(const AiCancelledException());
+  });
 
   receivePort.listen((message) {
     if (message is _IsolateResult) {
@@ -79,7 +156,7 @@ Future<String> _runInIsolate(
         ready.complete(message.value!);
       }
       receivePort.close();
-      isolate.kill(priority: Isolate.immediate);
+      isolate?.kill(priority: Isolate.immediate);
     }
   });
 
@@ -92,8 +169,15 @@ Future<String> _runInIsolate(
       modelPath: modelPath,
       prompt: prompt,
       imagePath: imagePath,
+      maxTokens: maxTokens,
     ),
   );
+
+  if (cancelled && !ready.isCompleted) {
+    receivePort.close();
+    isolate.kill(priority: Isolate.immediate);
+    ready.completeError(const AiCancelledException());
+  }
 
   return ready.future;
 }
@@ -106,6 +190,7 @@ class _IsolateArgs {
     required this.modelPath,
     required this.prompt,
     required this.imagePath,
+    required this.maxTokens,
   });
 
   final SendPort sendPort;
@@ -114,6 +199,7 @@ class _IsolateArgs {
   final String? modelPath;
   final String prompt;
   final String imagePath;
+  final int? maxTokens;
 }
 
 class _IsolateResult {
@@ -132,6 +218,7 @@ Future<void> _isolateEntry(_IsolateArgs args) async {
       modelPath: args.modelPath,
       prompt: args.prompt,
       imagePath: args.imagePath,
+      maxTokens: args.maxTokens,
     );
     args.sendPort.send(_IsolateResult(value: raw));
   } catch (e, st) {
@@ -145,6 +232,7 @@ Future<String> _infer({
   required String? modelPath,
   required String prompt,
   required String imagePath,
+  required int? maxTokens,
 }) async {
   switch (backendKind) {
     case AiBackendKind.notImplemented:
@@ -157,6 +245,7 @@ Future<String> _infer({
         modelPath: modelPath,
         prompt: prompt,
         imagePath: imagePath,
+        maxTokens: maxTokens,
       );
   }
 }

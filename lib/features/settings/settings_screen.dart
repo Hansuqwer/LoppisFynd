@@ -12,6 +12,10 @@ import '../../services/sync/cloud_photo_sync_service.dart';
 import '../../services/sync/cloud_metadata_sync_service.dart';
 import '../../services/sync/background/background_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/navigation/spring_route.dart';
+import 'account_deletion_screen.dart';
+import 'privacy_screen.dart';
+import 'sync_status_screen.dart';
 
 import '../../gen/app_localizations.dart';
 
@@ -31,11 +35,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _sourcePathController = TextEditingController();
+  final _displayNameController = TextEditingController();
   String? _installError;
   bool _syncing = false;
   bool _cloudSyncing = false;
   bool _cloudPhotoSyncing = false;
   bool _modelDownloading = false;
+  bool _signingOut = false;
+  String? _lastDisplayName;
 
   static const _kSyncIntervalHours = 'market_sync_interval_hours';
   static const _kHighContrastEnabled = 'high_contrast_enabled';
@@ -49,8 +56,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _sourcePathController.dispose();
+    _displayNameController.dispose();
     super.dispose();
   }
+
+  String _displayNameKey(String userId) => 'profile_display_name_$userId';
 
   Future<void> _installFromPath() async {
     final modelManager = ref.read(modelManagerProvider);
@@ -163,6 +173,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _signOut() async {
+    if (_signingOut) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _signingOut = true);
+    try {
+      await Supabase.instance.client.auth.signOut();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.settingsSignedOut)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.settingsSignOutFailed('$e'))));
+    } finally {
+      if (mounted) setState(() => _signingOut = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
@@ -172,6 +202,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
     final l10n = AppLocalizations.of(context)!;
+    final session = ref
+        .watch(authSessionProvider)
+        .maybeWhen(data: (v) => v, orElse: () => null);
+    final email = session?.user.email;
+    final userId = session?.user.id;
 
     return SafeArea(
       child: ListView(
@@ -335,11 +370,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: AppSpacing.xs),
                 if (config.hasSupabase)
                   Text(
-                    Supabase.instance.client.auth.currentUser?.email == null
+                    email == null
                         ? l10n.settingsNotSignedIn
-                        : l10n.settingsSignedInAs(
-                            Supabase.instance.client.auth.currentUser!.email!,
-                          ),
+                        : l10n.settingsSignedInAs(email),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 const SizedBox(height: AppSpacing.md),
@@ -358,6 +391,224 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onPressed: _cloudPhotoSyncing ? null : _cloudPhotoSyncNow,
                   tone: GlassButtonTone.neutral,
                   icon: const Icon(Icons.photo_library_outlined),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          BentoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.settingsPrivacyTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n.settingsPrivacySubtitle,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                GlassButton(
+                  label: l10n.settingsOpenPrivacy,
+                  icon: const Icon(Icons.privacy_tip_rounded),
+                  onPressed: () {
+                    Navigator.of(
+                      context,
+                    ).push(SpringRoute(builder: (_) => const PrivacyScreen()));
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          if (config.hasSupabase)
+            BentoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.settingsAccountTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    email == null
+                        ? l10n.settingsNotSignedIn
+                        : l10n.settingsSignedInAs(email),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  if (email != null && userId != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    FutureBuilder<String?>(
+                      future: db.appSettingsDao.getString(
+                        _displayNameKey(userId),
+                      ),
+                      builder: (context, snapshot) {
+                        final current = snapshot.data;
+                        if (current != _lastDisplayName) {
+                          _lastDisplayName = current;
+                          _displayNameController.text = current ?? '';
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextField(
+                              controller: _displayNameController,
+                              textInputAction: TextInputAction.done,
+                              decoration: InputDecoration(
+                                labelText: l10n.settingsDisplayNameLabel,
+                                hintText: l10n.settingsDisplayNameHint,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            GlassButton(
+                              label: l10n.settingsSaveProfile,
+                              icon: const Icon(Icons.save_rounded),
+                              onPressed: () async {
+                                final name = _displayNameController.text.trim();
+                                final messenger = ScaffoldMessenger.of(context);
+                                await db.appSettingsDao.setString(
+                                  _displayNameKey(userId),
+                                  name.isEmpty ? null : name,
+                                );
+                                if (!mounted) return;
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.settingsProfileSaved),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlassButton(
+                          label: _signingOut
+                              ? l10n.settingsSigningOut
+                              : l10n.settingsSignOut,
+                          onPressed: email == null || _signingOut
+                              ? null
+                              : _signOut,
+                          icon: const Icon(Icons.logout_rounded),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: GlassButton(
+                          label: l10n.settingsDeleteAccount,
+                          tone: GlassButtonTone.neutral,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              SpringRoute(
+                                builder: (_) => const AccountDeletionScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.person_off_rounded),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+          if (config.hasSupabase)
+            BentoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.settingsSyncStatusTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    l10n.settingsSyncStatusSubtitle,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  GlassButton(
+                    label: l10n.settingsOpenSyncStatus,
+                    icon: const Icon(Icons.cloud_rounded),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        SpringRoute(builder: (_) => const SyncStatusScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          if (config.hasSupabase) const SizedBox(height: AppSpacing.lg),
+          BentoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.settingsAiTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                FutureBuilder<int?>(
+                  future: db.appSettingsDao.getInt(
+                    'ai_accuracy_mode_${userId ?? 'guest'}',
+                  ),
+                  builder: (context, snapshot) {
+                    final current = snapshot.data ?? 1;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.settingsAiModeLabel,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                        DropdownButton<int>(
+                          value: current,
+                          items: [
+                            DropdownMenuItem(
+                              value: 0,
+                              child: Text(l10n.settingsAiEco),
+                            ),
+                            DropdownMenuItem(
+                              value: 1,
+                              child: Text(l10n.settingsAiQuality),
+                            ),
+                          ],
+                          onChanged: (v) async {
+                            if (v == null) return;
+                            final messenger = ScaffoldMessenger.of(context);
+                            await db.appSettingsDao.setInt(
+                              'ai_accuracy_mode_${userId ?? 'guest'}',
+                              v,
+                            );
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(l10n.settingsAiModeSaved)),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

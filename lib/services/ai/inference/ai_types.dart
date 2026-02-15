@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 sealed class AiTask {
   const AiTask();
@@ -13,10 +14,15 @@ class BatchShelfTask extends AiTask {
 }
 
 class AiInferenceRequest {
-  const AiInferenceRequest({required this.task, required this.imageFile});
+  const AiInferenceRequest({
+    required this.task,
+    required this.imageFile,
+    this.maxTokens,
+  });
 
   final AiTask task;
   final File imageFile;
+  final int? maxTokens;
 }
 
 class AiSingleItemResult {
@@ -79,4 +85,24 @@ class AiConfidenceTooLowException implements Exception {
 
   @override
   String toString() => 'AiConfidenceTooLowException: $message';
+}
+
+class AiCancelToken {
+  bool _cancelled = false;
+  final _completer = Completer<void>();
+
+  bool get isCancelled => _cancelled;
+  Future<void> get cancelled => _completer.future;
+
+  void cancel() {
+    if (_cancelled) return;
+    _cancelled = true;
+    _completer.complete();
+  }
+}
+
+class AiCancelledException implements Exception {
+  const AiCancelledException();
+  @override
+  String toString() => 'AiCancelledException';
 }

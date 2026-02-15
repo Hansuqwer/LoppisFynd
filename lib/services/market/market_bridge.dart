@@ -28,6 +28,12 @@ class MarketBridge implements MarketDataSource {
 
   @override
   Future<MarketStats?> fetchMarketStats({required String query}) async {
+    final comps = await fetchComps(query: query);
+    return comps?.stats;
+  }
+
+  @override
+  Future<MarketComps?> fetchComps({required String query}) async {
     final now = _clock.now();
     final key = _key(query);
     if (key.isEmpty) return null;
@@ -38,12 +44,15 @@ class MarketBridge implements MarketDataSource {
       ttl: _ttl,
     );
     if (cached != null) {
-      return MarketStats(
+      final stats = MarketStats(
         count: cached.count,
         minSek: cached.minSek.round(),
         medianSek: cached.medianSek.round(),
         maxSek: cached.maxSek.round(),
       );
+
+      // Cache only stores stats; return empty comps payload.
+      return MarketComps(sales: const [], stats: stats);
     }
 
     final resp = await _tradera.searchEnded(searchWords: query);
@@ -71,6 +80,6 @@ class MarketBridge implements MarketDataSource {
       fetchedAt: now,
     );
 
-    return stats;
+    return MarketComps(sales: sales, stats: stats);
   }
 }

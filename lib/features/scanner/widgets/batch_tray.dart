@@ -49,10 +49,9 @@ class BatchTray extends StatelessWidget {
               Text(
                 '${items.length}',
                 style: AppTypography.metricsFrom(
-                  Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ) ??
-                      const TextStyle(fontWeight: FontWeight.w700),
+                  Theme.of(
+                    context,
+                  ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
