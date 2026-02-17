@@ -9,7 +9,6 @@ import '../../../core/database/app_database.dart';
 import '../../market/market_bridge.dart';
 import '../../market/tradera_client.dart';
 import '../sync_scheduler.dart';
-import '../../notifications/app_notifications.dart';
 
 const _taskName = 'market_sync';
 
@@ -31,7 +30,12 @@ class BackgroundSync {
   static Future<void> scheduleIfConfigured({required AppDatabase db}) async {
     if (!isSupported) return;
     final config = AppConfig.fromEnvironment();
-    if (!config.hasTraderaProxy) return;
+    if (!config.hasTraderaProxy) {
+      // Avoid leaving stale periodic work scheduled when the app is run without
+      // a Tradera proxy configuration (common when switching flavors/dev envs).
+      await Workmanager().cancelByUniqueName(_taskName);
+      return;
+    }
 
     final hours =
         (await db.appSettingsDao.getInt('market_sync_interval_hours')) ?? 6;
@@ -68,23 +72,8 @@ void callbackDispatcher() {
       final scheduler = SyncScheduler(db: db, market: market);
 
       await scheduler.syncOnce();
-
-      final notifications = await AppNotifications.initialize();
-      await notifications.showSyncDone(
-        title: 'Loppisfynd',
-        body: 'Market sync completed.',
-      );
       return true;
     } catch (_) {
-      try {
-        final notifications = await AppNotifications.initialize();
-        await notifications.showSyncDone(
-          title: 'Loppisfynd',
-          body: 'Market sync failed.',
-        );
-      } catch (e) {
-        debugPrint('Failed to show sync failure notification: $e');
-      }
       return true;
     } finally {
       await db.close();
