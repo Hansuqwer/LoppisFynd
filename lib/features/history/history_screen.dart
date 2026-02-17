@@ -18,6 +18,7 @@ import '../../services/location/location_service.dart';
 import '../../services/location/reverse_geocode_cache_service.dart';
 import '../../services/sync/cloud/entity_keys.dart';
 import 'widgets/haul_pins_map.dart';
+import 'widgets/coffee_cup_empty_state.dart';
 import 'history_filtering.dart';
 
 enum _PinFilter { all, profit, loss }
@@ -549,10 +550,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           if (hauls.isEmpty)
-                            EmptyState(
+                            CoffeeCupEmptyState(
                               title: l10n.historyEmptyTitle,
                               message: l10n.historyEmptyMessage,
-                              icon: Icons.shopping_bag_outlined,
                             )
                           else if (filteredHauls.isEmpty)
                             EmptyState(
