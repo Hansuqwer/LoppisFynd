@@ -84,7 +84,7 @@ Typography recommendation:
 4) Analyzer: Item Detail (Price Oscillator chart + Profit + Flip Factor)  
 5) Summary: Haul Summary & Analytics  
 6) History: Treasure Map + Haul list  
-7) Settings: Eco/Turbo, sync intervals, quota, Tradera link
+7) Settings: AI mode, sync intervals, quota, Tradera link
 
 ---
 
@@ -173,7 +173,7 @@ Deliverables:
 Deliverables:
 - Reverse geocoded haul naming
 - Map pins by profit, filters
-- Settings: Eco/Turbo (quantization/backend choice), sync interval, quota UI
+- Settings: AI mode (accuracy/performance), sync interval, quota UI
 - One-tap Tradera draft listing (if API supports)
 
 ---
