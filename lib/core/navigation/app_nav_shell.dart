@@ -14,6 +14,8 @@ import '../../core/app/providers.dart';
 import '../../shared/widgets/offline_banner.dart';
 import '../../features/analyzer/item_detail_screen.dart';
 import 'spring_route.dart';
+import '../../shared/widgets/atmospheric_background.dart';
+import '../../shared/widgets/capsule_nav_bar.dart';
 
 enum AppTab { dashboard, scanner, haul, history, profile }
 
@@ -39,14 +41,6 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     if (nextTab == _tab) return;
     setState(() => _tab = nextTab);
   }
-
-  String get _title => switch (_tab) {
-    AppTab.dashboard => AppLocalizations.of(context)!.tabHome,
-    AppTab.scanner => AppLocalizations.of(context)!.tabScan,
-    AppTab.haul => AppLocalizations.of(context)!.tabHaul,
-    AppTab.history => AppLocalizations.of(context)!.tabHistory,
-    AppTab.profile => AppLocalizations.of(context)!.tabProfile,
-  };
 
   @override
   void initState() {
@@ -120,45 +114,62 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
         .watch(isOnlineProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
     return Scaffold(
-      appBar: AppBar(title: Text(_title)),
-      body: Column(
+      extendBody: true,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          if (!isOnline)
-            OfflineBanner(message: AppLocalizations.of(context)!.bannerOffline),
-          Expanded(
-            child: switch (_tab) {
-              AppTab.dashboard => const DashboardScreen(),
-              AppTab.scanner => const ScannerScreen(),
-              AppTab.haul => const HaulScreen(),
-              AppTab.history => const HistoryScreen(),
-              AppTab.profile => const SettingsScreen(),
-            },
+          const AtmosphericBackground(),
+          Column(
+            children: [
+              if (!isOnline)
+                OfflineBanner(
+                  message: AppLocalizations.of(context)!.bannerOffline,
+                ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 108),
+                  child: switch (_tab) {
+                    AppTab.dashboard => const DashboardScreen(),
+                    AppTab.scanner => const ScannerScreen(),
+                    AppTab.haul => const HaulScreen(),
+                    AppTab.history => const HistoryScreen(),
+                    AppTab.profile => const SettingsScreen(),
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _setIndex,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(LucideIcons.layoutGrid),
-            label: AppLocalizations.of(context)!.tabHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.camera),
-            label: AppLocalizations.of(context)!.tabScan,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.shoppingBag),
-            label: AppLocalizations.of(context)!.tabHaul,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.map),
-            label: AppLocalizations.of(context)!.tabHistory,
-          ),
-          NavigationDestination(
-            icon: const Icon(LucideIcons.userCog),
-            label: AppLocalizations.of(context)!.tabProfile,
+          CapsuleNavBar(
+            selectedIndex: _index,
+            onSelected: _setIndex,
+            destinations: [
+              CapsuleNavDestination(
+                key: const Key('nav_dashboard'),
+                icon: LucideIcons.layoutGrid,
+                label: AppLocalizations.of(context)!.tabHome,
+              ),
+              CapsuleNavDestination(
+                key: const Key('nav_scanner'),
+                icon: LucideIcons.camera,
+                label: AppLocalizations.of(context)!.tabScan,
+                isPrimary: true,
+              ),
+              CapsuleNavDestination(
+                key: const Key('nav_haul'),
+                icon: LucideIcons.shoppingBag,
+                label: AppLocalizations.of(context)!.tabHaul,
+              ),
+              CapsuleNavDestination(
+                key: const Key('nav_history'),
+                icon: LucideIcons.map,
+                label: AppLocalizations.of(context)!.tabHistory,
+              ),
+              CapsuleNavDestination(
+                key: const Key('nav_profile'),
+                icon: LucideIcons.userCog,
+                label: AppLocalizations.of(context)!.tabProfile,
+              ),
+            ],
           ),
         ],
       ),

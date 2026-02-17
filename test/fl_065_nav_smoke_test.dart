@@ -65,33 +65,33 @@ void main() {
     );
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    final nav = find.byType(NavigationBar);
+    final nav = find.byKey(const Key('capsule_nav'));
     expect(nav, findsOneWidget);
 
     // Scanner
-    await tester.tap(find.text('Skanna'));
+    await tester.tap(find.byKey(const Key('nav_scanner')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Skanna'), findsWidgets);
+    expect(find.text('Snabbskanner'), findsWidgets);
 
     // Haul
-    await tester.tap(find.text('Fynd'));
+    await tester.tap(find.byKey(const Key('nav_haul')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Fynd'), findsWidgets);
+    expect(find.text('Aktuellt fynd'), findsWidgets);
 
     // History
-    await tester.tap(find.text('Historik'));
+    await tester.tap(find.byKey(const Key('nav_history')));
     await tester.pump(const Duration(milliseconds: 700));
     expect(find.text('Historik'), findsWidgets);
 
     // Profile
-    await tester.tap(find.text('Profil'));
+    await tester.tap(find.byKey(const Key('nav_profile')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Profil'), findsWidgets);
+    expect(find.text('Tillgänglighet'), findsWidgets);
 
     // Back home
-    await tester.tap(find.text('Hem'));
+    await tester.tap(find.byKey(const Key('nav_dashboard')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Hem'), findsWidgets);
+    expect(find.text('Jagarens tavla'), findsWidgets);
 
     // Dispose the widget tree and flush any pending Drift timers.
     await tester.pumpWidget(const SizedBox.shrink());

@@ -67,13 +67,12 @@ void main() {
 
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
-    expect(find.text('Hem'), findsAtLeastNWidgets(1));
-    expect(find.text('Skanna'), findsAtLeastNWidgets(1));
-    expect(find.text('Fynd'), findsAtLeastNWidgets(1));
-    expect(find.text('Historik'), findsAtLeastNWidgets(1));
-    expect(find.text('Profil'), findsAtLeastNWidgets(1));
+    expect(find.byKey(const Key('capsule_nav')), findsOneWidget);
+    expect(find.byKey(const Key('nav_dashboard')), findsOneWidget);
+    expect(find.byKey(const Key('nav_scanner')), findsOneWidget);
+    expect(find.byKey(const Key('nav_haul')), findsOneWidget);
+    expect(find.byKey(const Key('nav_history')), findsOneWidget);
+    expect(find.byKey(const Key('nav_profile')), findsOneWidget);
 
     // Dispose the widget tree and flush any pending Drift timers.
     await tester.pumpWidget(const SizedBox.shrink());
