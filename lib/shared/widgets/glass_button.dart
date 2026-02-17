@@ -80,23 +80,34 @@ class _GlassButtonState extends State<GlassButton> {
                     horizontal: AppSpacing.lg,
                     vertical: AppSpacing.sm,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.icon != null) ...[
-                        IconTheme(
-                          data: IconThemeData(color: fg, size: 18),
-                          child: widget.icon!,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                      ],
-                      Text(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final bounded = constraints.maxWidth.isFinite;
+                      final label = Text(
                         widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(
                           context,
                         ).textTheme.labelLarge?.copyWith(color: fg),
-                      ),
-                    ],
+                      );
+
+                      return Row(
+                        mainAxisSize: bounded
+                            ? MainAxisSize.max
+                            : MainAxisSize.min,
+                        children: [
+                          if (widget.icon != null) ...[
+                            IconTheme(
+                              data: IconThemeData(color: fg, size: 18),
+                              child: widget.icon!,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                          ],
+                          if (bounded) Expanded(child: label) else label,
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
