@@ -67,35 +67,151 @@ class ModelManager {
     await tmp.rename(target.path);
   }
 
-  Future<void> downloadFromUrl({required Uri url}) async {
+  Future<void> downloadFromUrl({
+    required Uri url,
+    void Function(int received, int? total)? onProgress,
+    bool Function()? isCancelled,
+  }) async {
     final target = await modelFile();
     final tmp = File('${target.path}.partial');
 
-    if (await tmp.exists()) {
-      await tmp.delete();
-    }
-
     final client = http.Client();
     try {
-      final resp = await client.send(http.Request('GET', url));
-      if (resp.statusCode != 200) {
-        throw HttpException('HTTP ${resp.statusCode} downloading model');
+      if (isCancelled?.call() == true) {
+        throw const _ModelDownloadCancelledException();
       }
 
-      final sink = tmp.openWrite();
+      var existingBytes = 0;
+      if (await tmp.exists()) {
+        existingBytes = await tmp.length();
+      }
+
+      http.StreamedResponse resp;
+      FileMode sinkMode;
+      var received = 0;
+      int? total;
+
+      if (existingBytes > 0) {
+        final resumeReq = http.Request('GET', url);
+        resumeReq.headers['Range'] = 'bytes=$existingBytes-';
+        resp = await client.send(resumeReq);
+
+        if (resp.statusCode == 206) {
+          sinkMode = FileMode.append;
+          received = existingBytes;
+
+          final parsedTotal = _parseTotalFromContentRange(
+            _getHeader(resp.headers, 'content-range'),
+          );
+          final respLen = resp.contentLength;
+          total =
+              parsedTotal ??
+              ((respLen != null && respLen >= 0)
+                  ? (existingBytes + respLen)
+                  : null);
+        } else if (resp.statusCode == 200) {
+          // Server ignored Range; restart safely from scratch.
+          if (await tmp.exists()) {
+            await tmp.delete();
+          }
+          existingBytes = 0;
+          sinkMode = FileMode.write;
+          received = 0;
+
+          final respLen = resp.contentLength;
+          total = (respLen != null && respLen >= 0) ? respLen : null;
+        } else if (resp.statusCode == 416) {
+          // Partial is out of sync with remote; restart safely.
+          if (await tmp.exists()) {
+            await tmp.delete();
+          }
+          existingBytes = 0;
+
+          if (isCancelled?.call() == true) {
+            throw const _ModelDownloadCancelledException();
+          }
+
+          resp = await client.send(http.Request('GET', url));
+          if (resp.statusCode != 200) {
+            throw HttpException('HTTP ${resp.statusCode} downloading model');
+          }
+
+          sinkMode = FileMode.write;
+          received = 0;
+          final respLen = resp.contentLength;
+          total = (respLen != null && respLen >= 0) ? respLen : null;
+        } else {
+          throw HttpException(
+            'HTTP ${resp.statusCode} downloading model (resume attempt)',
+          );
+        }
+      } else {
+        resp = await client.send(http.Request('GET', url));
+        if (resp.statusCode != 200) {
+          throw HttpException('HTTP ${resp.statusCode} downloading model');
+        }
+
+        sinkMode = FileMode.write;
+        received = 0;
+        final respLen = resp.contentLength;
+        total = (respLen != null && respLen >= 0) ? respLen : null;
+      }
+
+      onProgress?.call(received, total);
+
+      final sink = tmp.openWrite(mode: sinkMode);
       try {
-        await resp.stream.pipe(sink);
+        await sink.addStream(
+          resp.stream.map((chunk) {
+            if (isCancelled?.call() == true) {
+              throw const _ModelDownloadCancelledException();
+            }
+            received += chunk.length;
+            onProgress?.call(received, total);
+            return chunk;
+          }),
+        );
       } finally {
         await sink.close();
+      }
+
+      if (isCancelled?.call() == true) {
+        throw const _ModelDownloadCancelledException();
       }
 
       if (await target.exists()) {
         await target.delete();
       }
       await tmp.rename(target.path);
+    } catch (_) {
+      try {
+        if (await tmp.exists()) {
+          await tmp.delete();
+        }
+      } catch (_) {
+        // Best-effort cleanup; keep original error.
+      }
+      rethrow;
     } finally {
       client.close();
     }
+  }
+
+  static String? _getHeader(Map<String, String> headers, String name) {
+    final target = name.toLowerCase();
+    for (final entry in headers.entries) {
+      if (entry.key.toLowerCase() == target) return entry.value;
+    }
+    return null;
+  }
+
+  static int? _parseTotalFromContentRange(String? value) {
+    if (value == null) return null;
+    final match = RegExp(r'\/(\d+|\*)\s*$').firstMatch(value.trim());
+    if (match == null) return null;
+    final raw = match.group(1);
+    if (raw == null || raw == '*') return null;
+    return int.tryParse(raw);
   }
 
   Future<void> deleteInstalled() async {
@@ -104,4 +220,11 @@ class ModelManager {
       await target.delete();
     }
   }
+}
+
+class _ModelDownloadCancelledException implements Exception {
+  const _ModelDownloadCancelledException();
+
+  @override
+  String toString() => 'Model download cancelled';
 }
