@@ -29,3 +29,19 @@ class FakeAppSettingsDao extends AppSettingsDao {
 - Keep `${target.path}.partial` if the app crashes mid-download (no delete-at-start).
 - On next `downloadFromUrl()`, if partial length > 0, try `Range: bytes=<existing>-` and append on `206` (total from `Content-Range` when available).
 - If resume is unsupported/out-of-sync (`200` or `416`), delete partial and restart a full download; still rename to target only after the full payload is present.
+
+## Final commit list (2026-02-17)
+
+a8dbbad chore(sisyphus): add ui-ux overhaul notes and handoff
+ef640e6 chore(cleanup): Remove "eco/turbo sync" placeholders
+975212f test(integration): Verify sync, dev mode, and download flow
+5fb0536 feat(ui): Hide sync toggles from regular settings
+1f35f19 feat(ui): tune existing history empty-state visuals
+62b27ef feat(ui): tune existing scanner overlay visuals
+08c6eeb feat(ui): Overhaul Dashboard with Bento Grid and Preflight Card
+e5bcf79 feat(ui): make GlassButton handle constrained widths
+53d9b14 feat(ui): polish existing app shell glassmorphism
+2cbf05b feat(ui): Implement ModelDownloadCard (Liquid Progress)
+2ff4bde feat(model): add resumable model downloads with progress/cancel
+af7c39a feat(sync): Enable market and cloud sync by default
+0c9b460 feat(tokens): Update design tokens and add saturationRed
