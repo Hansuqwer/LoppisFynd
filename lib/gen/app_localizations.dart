@@ -1795,6 +1795,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'/path/to/gemma_vision.task'**
   String get settingsInstallFromFilePathHint;
+
+  /// No description provided for @loginAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Loppisfynd'**
+  String get loginAppName;
+
+  /// No description provided for @loginTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan. Decide. Flip.'**
+  String get loginTagline;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// No description provided for @loginEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get loginEmailLabel;
+
+  /// No description provided for @loginPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get loginPasswordLabel;
+
+  /// No description provided for @loginWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get loginWorking;
+
+  /// No description provided for @loginSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginSignIn;
+
+  /// No description provided for @loginSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get loginSignUp;
+
+  /// No description provided for @loginAccountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created. You can sign in now.'**
+  String get loginAccountCreated;
+
+  /// No description provided for @loginOfflineFirstNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline-first: scanning works without internet. Market data requires sync.'**
+  String get loginOfflineFirstNote;
+
+  /// No description provided for @loginWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get loginWelcome;
+
+  /// No description provided for @loginContinueAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as {identity}'**
+  String loginContinueAs(Object identity);
+
+  /// No description provided for @loginForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get loginForgotPassword;
+
+  /// No description provided for @loginSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get loginSendCode;
+
+  /// No description provided for @loginVerifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get loginVerifyCode;
+
+  /// No description provided for @loginCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get loginCodeLabel;
+
+  /// No description provided for @loginErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get loginErrorGeneric;
 }
 
 class _AppLocalizationsDelegate

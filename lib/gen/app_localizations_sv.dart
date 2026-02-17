@@ -940,4 +940,58 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsInstallFromFilePathHint => '/path/to/gemma_vision.task';
+
+  @override
+  String get loginAppName => 'Loppisfynd';
+
+  @override
+  String get loginTagline => 'Skanna. Bestäm. Flippa.';
+
+  @override
+  String get loginTitle => 'Logga in';
+
+  @override
+  String get loginEmailLabel => 'Användarnamn';
+
+  @override
+  String get loginPasswordLabel => 'Lösenord';
+
+  @override
+  String get loginWorking => 'Arbetar…';
+
+  @override
+  String get loginSignIn => 'Logga in';
+
+  @override
+  String get loginSignUp => 'Skapa konto';
+
+  @override
+  String get loginAccountCreated => 'Konto skapat. Du kan logga in nu.';
+
+  @override
+  String get loginOfflineFirstNote =>
+      'Offline-först: skanning fungerar utan internet. Marknadsdata kräver synk.';
+
+  @override
+  String get loginWelcome => 'Välkommen';
+
+  @override
+  String loginContinueAs(Object identity) {
+    return 'Fortsätt som $identity';
+  }
+
+  @override
+  String get loginForgotPassword => 'Glömt lösenord?';
+
+  @override
+  String get loginSendCode => 'Skicka kod';
+
+  @override
+  String get loginVerifyCode => 'Verifiera kod';
+
+  @override
+  String get loginCodeLabel => 'Kod';
+
+  @override
+  String get loginErrorGeneric => 'Något gick fel.';
 }

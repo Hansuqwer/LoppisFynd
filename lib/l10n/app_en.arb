@@ -341,5 +341,29 @@
   "settingsDownloading": "Downloading…",
   "settingsDownloadModel": "Download model",
   "settingsInstallFromFilePathLabel": "Install from file path",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task"
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+
+  "loginAppName": "Loppisfynd",
+  "loginTagline": "Scan. Decide. Flip.",
+  "loginTitle": "Sign in",
+  "loginEmailLabel": "Username",
+  "loginPasswordLabel": "Password",
+  "loginWorking": "Working…",
+  "loginSignIn": "Sign in",
+  "loginSignUp": "Sign up",
+  "loginAccountCreated": "Account created. You can sign in now.",
+  "loginOfflineFirstNote": "Offline-first: scanning works without internet. Market data requires sync.",
+
+  "loginWelcome": "Welcome",
+  "loginContinueAs": "Continue as {identity}",
+  "@loginContinueAs": {
+    "placeholders": {
+      "identity": {}
+    }
+  },
+  "loginForgotPassword": "Forgot password?",
+  "loginSendCode": "Send code",
+  "loginVerifyCode": "Verify code",
+  "loginCodeLabel": "Code",
+  "loginErrorGeneric": "Something went wrong."
 }

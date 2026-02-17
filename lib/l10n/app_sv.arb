@@ -342,5 +342,29 @@
   "settingsDownloading": "Laddar ner…",
   "settingsDownloadModel": "Ladda ner modell",
   "settingsInstallFromFilePathLabel": "Installera från filsökväg",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task"
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+
+  "loginAppName": "Loppisfynd",
+  "loginTagline": "Skanna. Bestäm. Flippa.",
+  "loginTitle": "Logga in",
+  "loginEmailLabel": "Användarnamn",
+  "loginPasswordLabel": "Lösenord",
+  "loginWorking": "Arbetar…",
+  "loginSignIn": "Logga in",
+  "loginSignUp": "Skapa konto",
+  "loginAccountCreated": "Konto skapat. Du kan logga in nu.",
+  "loginOfflineFirstNote": "Offline-först: skanning fungerar utan internet. Marknadsdata kräver synk.",
+
+  "loginWelcome": "Välkommen",
+  "loginContinueAs": "Fortsätt som {identity}",
+  "@loginContinueAs": {
+    "placeholders": {
+      "identity": {}
+    }
+  },
+  "loginForgotPassword": "Glömt lösenord?",
+  "loginSendCode": "Skicka kod",
+  "loginVerifyCode": "Verifiera kod",
+  "loginCodeLabel": "Kod",
+  "loginErrorGeneric": "Något gick fel."
 }

@@ -940,4 +940,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsInstallFromFilePathHint => '/path/to/gemma_vision.task';
+
+  @override
+  String get loginAppName => 'Loppisfynd';
+
+  @override
+  String get loginTagline => 'Scan. Decide. Flip.';
+
+  @override
+  String get loginTitle => 'Sign in';
+
+  @override
+  String get loginEmailLabel => 'Username';
+
+  @override
+  String get loginPasswordLabel => 'Password';
+
+  @override
+  String get loginWorking => 'Working…';
+
+  @override
+  String get loginSignIn => 'Sign in';
+
+  @override
+  String get loginSignUp => 'Sign up';
+
+  @override
+  String get loginAccountCreated => 'Account created. You can sign in now.';
+
+  @override
+  String get loginOfflineFirstNote =>
+      'Offline-first: scanning works without internet. Market data requires sync.';
+
+  @override
+  String get loginWelcome => 'Welcome';
+
+  @override
+  String loginContinueAs(Object identity) {
+    return 'Continue as $identity';
+  }
+
+  @override
+  String get loginForgotPassword => 'Forgot password?';
+
+  @override
+  String get loginSendCode => 'Send code';
+
+  @override
+  String get loginVerifyCode => 'Verify code';
+
+  @override
+  String get loginCodeLabel => 'Code';
+
+  @override
+  String get loginErrorGeneric => 'Something went wrong.';
 }
