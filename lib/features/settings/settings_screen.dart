@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/app/providers.dart';
 import '../../core/tokens/app_tokens.dart';
@@ -44,8 +47,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _signingOut = false;
   String? _lastDisplayName;
 
+  static const _kDevModeEnabled = 'dev_mode_enabled_v1';
+  bool _devModeEnabled = false;
+  int _devModeTaps = 0;
+  Timer? _devModeTapTimer;
+  PackageInfo? _packageInfo;
+
   static const _kSyncIntervalHours = 'market_sync_interval_hours';
   static const _kHighContrastEnabled = 'high_contrast_enabled';
+
+  @override
+  void initState() {
+    super.initState();
+
+    () async {
+      final db = ref.read(appDatabaseProvider);
+      final enabled = (await db.appSettingsDao.getInt(_kDevModeEnabled)) == 1;
+      PackageInfo? info;
+      try {
+        info = await PackageInfo.fromPlatform();
+      } catch (_) {
+        // Platform channels may be unavailable in widget tests.
+        info = null;
+      }
+      if (!mounted) return;
+      setState(() {
+        _devModeEnabled = enabled;
+        _packageInfo = info;
+      });
+    }();
+  }
 
   Future<_ModelInfo> _loadModelInfo(ModelManager modelManager) async {
     final state = await modelManager.state();
@@ -55,9 +86,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   void dispose() {
+    _devModeTapTimer?.cancel();
     _sourcePathController.dispose();
     _displayNameController.dispose();
     super.dispose();
+  }
+
+  void _handleVersionTap() {
+    _devModeTapTimer?.cancel();
+    _devModeTapTimer = Timer(const Duration(milliseconds: 1200), () {
+      _devModeTaps = 0;
+    });
+
+    _devModeTaps++;
+    if (_devModeTaps < 7) return;
+    _devModeTaps = 0;
+
+    () async {
+      final db = ref.read(appDatabaseProvider);
+      final next = !_devModeEnabled;
+      await db.appSettingsDao.setInt(_kDevModeEnabled, next ? 1 : 0);
+      if (!mounted) return;
+      setState(() => _devModeEnabled = next);
+      try {
+        await HapticFeedback.heavyImpact();
+      } catch (_) {
+        // No-op when platform haptics are unavailable.
+      }
+    }();
   }
 
   String _displayNameKey(String userId) => 'profile_display_name_$userId';
@@ -242,159 +298,165 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          BentoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.settingsMarketSyncTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  config.hasTraderaProxy
-                      ? l10n.settingsTraderaProxyConfigured
-                      : l10n.settingsTraderaProxyNotConfigured,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  l10n.settingsTraderaProxyRunWith(
-                    '--dart-define=TRADERA_PROXY_URL=https://<project>.supabase.co/functions/v1/tradera-proxy',
-                  ),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                FutureBuilder<int?>(
-                  future: db.appSettingsDao.getInt(_kSyncIntervalHours),
-                  builder: (context, snapshot) {
-                    final current = snapshot.data ?? 6;
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.settingsBackgroundInterval,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                        DropdownButton<int>(
-                          value: current,
-                          items: [
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text(l10n.commonOff),
-                            ),
-                            DropdownMenuItem(
-                              value: 1,
-                              child: Text(l10n.settingsInterval1h),
-                            ),
-                            DropdownMenuItem(
-                              value: 6,
-                              child: Text(l10n.settingsInterval6h),
-                            ),
-                            DropdownMenuItem(
-                              value: 24,
-                              child: Text(l10n.settingsInterval24h),
-                            ),
-                          ],
-                          onChanged: !config.hasTraderaProxy
-                              ? null
-                              : (v) async {
-                                  if (v == null) return;
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  await db.appSettingsDao.setInt(
-                                    _kSyncIntervalHours,
-                                    v,
-                                  );
-                                  await BackgroundSync.scheduleIfConfigured(
-                                    db: db,
-                                  );
-                                  if (!mounted) return;
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        l10n.settingsSavedSyncInterval,
-                                      ),
-                                    ),
-                                  );
-                                  setState(() {});
-                                },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                FutureBuilder<int?>(
-                  future: db.syncQuotasDao.getUsed(_todayKey()),
-                  builder: (context, snapshot) {
-                    final used = snapshot.data;
-                    return Text(
-                      used == null
-                          ? l10n.settingsQuotaUnknown
-                          : l10n.settingsQuotaUsedToday(used),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    );
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                GlassButton(
-                  label: _syncing ? l10n.settingsSyncing : l10n.settingsSyncNow,
-                  onPressed: _syncing ? null : _syncNow,
-                  icon: const Icon(Icons.sync_rounded),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          BentoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.settingsCloudSyncTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  config.hasSupabase
-                      ? l10n.settingsSupabaseConfigured
-                      : l10n.settingsSupabaseNotConfigured,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                if (config.hasSupabase)
+          if (_devModeEnabled) ...[
+            const SizedBox(height: AppSpacing.lg),
+            BentoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    email == null
-                        ? l10n.settingsNotSignedIn
-                        : l10n.settingsSignedInAs(email),
+                    l10n.settingsMarketSyncTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    config.hasTraderaProxy
+                        ? l10n.settingsTraderaProxyConfigured
+                        : l10n.settingsTraderaProxyNotConfigured,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    l10n.settingsTraderaProxyRunWith(
+                      '--dart-define=TRADERA_PROXY_URL=https://<project>.supabase.co/functions/v1/tradera-proxy',
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                const SizedBox(height: AppSpacing.md),
-                GlassButton(
-                  label: _cloudSyncing
-                      ? l10n.settingsSyncing
-                      : l10n.settingsSyncMetadata,
-                  onPressed: _cloudSyncing ? null : _cloudSyncNow,
-                  icon: const Icon(Icons.cloud_done_rounded),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                GlassButton(
-                  label: _cloudPhotoSyncing
-                      ? l10n.settingsSyncing
-                      : l10n.settingsSyncPhotos,
-                  onPressed: _cloudPhotoSyncing ? null : _cloudPhotoSyncNow,
-                  tone: GlassButtonTone.neutral,
-                  icon: const Icon(Icons.photo_library_outlined),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  FutureBuilder<int?>(
+                    future: db.appSettingsDao.getInt(_kSyncIntervalHours),
+                    builder: (context, snapshot) {
+                      final current = snapshot.data ?? 6;
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.settingsBackgroundInterval,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          DropdownButton<int>(
+                            value: current,
+                            items: [
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text(l10n.commonOff),
+                              ),
+                              DropdownMenuItem(
+                                value: 1,
+                                child: Text(l10n.settingsInterval1h),
+                              ),
+                              DropdownMenuItem(
+                                value: 6,
+                                child: Text(l10n.settingsInterval6h),
+                              ),
+                              DropdownMenuItem(
+                                value: 24,
+                                child: Text(l10n.settingsInterval24h),
+                              ),
+                            ],
+                            onChanged: !config.hasTraderaProxy
+                                ? null
+                                : (v) async {
+                                    if (v == null) return;
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    await db.appSettingsDao.setInt(
+                                      _kSyncIntervalHours,
+                                      v,
+                                    );
+                                    await BackgroundSync.scheduleIfConfigured(
+                                      db: db,
+                                    );
+                                    if (!mounted) return;
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          l10n.settingsSavedSyncInterval,
+                                        ),
+                                      ),
+                                    );
+                                    setState(() {});
+                                  },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  FutureBuilder<int?>(
+                    future: db.syncQuotasDao.getUsed(_todayKey()),
+                    builder: (context, snapshot) {
+                      final used = snapshot.data;
+                      return Text(
+                        used == null
+                            ? l10n.settingsQuotaUnknown
+                            : l10n.settingsQuotaUsedToday(used),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  GlassButton(
+                    label: _syncing
+                        ? l10n.settingsSyncing
+                        : l10n.settingsSyncNow,
+                    onPressed: _syncing ? null : _syncNow,
+                    icon: const Icon(Icons.sync_rounded),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
+          if (_devModeEnabled) ...[
+            const SizedBox(height: AppSpacing.lg),
+            BentoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.settingsCloudSyncTitle,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    config.hasSupabase
+                        ? l10n.settingsSupabaseConfigured
+                        : l10n.settingsSupabaseNotConfigured,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  if (config.hasSupabase)
+                    Text(
+                      email == null
+                          ? l10n.settingsNotSignedIn
+                          : l10n.settingsSignedInAs(email),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  const SizedBox(height: AppSpacing.md),
+                  GlassButton(
+                    label: _cloudSyncing
+                        ? l10n.settingsSyncing
+                        : l10n.settingsSyncMetadata,
+                    onPressed: _cloudSyncing ? null : _cloudSyncNow,
+                    icon: const Icon(Icons.cloud_done_rounded),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  GlassButton(
+                    label: _cloudPhotoSyncing
+                        ? l10n.settingsSyncing
+                        : l10n.settingsSyncPhotos,
+                    onPressed: _cloudPhotoSyncing ? null : _cloudPhotoSyncNow,
+                    tone: GlassButtonTone.neutral,
+                    icon: const Icon(Icons.photo_library_outlined),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           BentoCard(
             child: Column(
@@ -637,65 +699,122 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? l10n.settingsModelInstalled(info.state.bytes ?? 0)
                           : l10n.settingsModelNotInstalled,
                     ),
-                    if (info != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        l10n.settingsModelExpectedPath(info.file.path),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    if (config.hasGemmaModelUrl) ...[
-                      GlassButton(
-                        label: _modelDownloading
-                            ? l10n.settingsDownloading
-                            : l10n.settingsDownloadModel,
-                        onPressed: _modelDownloading ? null : _downloadModel,
-                        icon: const Icon(Icons.cloud_download_rounded),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ],
-                    TextField(
-                      controller: _sourcePathController,
-                      decoration: InputDecoration(
-                        labelText: l10n.settingsInstallFromFilePathLabel,
-                        hintText: l10n.settingsInstallFromFilePathHint,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        GlassButton(
-                          label: l10n.commonInstall,
-                          onPressed: _installFromPath,
-                          icon: const Icon(Icons.download_rounded),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        GlassButton(
-                          label: l10n.commonDelete,
-                          tone: GlassButtonTone.neutral,
-                          onPressed: () async {
-                            await modelManager.deleteInstalled();
-                            if (!mounted) return;
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.delete_outline_rounded),
+                    if (_devModeEnabled) ...[
+                      if (info != null) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          l10n.settingsModelExpectedPath(info.file.path),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
-                    ),
-                    if (_installError != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        _installError!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primaryAction,
+                      const SizedBox(height: AppSpacing.md),
+                      if (config.hasGemmaModelUrl) ...[
+                        GlassButton(
+                          label: _modelDownloading
+                              ? l10n.settingsDownloading
+                              : l10n.settingsDownloadModel,
+                          onPressed: _modelDownloading ? null : _downloadModel,
+                          icon: const Icon(Icons.cloud_download_rounded),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      TextField(
+                        controller: _sourcePathController,
+                        decoration: InputDecoration(
+                          labelText: l10n.settingsInstallFromFilePathLabel,
+                          hintText: l10n.settingsInstallFromFilePathHint,
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          GlassButton(
+                            label: l10n.commonInstall,
+                            onPressed: _installFromPath,
+                            icon: const Icon(Icons.download_rounded),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          GlassButton(
+                            label: l10n.commonDelete,
+                            tone: GlassButtonTone.neutral,
+                            onPressed: () async {
+                              await modelManager.deleteInstalled();
+                              if (!mounted) return;
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.delete_outline_rounded),
+                          ),
+                        ],
+                      ),
+                      if (_installError != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          _installError!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.primaryAction),
+                        ),
+                      ],
                     ],
                   ],
                 ),
               );
             },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          BentoCard(
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.appTitle,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      GestureDetector(
+                        onTap: _handleVersionTap,
+                        child: Text(
+                          () {
+                            final info = _packageInfo;
+                            if (info == null) return l10n.settingsModelChecking;
+                            return info.version;
+                          }(),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.inkDeep.withValues(
+                                  alpha: 0.55,
+                                ),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_devModeEnabled)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.inkDeep.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: AppColors.borderSubtle),
+                    ),
+                    child: Icon(
+                      Icons.code_rounded,
+                      size: 16,
+                      color: AppColors.inkDeep.withValues(alpha: 0.75),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

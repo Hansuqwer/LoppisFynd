@@ -41,14 +41,23 @@ class SyncStatusScreen extends ConsumerWidget {
                     isOnline ? l10n.syncStatusOnline : l10n.syncStatusOffline,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  GlassButton(
-                    label: l10n.syncStatusSyncNow,
-                    icon: const Icon(Icons.sync_rounded),
-                    onPressed: () {
-                      ref
-                          .read(cloudSyncCoordinatorProvider)
-                          .syncIfNeeded(isOnline: isOnline, force: true);
+                  FutureBuilder<int?>(
+                    future: db.appSettingsDao.getInt('dev_mode_enabled_v1'),
+                    builder: (context, snapshot) {
+                      final isDev = (snapshot.data ?? 0) == 1;
+                      if (!isDev) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.md),
+                        child: GlassButton(
+                          label: l10n.syncStatusSyncNow,
+                          icon: const Icon(Icons.sync_rounded),
+                          onPressed: () {
+                            ref
+                                .read(cloudSyncCoordinatorProvider)
+                                .syncIfNeeded(isOnline: isOnline, force: true);
+                          },
+                        ),
+                      );
                     },
                   ),
                 ],
