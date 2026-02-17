@@ -9,6 +9,7 @@ abstract final class AppColors {
   static const copperOak = Color(0xFF935233);
   static const atmosphericFog = Color(0xFF5B6C8F);
   static const dopamineRed = Color(0xFFFF3131);
+  static const saturationRed = dopamineRed;
   static const neonPink = Color(0xFFFF1493);
   static const electricBlue = Color(0xFF00E5FF);
 
