@@ -7,10 +7,13 @@ import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
+import '../../features/model_manager/widgets/model_download_card.dart';
 import '../../gen/app_localizations.dart';
 import '../summary/haul_summary_screen.dart';
 import '../drafts/drafts_screen.dart';
 import '../drafts/draft_editor_screen.dart';
+import '../../core/config/app_config.dart';
+import '../../services/ai/model_manager.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -22,111 +25,421 @@ class DashboardScreen extends ConsumerWidget {
     final defaultHaulId = ref.watch(defaultHaulIdProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          BentoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.dashboardTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(l10n.dashboardSubtitle),
-              ],
-            ),
-          ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.08, end: 0),
-          const SizedBox(height: AppSpacing.lg),
-          GlassButton(
-            label: l10n.dashboardQuickScan,
-            icon: const Icon(Icons.camera_alt_rounded),
-            onPressed: () {
-              // Switch to Scan tab via the deep-link skeleton provider.
-              ref.read(deepLinkTabIndexProvider.notifier).state = 1;
-            },
-          ).animate().fadeIn(duration: 320.ms).slideY(begin: 0.06, end: 0),
-          const SizedBox(height: AppSpacing.sm),
-          GlassButton(
-            label: l10n.dashboardHaulSummary,
-            tone: GlassButtonTone.neutral,
-            icon: const Icon(Icons.assessment_rounded),
-            onPressed: () {
-              Navigator.of(context).push(
-                SpringRoute(
-                  builder: (_) => HaulSummaryScreen(haulId: defaultHaulId),
-                ),
-              );
-            },
-          ).animate().fadeIn(duration: 360.ms).slideY(begin: 0.06, end: 0),
-          const SizedBox(height: AppSpacing.lg),
-          StreamBuilder(
-            stream: db.draftListingsDao.watchAllForUser(userId: userId),
-            builder: (context, snapshot) {
-              final rows = snapshot.data ?? const [];
-              final shown = rows.length > 3 ? rows.take(3).toList() : rows;
+    final width = MediaQuery.sizeOf(context).width;
+    final twoUp = width >= 380;
 
-              return BentoCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.dashboardDraftsTitle,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.dashboardTitle,
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.7,
+              ),
+            ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.08, end: 0),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l10n.dashboardSubtitle,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.inkDeep.withValues(alpha: 0.72),
+              ),
+            ).animate().fadeIn(duration: 310.ms).slideY(begin: 0.08, end: 0),
+            const SizedBox(height: AppSpacing.lg),
+            const _ModelPreflightCard()
+                .animate()
+                .fadeIn(duration: 340.ms)
+                .slideY(begin: 0.06, end: 0),
+            const SizedBox(height: AppSpacing.md),
+
+            // Predictive hero action: Start Scanner.
+            BentoCard(
+              backgroundColor: AppColors.glassFill,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              onTap: () {
+                ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+              },
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.atmosphericFog.withValues(alpha: 0.10),
+                            AppColors.cloudDancer.withValues(alpha: 0.0),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              SpringRoute(builder: (_) => const DraftsScreen()),
-                            );
-                          },
-                          child: Text(l10n.dashboardSeeAll),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    if (rows.isEmpty)
+                  ),
+                  Positioned(
+                    right: -10,
+                    bottom: -12,
+                    child: Icon(
+                      Icons.qr_code_scanner_rounded,
+                      size: 150,
+                      color: AppColors.inkDeep.withValues(alpha: 0.06),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        l10n.dashboardNoDraftsYet,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      )
-                    else
-                      ...shown.map(
-                        (row) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                          child: GlassButton(
+                        l10n.dashboardQuickScan,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.scannerSubtitle,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.inkDeep.withValues(alpha: 0.68),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        onPressed: () {
+                          ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.inkDeep,
+                          foregroundColor: AppColors.cloudDancer,
+                        ),
+                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                        label: Text(l10n.dashboardQuickScan),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 360.ms).slideY(begin: 0.06, end: 0),
+            const SizedBox(height: AppSpacing.md),
+
+            if (twoUp)
+              Row(
+                children: [
+                  Expanded(
+                    child: BentoCard(
+                      backgroundColor: AppColors.glassFill,
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.dashboardHaulSummary,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.haulTitle,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          GlassButton(
+                            label: l10n.dashboardHaulSummary,
                             tone: GlassButtonTone.neutral,
-                            icon: const Icon(Icons.edit_note_rounded),
-                            label: (row.draft.title?.trim().isNotEmpty ?? false)
-                                ? row.draft.title!.trim()
-                                : l10n.dashboardUntitledDraft,
+                            icon: const Icon(Icons.assessment_rounded),
                             onPressed: () {
                               Navigator.of(context).push(
                                 SpringRoute(
-                                  builder: (_) => DraftEditorScreen(
-                                    scanItemId: row.item.id,
-                                  ),
+                                  builder: (_) =>
+                                      HaulSummaryScreen(haulId: defaultHaulId),
                                 ),
                               );
                             },
                           ),
-                        ),
+                        ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _DraftsMiniCard(dbUserId: userId)),
+                ],
+              )
+            else ...[
+              BentoCard(
+                backgroundColor: AppColors.glassFill,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.dashboardHaulSummary,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            l10n.haulTitle,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    GlassButton(
+                      label: l10n.dashboardHaulSummary,
+                      tone: GlassButtonTone.neutral,
+                      icon: const Icon(Icons.assessment_rounded),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          SpringRoute(
+                            builder: (_) =>
+                                HaulSummaryScreen(haulId: defaultHaulId),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
-              );
-            },
-          ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.06, end: 0),
-        ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _DraftsMiniCard(dbUserId: userId),
+            ],
+            const SizedBox(height: AppSpacing.md),
+
+            StreamBuilder(
+              stream: db.draftListingsDao.watchAllForUser(userId: userId),
+              builder: (context, snapshot) {
+                final rows = snapshot.data ?? const [];
+                final shown = rows.length > 3 ? rows.take(3).toList() : rows;
+
+                return BentoCard(
+                  backgroundColor: AppColors.glassFill,
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.dashboardDraftsTitle,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                SpringRoute(
+                                  builder: (_) => const DraftsScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(l10n.dashboardSeeAll),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (rows.isEmpty)
+                        Text(
+                          l10n.dashboardNoDraftsYet,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      else
+                        ...shown.map(
+                          (row) => Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.xs,
+                            ),
+                            child: GlassButton(
+                              tone: GlassButtonTone.neutral,
+                              icon: const Icon(Icons.edit_note_rounded),
+                              label:
+                                  (row.draft.title?.trim().isNotEmpty ?? false)
+                                  ? row.draft.title!.trim()
+                                  : l10n.dashboardUntitledDraft,
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  SpringRoute(
+                                    builder: (_) => DraftEditorScreen(
+                                      scanItemId: row.item.id,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.dashboardTitle,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: AppColors.inkDeep.withValues(alpha: 0.34),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.06, end: 0),
+            const SizedBox(height: AppSpacing.xxxl),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _DraftsMiniCard extends ConsumerWidget {
+  const _DraftsMiniCard({required this.dbUserId});
+
+  final String? dbUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.watch(appDatabaseProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return StreamBuilder(
+      stream: db.draftListingsDao.watchAllForUser(userId: dbUserId),
+      builder: (context, snapshot) {
+        final rows = snapshot.data ?? const [];
+        return BentoCard(
+          backgroundColor: AppColors.glassFill,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.dashboardDraftsTitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                rows.isEmpty
+                    ? l10n.dashboardNoDraftsYet
+                    : '${rows.length} ${l10n.dashboardDraftsTitle}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.inkDeep.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              GlassButton(
+                label: l10n.dashboardSeeAll,
+                tone: GlassButtonTone.neutral,
+                icon: const Icon(Icons.edit_note_rounded),
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(SpringRoute(builder: (_) => const DraftsScreen()));
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ModelPreflightCard extends ConsumerStatefulWidget {
+  const _ModelPreflightCard();
+
+  @override
+  ConsumerState<_ModelPreflightCard> createState() =>
+      _ModelPreflightCardState();
+}
+
+class _ModelPreflightCardState extends ConsumerState<_ModelPreflightCard> {
+  bool _downloading = false;
+  int _received = 0;
+  int? _total;
+  String? _error;
+  int _lastUpdate = 0;
+
+  double get _progress {
+    if (_total == null || _total == 0) return 0.0;
+    return (_received / _total!).clamp(0.0, 1.0);
+  }
+
+  Future<void> _download(AppConfig config, ModelManager modelManager) async {
+    if (_downloading) return;
+    if (!config.hasGemmaModelUrl) return;
+
+    setState(() {
+      _downloading = true;
+      _error = null;
+      _received = 0;
+      _total = null;
+    });
+
+    try {
+      await modelManager.downloadFromUrl(
+        url: Uri.parse(config.gemmaModelUrl),
+        onProgress: (received, total) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final shouldUpdate =
+              (now - _lastUpdate > 120) ||
+              (total != null && (received / total - _progress).abs() >= 0.01);
+
+          if (shouldUpdate && mounted) {
+            _lastUpdate = now;
+            setState(() {
+              _received = received;
+              _total = total;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _downloading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final config = ref.watch(appConfigProvider);
+    final modelManager = ref.watch(modelManagerProvider);
+
+    return FutureBuilder<ModelInstallState>(
+      future: modelManager.state(),
+      builder: (context, snapshot) {
+        final state = snapshot.data;
+        final installed = state?.installed == true;
+
+        if (installed || !config.hasGemmaModelUrl) {
+          return const SizedBox.shrink();
+        }
+
+        return ModelDownloadCard(
+          title: l10n.settingsOnDeviceModelTitle,
+          subtitle: l10n.settingsModelNotInstalled,
+          progress: _progress,
+          isDownloading: _downloading,
+          isCompleted: false, // Disappears when installed
+          errorText: _error,
+          onPressed: _downloading
+              ? null
+              : () => _download(config, modelManager),
+        );
+      },
     );
   }
 }
