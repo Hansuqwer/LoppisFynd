@@ -22,6 +22,7 @@ import 'barcode/mlkit_input_image.dart';
 import 'scan_capture_service.dart';
 import 'widgets/barcode_ar_overlay.dart';
 import 'widgets/batch_tray.dart';
+import 'widgets/scanner_overlay.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({
@@ -485,6 +486,42 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             frame: _overlayFrame,
                             onBarcodeTap:
                                 widget.onBarcodeTap ?? _handleBarcodeTap,
+                          ),
+                          const ScannerOverlay(),
+                          Positioned(
+                            top: 14,
+                            left: 14,
+                            right: 14,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.xs,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.inkDeep.withValues(
+                                    alpha: 0.58,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.pill,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.textOnDark.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.scannerBarcodeAimHint,
+                                  style: TextStyle(
+                                    color: AppColors.textOnDark,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
