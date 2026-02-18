@@ -29,6 +29,9 @@ class AppNavShell extends ConsumerStatefulWidget {
 class _AppNavShellState extends ConsumerState<AppNavShell> {
   var _tab = AppTab.dashboard;
 
+  final _builtTabs = <int>{};
+  final _tabCache = <int, Widget>{};
+
   late final ProviderSubscription<int?> _deepLinkTabSub;
   late final ProviderSubscription<String?> _deepLinkItemSub;
   late final ProviderSubscription<AsyncValue<bool>> _onlineSub;
@@ -39,12 +42,17 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
   void _setIndex(int index) {
     final nextTab = AppTab.values[index];
     if (nextTab == _tab) return;
-    setState(() => _tab = nextTab);
+    setState(() {
+      _tab = nextTab;
+      _builtTabs.add(index);
+    });
   }
 
   @override
   void initState() {
     super.initState();
+
+    _builtTabs.add(_index);
 
     _deepLinkTabSub = ref.listenManual<int?>(deepLinkTabIndexProvider, (
       prev,
@@ -53,7 +61,10 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
       if (next == null) return;
       if (next < 0 || next >= AppTab.values.length) return;
       if (!mounted) return;
-      setState(() => _tab = AppTab.values[next]);
+      setState(() {
+        _tab = AppTab.values[next];
+        _builtTabs.add(next);
+      });
       ref.read(deepLinkTabIndexProvider.notifier).state = null;
     });
 
@@ -108,11 +119,28 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     super.dispose();
   }
 
+  Widget _buildTab(int index) {
+    return _tabCache.putIfAbsent(index, () {
+      return switch (AppTab.values[index]) {
+        AppTab.dashboard => const DashboardScreen(),
+        AppTab.scanner => const ScannerScreen(),
+        AppTab.haul => const HaulScreen(),
+        AppTab.history => const HistoryScreen(),
+        AppTab.profile => const SettingsScreen(),
+      };
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    assert(AppTab.values.length == 5);
+
     final isOnline = ref
         .watch(isOnlineProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
+
+    _builtTabs.add(_index);
+
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -128,13 +156,18 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 108),
-                  child: switch (_tab) {
-                    AppTab.dashboard => const DashboardScreen(),
-                    AppTab.scanner => const ScannerScreen(),
-                    AppTab.haul => const HaulScreen(),
-                    AppTab.history => const HistoryScreen(),
-                    AppTab.profile => const SettingsScreen(),
-                  },
+                  child: IndexedStack(
+                    index: _index,
+                    children: List.generate(AppTab.values.length, (i) {
+                      final selected = i == _index;
+                      return TickerMode(
+                        enabled: selected,
+                        child: _builtTabs.contains(i)
+                            ? _buildTab(i)
+                            : const SizedBox.shrink(),
+                      );
+                    }),
+                  ),
                 ),
               ),
             ],
