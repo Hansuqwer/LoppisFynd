@@ -11,13 +11,13 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Current Phase:** 3
 **Current Phase Name:** Startup + Auth + Model Download
-**Current Plan:** Not started
-**Total Plans in Phase:** 3
-**Status:** Ready to plan
+**Current Plan:** 3
+**Total Plans in Phase:** 4
+**Status:** Ready to execute
 **Last Activity:** 2026-02-18
-**Last Activity Description:** Phase 2 complete (verified)
+**Last Activity Description:** Phase 03 plan 02 complete (auth verified)
 
-**Progress:** [█████-----] 50%
+**Progress:** [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -32,7 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 |-------|-------|-------|----------|
 | 1. Design System + Guardrails | 5 | 5 | - |
 | 2. Capsule Navigation Shell | 2 | 2 | - |
-| 3. Startup + Auth + Model Download | 0 | 3 | - |
+| 3. Startup + Auth + Model Download | 0 | 4 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
 | Phase 01-design-system-guardrails P03 | 29 min | 2 tasks | 25 files |
@@ -40,6 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 | Phase 01 P04 | 10 min | 2 tasks | 2 files |
 | Phase 01 P05 | 1 min | 1 tasks | 3 files |
 | Phase 02 P02 | 50 min | 3 tasks | 2 files |
+| Phase 03 P02 | 2h 53m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -55,6 +56,8 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 - [Phase 01]: Keep motif overlay shadow appearance stable (golden-safe) while removing ad-hoc BoxShadow literals
 - [Phase 01]: On-device clipped blur motion/perf verification approved (DS-02 Truth #2 VERIFIED).
 - [Phase 02]: Recorded explicit user approval for NAV-03 at 02-02 Task 3 (human-verify checkpoint).
+- [Phase 03]: Default auth mode to signup (Skapa konto) in LoginScreen to match Phase 3 UX contract
+- [Phase 03]: Surface Supabase AuthException messages in auth UI (password + OTP flows) to avoid generic failures
 
 ### Pending Todos
 
@@ -66,6 +69,6 @@ None
 
 ## Session
 
-**Last session:** 2026-02-18T16:06:42.701Z
-**Stopped At:** Phase 2 complete, ready to plan Phase 3
+**Last session:** 2026-02-18T21:27:55.884Z
+**Stopped At:** Completed 03-02-PLAN.md
 **Resume File:** None

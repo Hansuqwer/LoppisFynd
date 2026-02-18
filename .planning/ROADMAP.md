@@ -60,12 +60,13 @@ Plans:
   3. Model download never starts without explicit user consent; if consent is given, download starts immediately and continues in the background while the user proceeds.
   4. Model download UI reflects real state (downloading/installing/ready/failed), shows progress when available (no fake progress), failures are recoverable via retry without blocking onboarding completion, and success triggers a completion popup using the reference red color.
   5. Login experience is signup-first (default "Skapa konto"), matches the glass/motif reference, and includes a "Lost password / Trouble signing in" affordance with OTP-friendly wording.
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [ ] 03-01: Onboarding screens 1-3 with Gemma callout + "Varför?" explainer sheet
-- [ ] 03-02: Signup-first login UI + trouble-sign-in affordance
-- [ ] 03-03: Consent-gated model download/install controller (real progress, retry, completion popup)
+- [x] 03-02: Signup-first login UI + trouble-sign-in affordance
+- [ ] 03-03: Consent-gated model download/install controller + refactor download entrypoints (no auto-download)
+- [ ] 03-04: Model status chip + one-time red completion popup + Settings opt-in later (localized)
 
 ### Phase 4: Core Screens + Goldens
 **Goal**: Users see the five core tabs/settings match the reference layouts and can use the app offline as before, with golden tests preventing future UI drift.
@@ -92,5 +93,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Design System + Guardrails | 5/5 | Complete    | 2026-02-18 |
 | 2. Capsule Navigation Shell | 2/2 | Complete    | 2026-02-18 |
-| 3. Startup + Auth + Model Download | 0/3 | Not started | - |
+| 3. Startup + Auth + Model Download | 1/4 | In Progress | - |
 | 4. Core Screens + Goldens | 0/3 | Not started | - |
