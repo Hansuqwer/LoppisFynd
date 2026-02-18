@@ -250,38 +250,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   const SizedBox(height: AppSpacing.md),
                   _ProgressDots(count: pages.length, index: _index),
                   const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      if (_index > 0) ...[
-                        Expanded(
-                          child: GlassButton(
-                            label: l10n.onboardingBack,
-                            tone: GlassButtonTone.neutral,
-                            icon: const Icon(Icons.arrow_back_rounded),
-                            onPressed: _previous,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // On narrow portrait phones, the footer back button can
+                      // become too tight for "Tillbaka" and ends up ellipsized.
+                      // Give it a little more share of the row only in compact
+                      // widths to preserve the reference density elsewhere.
+                      final compactFooter = constraints.maxWidth < 340;
+                      final backFlex = compactFooter ? 2 : 1;
+                      final primaryFlex = compactFooter ? 3 : 2;
+
+                      return Row(
+                        children: [
+                          if (_index > 0) ...[
+                            Expanded(
+                              flex: backFlex,
+                              child: GlassButton(
+                                label: l10n.onboardingBack,
+                                tone: GlassButtonTone.neutral,
+                                icon: const Icon(Icons.arrow_back_rounded),
+                                onPressed: _previous,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                          ],
+                          Expanded(
+                            flex: primaryFlex,
+                            child: GlassButton(
+                              label: isLast
+                                  ? l10n.onboardingStart
+                                  : l10n.onboardingContinue,
+                              icon: Icon(
+                                isLast
+                                    ? Icons.rocket_launch_rounded
+                                    : Icons.arrow_forward_rounded,
+                              ),
+                              onPressed: !_ready
+                                  ? null
+                                  : (!isLast)
+                                  ? _next
+                                  : (canComplete ? _setDone : null),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                      ],
-                      Expanded(
-                        flex: 2,
-                        child: GlassButton(
-                          label: isLast
-                              ? l10n.onboardingStart
-                              : l10n.onboardingContinue,
-                          icon: Icon(
-                            isLast
-                                ? Icons.rocket_launch_rounded
-                                : Icons.arrow_forward_rounded,
-                          ),
-                          onPressed: !_ready
-                              ? null
-                              : (!isLast)
-                              ? _next
-                              : (canComplete ? _setDone : null),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
