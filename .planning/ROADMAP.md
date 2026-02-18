@@ -10,7 +10,7 @@ Implement the Nature Distilled overhaul as a contract-driven retrofit: first loc
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Design System + Guardrails** - Tokens, clipped-blur glass primitives, and localization/copy rules.
+- [x] **Phase 1: Design System + Guardrails** - Tokens, clipped-blur glass primitives, and localization/copy rules. (completed 2026-02-18)
 - [ ] **Phase 2: Capsule Navigation Shell** - Persistent Nature background + capsule nav with the 5-tab contract and state retention.
 - [ ] **Phase 3: Startup + Auth + Model Download** - Onboarding 1-3 + signup-first login + consent-gated, real-state Gemma download.
 - [ ] **Phase 4: Core Screens + Goldens** - Visual parity for core tabs/settings, offline-first safety, and golden regression coverage.
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design System + Guardrails | 0/3 | Not started | - |
+| 1. Design System + Guardrails | 0/3 | Complete    | 2026-02-18 |
 | 2. Capsule Navigation Shell | 0/2 | Not started | - |
 | 3. Startup + Auth + Model Download | 0/3 | Not started | - |
 | 4. Core Screens + Goldens | 0/3 | Not started | - |
