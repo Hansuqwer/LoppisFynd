@@ -14,8 +14,8 @@ import '../../core/app/providers.dart';
 import '../../shared/widgets/offline_banner.dart';
 import '../../features/analyzer/item_detail_screen.dart';
 import 'spring_route.dart';
-import '../../shared/widgets/atmospheric_background.dart';
 import '../../shared/widgets/capsule_nav_bar.dart';
+import '../../shared/widgets/nature_background.dart';
 
 enum AppTab { dashboard, scanner, haul, history, profile }
 
@@ -31,6 +31,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
 
   final _builtTabs = <int>{};
   final _tabCache = <int, Widget>{};
+  late final ValueNotifier<AppTab> _activeTab;
 
   late final ProviderSubscription<int?> _deepLinkTabSub;
   late final ProviderSubscription<String?> _deepLinkItemSub;
@@ -45,6 +46,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     setState(() {
       _tab = nextTab;
       _builtTabs.add(index);
+      _activeTab.value = nextTab;
     });
   }
 
@@ -52,6 +54,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
   void initState() {
     super.initState();
 
+    _activeTab = ValueNotifier(_tab);
     _builtTabs.add(_index);
 
     _deepLinkTabSub = ref.listenManual<int?>(deepLinkTabIndexProvider, (
@@ -64,6 +67,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
       setState(() {
         _tab = AppTab.values[next];
         _builtTabs.add(next);
+        _activeTab.value = _tab;
       });
       ref.read(deepLinkTabIndexProvider.notifier).state = null;
     });
@@ -116,6 +120,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     _deepLinkItemSub.close();
     _onlineSub.close();
     _authSub.close();
+    _activeTab.dispose();
     super.dispose();
   }
 
@@ -123,7 +128,12 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     return _tabCache.putIfAbsent(index, () {
       return switch (AppTab.values[index]) {
         AppTab.dashboard => const DashboardScreen(),
-        AppTab.scanner => const ScannerScreen(),
+        AppTab.scanner => ValueListenableBuilder<AppTab>(
+          valueListenable: _activeTab,
+          builder: (context, tab, _) {
+            return ScannerScreen(active: tab == AppTab.scanner);
+          },
+        ),
         AppTab.haul => const HaulScreen(),
         AppTab.history => const HistoryScreen(),
         AppTab.profile => const SettingsScreen(),
@@ -146,7 +156,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const AtmosphericBackground(),
+          const NatureBackground(),
           Column(
             children: [
               if (!isOnline)
@@ -155,7 +165,9 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
                 ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 108),
+                  padding: EdgeInsets.only(
+                    bottom: CapsuleNavBar.obstructionHeight(context),
+                  ),
                   child: IndexedStack(
                     index: _index,
                     children: List.generate(AppTab.values.length, (i) {

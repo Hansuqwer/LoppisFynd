@@ -27,10 +27,12 @@ import 'widgets/scanner_overlay.dart';
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({
     super.key,
+    this.active = true,
     this.barcodeOverlayListenable,
     this.onBarcodeTap,
   });
 
+  final bool active;
   final ValueListenable<BarcodeDetectionFrame?>? barcodeOverlayListenable;
   final ValueChanged<String>? onBarcodeTap;
 
@@ -73,17 +75,31 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   @override
   void didUpdateWidget(covariant ScannerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.active != widget.active) {
+      if (!widget.active) {
+        _deactivateCamera();
+      } else {
+        _initCameraIfNeeded();
+
+        if (!_aiWarmUpStarted) {
+          _aiWarmUpStarted = true;
+          unawaited(ref.read(aiInferenceProvider).warmUp());
+        }
+      }
+    }
     _syncOverlayListenable();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _initCameraIfNeeded();
+    if (widget.active) {
+      _initCameraIfNeeded();
 
-    if (!_aiWarmUpStarted) {
-      _aiWarmUpStarted = true;
-      unawaited(ref.read(aiInferenceProvider).warmUp());
+      if (!_aiWarmUpStarted) {
+        _aiWarmUpStarted = true;
+        unawaited(ref.read(aiInferenceProvider).warmUp());
+      }
     }
   }
 
@@ -152,17 +168,41 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
+  void _deactivateCamera() {
+    final controller = _controller;
+    if (controller == null) return;
+
+    _controller = null;
+    try {
+      unawaited(controller.dispose());
+    } catch (_) {
+      // Ignore dispose failures on unsupported camera backends.
+    }
+
+    if (mounted) {
+      setState(() {
+        _error = null;
+        _cameraPermissionDenied = false;
+        _cameraPermissionPermanentlyDenied = false;
+        _overlayFrame = null;
+        _pendingOverlayFrame = null;
+      });
+    }
+  }
+
   Future<void> _initCameraIfNeeded() async {
+    if (!widget.active) return;
     if (_controller != null) return;
 
     final l10n = AppLocalizations.of(context)!;
 
     final hasPermission = await _ensureCameraPermission();
     if (!hasPermission) return;
+    if (!mounted || !widget.active) return;
 
     try {
       final cameras = await availableCameras();
-      if (!mounted) return;
+      if (!mounted || !widget.active) return;
 
       if (cameras.isEmpty) {
         setState(() => _error = l10n.scannerNoCamerasAvailable);
@@ -177,13 +217,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       );
 
       await controller.initialize();
-      if (!mounted) return;
+      if (!mounted || !widget.active) {
+        await controller.dispose();
+        return;
+      }
 
       if (widget.barcodeOverlayListenable == null) {
         _barcodeScanner ??= BarcodeScanner();
         await _startBarcodeStreamIfPossible(controller);
       }
-      if (!mounted) return;
+      if (!mounted || !widget.active) {
+        await controller.dispose();
+        return;
+      }
 
       setState(() {
         _error = null;

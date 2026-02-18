@@ -30,10 +30,18 @@ class CapsuleNavBar extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final List<CapsuleNavDestination> destinations;
 
+  static double marginBottom(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return 14.0 + (bottomInset > 0 ? 6.0 : 18.0);
+  }
+
+  static double obstructionHeight(BuildContext context) {
+    return AppCapsuleNav.barHeight + marginBottom(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final marginBottom = 14.0 + (bottomInset > 0 ? 6.0 : 18.0);
+    final marginBottom = CapsuleNavBar.marginBottom(context);
 
     final barRadius = BorderRadius.circular(AppRadius.capsule);
 
