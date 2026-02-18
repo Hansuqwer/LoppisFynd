@@ -11,13 +11,13 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Current Phase:** 01
 **Current Phase Name:** Design System + Guardrails
-**Current Plan:** 1
+**Current Plan:** 2
 **Total Plans in Phase:** 3
 **Status:** Ready to execute
 **Last Activity:** 2026-02-18
 **Last Activity Description:** Completed 01-01-PLAN.md
 
-**Progress:** [███░░░░░░░] 33%
+**Progress:** [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -35,6 +35,7 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 | 3. Startup + Auth + Model Download | 0 | 3 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
+| Phase 01-design-system-guardrails P03 | 29 min | 2 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -42,6 +43,8 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 - [Phase 01]: Preserved AppRadius.pill semantics (999.0) and added AppRadius.capsule (30.0) for tighter contract capsules
 - [Phase 01]: Avoided ThemeData-wide input/button overrides that drift existing goldens; kept theme changes additive via tokens
+- [Phase 01-design-system-guardrails]: Pinned custom_lint 0.8.x to satisfy analyzer constraints and keep CI green.
+- [Phase 01-design-system-guardrails]: Added AppCapsuleNav/AppShadows capsule tokens so shared primitives stay lint-clean (no ad-hoc UI numbers).
 
 ### Pending Todos
 
@@ -53,6 +56,6 @@ None
 
 ## Session
 
-**Last session:** 2026-02-18T04:01:12.706Z
-**Stopped At:** Completed 01-01-PLAN.md
+**Last session:** 2026-02-18T04:26:37.276Z
+**Stopped At:** Completed 01-design-system-guardrails-03-PLAN.md
 **Resume File:** None
