@@ -138,12 +138,20 @@ class _NavItem extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isPrimary
-                    ? AppColors.accentEarth
+                    ? (selected
+                          ? AppColors.accentEarth
+                          : AppColors.accentEarth.withValues(
+                              alpha: AppOpacity.capsuleNavFill,
+                            ))
                     : (selected ? AppColors.glassFill : Colors.transparent),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(
                   color: isPrimary
-                      ? Colors.transparent
+                      ? (selected
+                            ? AppColors.cloudDancer.withValues(
+                                alpha: AppOpacity.capsuleNavFill,
+                              )
+                            : Colors.transparent)
                       : (selected ? AppColors.glassStroke : Colors.transparent),
                 ),
               ),
