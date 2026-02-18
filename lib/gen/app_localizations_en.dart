@@ -1166,6 +1166,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.';
 
   @override
+  String get modelInstall_chipLabelDownloading => 'Downloading';
+
+  @override
+  String get modelInstall_chipLabelInstalling => 'Installing';
+
+  @override
+  String get modelInstall_chipLabelReady => 'Ready';
+
+  @override
+  String get modelInstall_chipLabelFailed => 'Failed';
+
+  @override
+  String get modelInstall_chipRetryCta => 'Try again';
+
+  @override
+  String get modelInstall_popupTitle => 'AI is ready';
+
+  @override
+  String get modelInstall_popupBody =>
+      'The AI model is installed. You can scan and identify faster, even offline, with better results.';
+
+  @override
+  String get modelInstall_popupPrimaryCta => 'Nice';
+
+  @override
+  String get modelInstall_popupSecondaryCta => 'Close';
+
+  @override
   String get authTitleWelcome => 'Welcome';
 
   @override

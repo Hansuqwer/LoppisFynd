@@ -1166,6 +1166,34 @@ class AppLocalizationsSv extends AppLocalizations {
       'För att kunna använda AI-funktioner offline. Modellen laddas ner till din enhet (ca 1 GB) och skickas inte till en server. På wifi tar det ofta ca 2–10 minuter.';
 
   @override
+  String get modelInstall_chipLabelDownloading => 'Laddar ner';
+
+  @override
+  String get modelInstall_chipLabelInstalling => 'Installerar';
+
+  @override
+  String get modelInstall_chipLabelReady => 'Klar';
+
+  @override
+  String get modelInstall_chipLabelFailed => 'Misslyckades';
+
+  @override
+  String get modelInstall_chipRetryCta => 'Försök igen';
+
+  @override
+  String get modelInstall_popupTitle => 'AI är redo';
+
+  @override
+  String get modelInstall_popupBody =>
+      'AI-modellen är nu installerad. Du kan skanna och identifiera snabbare, även offline, med bättre träffar.';
+
+  @override
+  String get modelInstall_popupPrimaryCta => 'Toppen';
+
+  @override
+  String get modelInstall_popupSecondaryCta => 'Stäng';
+
+  @override
   String get authTitleWelcome => 'Välkommen';
 
   @override

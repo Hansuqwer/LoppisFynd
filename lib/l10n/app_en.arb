@@ -447,6 +447,16 @@
   "modelWhyTitle": "Why do I need to download a model?",
   "modelWhyBody": "To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.",
 
+  "modelInstall_chipLabelDownloading": "Downloading",
+  "modelInstall_chipLabelInstalling": "Installing",
+  "modelInstall_chipLabelReady": "Ready",
+  "modelInstall_chipLabelFailed": "Failed",
+  "modelInstall_chipRetryCta": "Try again",
+  "modelInstall_popupTitle": "AI is ready",
+  "modelInstall_popupBody": "The AI model is installed. You can scan and identify faster, even offline, with better results.",
+  "modelInstall_popupPrimaryCta": "Nice",
+  "modelInstall_popupSecondaryCta": "Close",
+
   "authTitleWelcome": "Welcome",
   "authModeSignUp": "Create account",
   "authModeSignIn": "Sign in",

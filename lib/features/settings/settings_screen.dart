@@ -261,6 +261,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final db = ref.watch(appDatabaseProvider);
     final config = ref.watch(appConfigProvider);
     final modelManager = ref.watch(modelManagerProvider);
+    final consent = ref
+        .watch(gemmaConsentProvider)
+        .maybeWhen(data: (v) => v, orElse: () => 0);
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
@@ -706,6 +709,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? l10n.settingsModelInstalled(info.state.bytes ?? 0)
                           : l10n.settingsModelNotInstalled,
                     ),
+                    if (!_devModeEnabled &&
+                        config.hasGemmaModelUrl &&
+                        consent != 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.md),
+                        child: GlassButton(
+                          label: l10n.settingsDownloadModel,
+                          icon: const Icon(Icons.cloud_download_rounded),
+                          onPressed: () async {
+                            await db.appSettingsDao.setInt(
+                              kGemmaConsentKeyV1,
+                              1,
+                            );
+                          },
+                        ),
+                      ),
                     if (_devModeEnabled) ...[
                       if (info != null) ...[
                         const SizedBox(height: AppSpacing.xs),

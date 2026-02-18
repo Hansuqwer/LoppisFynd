@@ -22,20 +22,29 @@ class ModelDownloadStatusChip extends ConsumerWidget {
       case ModelInstallControllerStateIdle():
       case ModelInstallControllerStateNotConsented():
         return const SizedBox.shrink();
-      case ModelInstallControllerStateDownloading(:final percent):
+      case ModelInstallControllerStateDownloading(
+        :final received,
+        :final total,
+      ):
+        final percent = (total != null && total > 0)
+            ? ((received / total).clamp(0.0, 1.0) * 100).toInt()
+            : null;
         final label = percent == null
-            ? l10n.modelDownloading
-            : l10n.modelDownloadingPercent(percent);
+            ? l10n.modelInstall_chipLabelDownloading
+            : '${l10n.modelInstall_chipLabelDownloading} $percent%';
         return _StatusChip(label: label);
       case ModelInstallControllerStateInstalling():
-        return _StatusChip(label: l10n.modelInstalling);
+        return _StatusChip(label: l10n.modelInstall_chipLabelInstalling);
       case ModelInstallControllerStateReady():
-        return _StatusChip(label: l10n.modelInstalled, tone: _ChipTone.good);
+        return _StatusChip(
+          label: l10n.modelInstall_chipLabelReady,
+          tone: _ChipTone.good,
+        );
       case ModelInstallControllerStateFailed():
         return _StatusChip(
-          label: l10n.filterStatusFailed,
+          label: l10n.modelInstall_chipLabelFailed,
           tone: _ChipTone.bad,
-          actionLabel: l10n.modelRetry,
+          actionLabel: l10n.modelInstall_chipRetryCta,
           onActionPressed: () => notifier.retry(),
         );
     }

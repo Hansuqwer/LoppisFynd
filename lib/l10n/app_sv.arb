@@ -448,6 +448,16 @@
   "modelWhyTitle": "Varför behöver jag ladda ned en modell?",
   "modelWhyBody": "För att kunna använda AI-funktioner offline. Modellen laddas ner till din enhet (ca 1 GB) och skickas inte till en server. På wifi tar det ofta ca 2–10 minuter.",
 
+  "modelInstall_chipLabelDownloading": "Laddar ner",
+  "modelInstall_chipLabelInstalling": "Installerar",
+  "modelInstall_chipLabelReady": "Klar",
+  "modelInstall_chipLabelFailed": "Misslyckades",
+  "modelInstall_chipRetryCta": "Försök igen",
+  "modelInstall_popupTitle": "AI är redo",
+  "modelInstall_popupBody": "AI-modellen är nu installerad. Du kan skanna och identifiera snabbare, även offline, med bättre träffar.",
+  "modelInstall_popupPrimaryCta": "Toppen",
+  "modelInstall_popupSecondaryCta": "Stäng",
+
   "authTitleWelcome": "Välkommen",
   "authModeSignUp": "Skapa konto",
   "authModeSignIn": "Logga in",

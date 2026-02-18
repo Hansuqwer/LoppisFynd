@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -14,7 +12,6 @@ import '../../gen/app_localizations.dart';
 import '../summary/haul_summary_screen.dart';
 import '../drafts/drafts_screen.dart';
 import '../drafts/draft_editor_screen.dart';
-import '../../services/ai/model_install_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -357,7 +354,6 @@ class _ModelPreflightCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
     final config = ref.watch(appConfigProvider);
 
     if (!config.hasGemmaModelUrl) return const SizedBox.shrink();
@@ -367,63 +363,6 @@ class _ModelPreflightCard extends ConsumerWidget {
         .maybeWhen(data: (v) => v, orElse: () => 0);
     if (consent != 1) return const SizedBox.shrink();
 
-    final state = ref.watch(modelInstallControllerProvider);
-    final notifier = ref.read(modelInstallControllerProvider.notifier);
-
-    var progress = 0.0;
-    var isDownloading = false;
-    var isCompleted = false;
-    String? errorText;
-    var statusText = l10n.modelNotInstalled;
-    VoidCallback? onPressed;
-
-    switch (state) {
-      case ModelInstallControllerStateIdle():
-        statusText = l10n.modelNotInstalled;
-        onPressed = () => unawaited(notifier.startIfNeeded());
-      case ModelInstallControllerStateNotConsented():
-        return const SizedBox.shrink();
-      case ModelInstallControllerStateDownloading(
-        :final received,
-        :final total,
-      ):
-        isDownloading = true;
-        if (total != null && total > 0) {
-          progress = (received / total).clamp(0.0, 1.0);
-          statusText = l10n.modelDownloadingPercent((progress * 100).toInt());
-        } else {
-          progress = 0.0;
-          statusText = l10n.modelDownloading;
-        }
-        onPressed = null;
-      case ModelInstallControllerStateInstalling():
-        isDownloading = true;
-        progress = 1.0;
-        statusText = l10n.modelInstalling;
-        onPressed = null;
-      case ModelInstallControllerStateReady():
-        isCompleted = true;
-        statusText = l10n.modelInstalled;
-        onPressed = null;
-      case ModelInstallControllerStateFailed(:final error):
-        errorText = l10n.modelFailed(error);
-        statusText = errorText;
-        onPressed = () => unawaited(notifier.retry());
-    }
-
-    if (state is ModelInstallControllerStateReady) {
-      return const SizedBox.shrink();
-    }
-
-    return ModelDownloadCard(
-      title: l10n.settingsOnDeviceModelTitle,
-      subtitle: l10n.settingsModelNotInstalled,
-      progress: progress,
-      isDownloading: isDownloading,
-      isCompleted: isCompleted,
-      statusText: statusText,
-      errorText: errorText,
-      onPressed: onPressed,
-    );
+    return const ModelInstallDownloadCard();
   }
 }

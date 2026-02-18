@@ -2210,6 +2210,60 @@ abstract class AppLocalizations {
   /// **'To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.'**
   String get modelWhyBody;
 
+  /// No description provided for @modelInstall_chipLabelDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get modelInstall_chipLabelDownloading;
+
+  /// No description provided for @modelInstall_chipLabelInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing'**
+  String get modelInstall_chipLabelInstalling;
+
+  /// No description provided for @modelInstall_chipLabelReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get modelInstall_chipLabelReady;
+
+  /// No description provided for @modelInstall_chipLabelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get modelInstall_chipLabelFailed;
+
+  /// No description provided for @modelInstall_chipRetryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get modelInstall_chipRetryCta;
+
+  /// No description provided for @modelInstall_popupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is ready'**
+  String get modelInstall_popupTitle;
+
+  /// No description provided for @modelInstall_popupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI model is installed. You can scan and identify faster, even offline, with better results.'**
+  String get modelInstall_popupBody;
+
+  /// No description provided for @modelInstall_popupPrimaryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice'**
+  String get modelInstall_popupPrimaryCta;
+
+  /// No description provided for @modelInstall_popupSecondaryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get modelInstall_popupSecondaryCta;
+
   /// No description provided for @authTitleWelcome.
   ///
   /// In en, this message translates to:

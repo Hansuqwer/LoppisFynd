@@ -1,6 +1,91 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/app/providers.dart';
 import '../../../../core/tokens/app_tokens.dart';
+import '../../../../gen/app_localizations.dart';
 import '../../../../shared/widgets/glass_overlay.dart';
+import '../../../../services/ai/model_install_controller.dart';
+
+class ModelInstallDownloadCard extends ConsumerWidget {
+  const ModelInstallDownloadCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final config = ref.watch(appConfigProvider);
+    if (!config.hasGemmaModelUrl) return const SizedBox.shrink();
+
+    final consent = ref
+        .watch(gemmaConsentProvider)
+        .maybeWhen(data: (v) => v, orElse: () => 0);
+    if (consent != 1) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final state = ref.watch(modelInstallControllerProvider);
+    final notifier = ref.read(modelInstallControllerProvider.notifier);
+
+    var progress = 0.0;
+    var isDownloading = false;
+    var isCompleted = false;
+    String? errorText;
+    String? statusText;
+    VoidCallback? onPressed;
+
+    switch (state) {
+      case ModelInstallControllerStateIdle():
+        statusText = l10n.modelNotInstalled;
+        onPressed = () => unawaited(notifier.startIfNeeded());
+      case ModelInstallControllerStateNotConsented():
+        return const SizedBox.shrink();
+      case ModelInstallControllerStateDownloading(
+        :final received,
+        :final total,
+      ):
+        final percent = (total != null && total > 0)
+            ? ((received / total).clamp(0.0, 1.0) * 100).toInt()
+            : null;
+        isDownloading = true;
+        if (percent != null) {
+          statusText = '${l10n.modelInstall_chipLabelDownloading} $percent%';
+          progress = (received / total!).clamp(0.0, 1.0);
+        } else {
+          statusText = l10n.modelInstall_chipLabelDownloading;
+          progress = 0.0;
+        }
+        onPressed = null;
+      case ModelInstallControllerStateInstalling():
+        isDownloading = true;
+        progress = 1.0;
+        statusText = l10n.modelInstall_chipLabelInstalling;
+        onPressed = null;
+      case ModelInstallControllerStateReady():
+        isCompleted = true;
+        statusText = l10n.modelInstall_chipLabelReady;
+        onPressed = null;
+      case ModelInstallControllerStateFailed():
+        errorText = l10n.modelInstall_chipLabelFailed;
+        statusText = errorText;
+        onPressed = () => unawaited(notifier.retry());
+    }
+
+    if (state is ModelInstallControllerStateReady) {
+      return const SizedBox.shrink();
+    }
+
+    return ModelDownloadCard(
+      title: l10n.settingsOnDeviceModelTitle,
+      subtitle: l10n.modelCalloutBody,
+      statusText: statusText,
+      progress: progress,
+      isDownloading: isDownloading,
+      isCompleted: isCompleted,
+      errorText: errorText,
+      onPressed: onPressed,
+    );
+  }
+}
 
 /// A glassmorphic bento-style card for model downloads with liquid progress.
 ///
