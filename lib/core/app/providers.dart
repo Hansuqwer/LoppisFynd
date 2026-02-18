@@ -8,6 +8,7 @@ import '../database/app_database.dart';
 import '../storage/scan_image_storage.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../../services/ai/model_manager.dart';
+import '../../services/ai/model_install_controller.dart';
 import '../../services/sync/sync_scheduler.dart';
 import '../../services/sync/cloud/cloud_sync_coordinator.dart';
 import '../../services/analytics/analytics_service.dart';
@@ -45,6 +46,25 @@ final defaultHaulIdProvider = Provider<String>((ref) {
 final modelManagerProvider = Provider<ModelManager>((ref) {
   return _uninitialized<ModelManager>('modelManagerProvider');
 });
+
+final gemmaConsentProvider = StreamProvider<int>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao.watchInt(kGemmaConsentKeyV1).map((v) => v ?? 0);
+});
+
+final modelInstallControllerProvider =
+    StateNotifierProvider<ModelInstallController, ModelInstallControllerState>((
+      ref,
+    ) {
+      final db = ref.watch(appDatabaseProvider);
+      final config = ref.watch(appConfigProvider);
+      final modelManager = ref.watch(modelManagerProvider);
+      return ModelInstallController(
+        settingsDao: db.appSettingsDao,
+        config: config,
+        modelManager: modelManager,
+      );
+    });
 
 final aiInferenceProvider = Provider<AiInferenceIsolateService>((ref) {
   return _uninitialized<AiInferenceIsolateService>('aiInferenceProvider');

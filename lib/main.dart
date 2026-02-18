@@ -142,17 +142,6 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
     spec: const ModelSpec(id: 'gemma_vision', fileName: 'gemma_vision.task'),
   );
 
-  () async {
-    try {
-      final state = await modelManager.state();
-      if (state.installed) return;
-      if (!config.hasGemmaModelUrl) return;
-      await modelManager.downloadFromUrl(url: Uri.parse(config.gemmaModelUrl));
-    } catch (_) {
-      // Best-effort; model download should not block app startup.
-    }
-  }();
-
   final modelFile = await modelManager.modelFile();
   final aiInference = AiInferenceIsolateService(
     backendKind: AiBackendKind.flutterGemma,
@@ -215,11 +204,47 @@ class _AppRootState extends State<_AppRoot> {
   }
 }
 
-class LoppisfyndApp extends ConsumerWidget {
+class LoppisfyndApp extends ConsumerStatefulWidget {
   const LoppisfyndApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoppisfyndApp> createState() => _LoppisfyndAppState();
+}
+
+class _LoppisfyndAppState extends ConsumerState<LoppisfyndApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    unawaited(_kickoffModelInstallIfConsented());
+  }
+
+  Future<void> _kickoffModelInstallIfConsented() async {
+    try {
+      final consent = await ref.read(gemmaConsentProvider.future);
+      if (!mounted) return;
+      if (consent == 1) {
+        unawaited(
+          ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
+        );
+      }
+    } catch (_) {
+      // Best-effort; model download/install must never block app startup.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<int>>(gemmaConsentProvider, (previous, next) {
+      final prev = previous?.valueOrNull ?? 0;
+      final current = next.valueOrNull ?? 0;
+      if (current == 1 && prev != 1) {
+        unawaited(
+          ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
+        );
+      }
+    });
+
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);

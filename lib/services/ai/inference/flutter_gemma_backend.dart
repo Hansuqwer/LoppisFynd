@@ -6,6 +6,13 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 
 import 'ai_types.dart';
 
+Future<void> installGemmaModel({required String modelPath}) async {
+  await FlutterGemma.initialize();
+  await FlutterGemma.installModel(
+    modelType: ModelType.gemmaIt,
+  ).fromFile(modelPath).install();
+}
+
 Future<String> inferJsonWithFlutterGemma({
   required RootIsolateToken? rootIsolateToken,
   required String? modelPath,
@@ -27,13 +34,9 @@ Future<String> inferJsonWithFlutterGemma({
     throw ModelNotInstalledException('Model not installed at: $modelPath');
   }
 
-  await FlutterGemma.initialize();
-
   // Note: ModelType selection is used by the plugin to choose runtime settings.
   // For now, we follow the plugin's documented Gemma install path.
-  await FlutterGemma.installModel(
-    modelType: ModelType.gemmaIt,
-  ).fromFile(modelPath).install();
+  await installGemmaModel(modelPath: modelPath);
 
   final model = await FlutterGemma.getActiveModel(
     maxTokens: maxTokens ?? 1024,
