@@ -215,7 +215,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingStart.
   ///
   /// In en, this message translates to:
-  /// **'Start'**
+  /// **'Get started'**
   String get onboardingStart;
 
   /// No description provided for @onboardingSkip.
@@ -223,6 +223,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get onboardingSkip;
+
+  /// No description provided for @onboardingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onboardingBack;
+
+  /// No description provided for @onboardingDownloadNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Download now'**
+  String get onboardingDownloadNow;
+
+  /// No description provided for @onboardingNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get onboardingNotNow;
 
   /// No description provided for @bannerOffline.
   ///
@@ -2189,7 +2207,7 @@ abstract class AppLocalizations {
   /// No description provided for @modelWhyBody.
   ///
   /// In en, this message translates to:
-  /// **'To use AI features offline. The model is downloaded to your device and is not sent to a server.'**
+  /// **'To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.'**
   String get modelWhyBody;
 
   /// No description provided for @authTitleWelcome.

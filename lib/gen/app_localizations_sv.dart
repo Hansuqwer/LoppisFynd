@@ -73,10 +73,19 @@ class AppLocalizationsSv extends AppLocalizations {
   String get onboardingContinue => 'Fortsätt';
 
   @override
-  String get onboardingStart => 'Börja';
+  String get onboardingStart => 'Kom igång';
 
   @override
   String get onboardingSkip => 'Hoppa över';
+
+  @override
+  String get onboardingBack => 'Tillbaka';
+
+  @override
+  String get onboardingDownloadNow => 'Ladda ner nu';
+
+  @override
+  String get onboardingNotNow => 'Inte nu';
 
   @override
   String get bannerOffline => 'Offline-läge: prishämtning är pausad.';
@@ -1154,7 +1163,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get modelWhyBody =>
-      'För att kunna använda AI-funktioner offline. Modellen laddas ned till din enhet och skickas inte till en server.';
+      'För att kunna använda AI-funktioner offline. Modellen laddas ner till din enhet (ca 1 GB) och skickas inte till en server. På wifi tar det ofta ca 2–10 minuter.';
 
   @override
   String get authTitleWelcome => 'Välkommen';

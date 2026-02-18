@@ -26,8 +26,11 @@
   "onboardingOfflineTitle": "Offline-first",
   "onboardingOfflineBody": "Everything works without internet except price fetch. Your data stays on-device unless you enable cloud sync.",
   "onboardingContinue": "Continue",
-  "onboardingStart": "Start",
+  "onboardingStart": "Get started",
   "onboardingSkip": "Skip",
+  "onboardingBack": "Back",
+  "onboardingDownloadNow": "Download now",
+  "onboardingNotNow": "Not now",
 
   "bannerOffline": "Offline mode: price fetch is paused.",
   "buttonRetry": "Retry",
@@ -442,7 +445,7 @@
   "@modelFailed": {"placeholders": {"message": {"type": "String"}}},
   "modelWhyLink": "Why?",
   "modelWhyTitle": "Why do I need to download a model?",
-  "modelWhyBody": "To use AI features offline. The model is downloaded to your device and is not sent to a server.",
+  "modelWhyBody": "To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.",
 
   "authTitleWelcome": "Welcome",
   "authModeSignUp": "Create account",

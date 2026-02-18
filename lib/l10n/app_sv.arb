@@ -26,8 +26,11 @@
   "onboardingOfflineTitle": "Offline först",
   "onboardingOfflineBody": "Allt fungerar utan internet förutom prishämtning. Din data stannar på enheten om du inte aktiverar molnsynk.",
   "onboardingContinue": "Fortsätt",
-  "onboardingStart": "Börja",
+  "onboardingStart": "Kom igång",
   "onboardingSkip": "Hoppa över",
+  "onboardingBack": "Tillbaka",
+  "onboardingDownloadNow": "Ladda ner nu",
+  "onboardingNotNow": "Inte nu",
 
   "bannerOffline": "Offline-läge: prishämtning är pausad.",
 
@@ -443,7 +446,7 @@
   "@modelFailed": {"placeholders": {"message": {"type": "String"}}},
   "modelWhyLink": "Varför?",
   "modelWhyTitle": "Varför behöver jag ladda ned en modell?",
-  "modelWhyBody": "För att kunna använda AI-funktioner offline. Modellen laddas ned till din enhet och skickas inte till en server.",
+  "modelWhyBody": "För att kunna använda AI-funktioner offline. Modellen laddas ner till din enhet (ca 1 GB) och skickas inte till en server. På wifi tar det ofta ca 2–10 minuter.",
 
   "authTitleWelcome": "Välkommen",
   "authModeSignUp": "Skapa konto",

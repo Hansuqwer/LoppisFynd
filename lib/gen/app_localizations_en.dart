@@ -73,10 +73,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingContinue => 'Continue';
 
   @override
-  String get onboardingStart => 'Start';
+  String get onboardingStart => 'Get started';
 
   @override
   String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingBack => 'Back';
+
+  @override
+  String get onboardingDownloadNow => 'Download now';
+
+  @override
+  String get onboardingNotNow => 'Not now';
 
   @override
   String get bannerOffline => 'Offline mode: price fetch is paused.';
@@ -1154,7 +1163,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modelWhyBody =>
-      'To use AI features offline. The model is downloaded to your device and is not sent to a server.';
+      'To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.';
 
   @override
   String get authTitleWelcome => 'Welcome';

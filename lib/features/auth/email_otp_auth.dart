@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class EmailOtpAuthApi {
-  Future<void> sendOtp({required String email});
+  Future<void> sendOtp({required String email, required bool shouldCreateUser});
 
   Future<void> verifyOtp({required String email, required String code});
 }
@@ -12,8 +12,14 @@ class SupabaseEmailOtpAuthApi implements EmailOtpAuthApi {
   final SupabaseClient _client;
 
   @override
-  Future<void> sendOtp({required String email}) async {
-    await _client.auth.signInWithOtp(email: email, shouldCreateUser: true);
+  Future<void> sendOtp({
+    required String email,
+    required bool shouldCreateUser,
+  }) async {
+    await _client.auth.signInWithOtp(
+      email: email,
+      shouldCreateUser: shouldCreateUser,
+    );
   }
 
   @override
@@ -46,24 +52,24 @@ class EmailOtpAuth {
 
   final EmailOtpAuthApi _api;
 
-  Future<void> sendOtp(String email) async {
+  Future<void> sendOtp(String email, {bool shouldCreateUser = false}) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
-      throw const EmailOtpAuthException('empty_email', 'Email is required.');
+      throw const EmailOtpAuthException('empty_email', '');
     }
 
-    await _api.sendOtp(email: trimmedEmail);
+    await _api.sendOtp(email: trimmedEmail, shouldCreateUser: shouldCreateUser);
   }
 
   Future<void> verifyOtp(String email, String code) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
-      throw const EmailOtpAuthException('empty_email', 'Email is required.');
+      throw const EmailOtpAuthException('empty_email', '');
     }
 
     final trimmedCode = code.trim();
     if (trimmedCode.isEmpty) {
-      throw const EmailOtpAuthException('empty_code', 'Code is required.');
+      throw const EmailOtpAuthException('empty_code', '');
     }
 
     await _api.verifyOtp(email: trimmedEmail, code: trimmedCode);

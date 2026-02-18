@@ -16,11 +16,16 @@ class _FakeEmailOtpAuthApi implements EmailOtpAuthApi {
   int verifyCalls = 0;
   String? lastEmail;
   String? lastCode;
+  bool? lastShouldCreateUser;
 
   @override
-  Future<void> sendOtp({required String email}) async {
+  Future<void> sendOtp({
+    required String email,
+    required bool shouldCreateUser,
+  }) async {
     sendCalls += 1;
     lastEmail = email;
+    lastShouldCreateUser = shouldCreateUser;
   }
 
   @override

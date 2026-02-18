@@ -6,19 +6,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class _FakeEmailOtpAuthApi implements EmailOtpAuthApi {
   _FakeEmailOtpAuthApi({this.onSendOtp, this.onVerifyOtp});
 
-  Future<void> Function(String email)? onSendOtp;
+  Future<void> Function(String email, bool shouldCreateUser)? onSendOtp;
   Future<void> Function(String email, String code)? onVerifyOtp;
 
   int sendCalls = 0;
   int verifyCalls = 0;
   String? lastEmail;
   String? lastCode;
+  bool? lastShouldCreateUser;
 
   @override
-  Future<void> sendOtp({required String email}) async {
+  Future<void> sendOtp({
+    required String email,
+    required bool shouldCreateUser,
+  }) async {
     sendCalls += 1;
     lastEmail = email;
-    await onSendOtp?.call(email);
+    lastShouldCreateUser = shouldCreateUser;
+    await onSendOtp?.call(email, shouldCreateUser);
   }
 
   @override
@@ -107,7 +112,7 @@ void main() {
 
     test('network error path (generic exception) is surfaced', () async {
       final api = _FakeEmailOtpAuthApi(
-        onSendOtp: (_) async {
+        onSendOtp: (email, _) async {
           throw Exception('Network down');
         },
       );

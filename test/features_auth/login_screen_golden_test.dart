@@ -12,7 +12,10 @@ import 'package:fynd_loppis/gen/app_localizations.dart';
 
 class _FakeEmailOtpAuthApi implements EmailOtpAuthApi {
   @override
-  Future<void> sendOtp({required String email}) async {}
+  Future<void> sendOtp({
+    required String email,
+    required bool shouldCreateUser,
+  }) async {}
 
   @override
   Future<void> verifyOtp({required String email, required String code}) async {}
