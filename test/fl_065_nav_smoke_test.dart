@@ -14,6 +14,7 @@ import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart
 import 'package:fynd_loppis/services/ai/model_manager.dart';
 import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
+import 'package:fynd_loppis/shared/widgets/capsule_nav_bar.dart';
 
 void main() {
   testWidgets('Bottom nav tabs switch without crashing', (tester) async {
@@ -67,6 +68,25 @@ void main() {
 
     final nav = find.byKey(const Key('capsule_nav'));
     expect(nav, findsOneWidget);
+
+    // Contract: exactly 5 destinations.
+    const destinationKeys = <Key>[
+      Key('nav_dashboard'),
+      Key('nav_scanner'),
+      Key('nav_haul'),
+      Key('nav_history'),
+      Key('nav_profile'),
+    ];
+    for (final key in destinationKeys) {
+      expect(
+        find.descendant(of: nav, matching: find.byKey(key)),
+        findsOneWidget,
+      );
+    }
+    expect(
+      tester.widget<CapsuleNavBar>(find.byType(CapsuleNavBar)).destinations,
+      hasLength(5),
+    );
 
     // Scanner
     await tester.tap(find.byKey(const Key('nav_scanner')));
