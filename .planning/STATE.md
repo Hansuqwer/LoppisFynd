@@ -11,31 +11,32 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Current Phase:** 01
 **Current Phase Name:** Design System + Guardrails
-**Current Plan:** 2
+**Current Plan:** 3
 **Total Plans in Phase:** 3
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Last Activity:** 2026-02-18
-**Last Activity Description:** Completed 01-01-PLAN.md
+**Last Activity Description:** Completed 01-02-PLAN.md
 
-**Progress:** [███████░░░] 67%
+**Progress:** [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 6 min
-- Total execution time: 0.1 hours
+- Total plans completed: 3
+- Average duration: 15 min
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Design System + Guardrails | 1 | 3 | 6 min |
+| 1. Design System + Guardrails | 3 | 3 | 15 min |
 | 2. Capsule Navigation Shell | 0 | 2 | - |
 | 3. Startup + Auth + Model Download | 0 | 3 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
 | Phase 01-design-system-guardrails P03 | 29 min | 2 tasks | 25 files |
+| Phase 01-design-system-guardrails P02 | 11 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -45,6 +46,9 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 - [Phase 01]: Avoided ThemeData-wide input/button overrides that drift existing goldens; kept theme changes additive via tokens
 - [Phase 01-design-system-guardrails]: Pinned custom_lint 0.8.x to satisfy analyzer constraints and keep CI green.
 - [Phase 01-design-system-guardrails]: Added AppCapsuleNav/AppShadows capsule tokens so shared primitives stay lint-clean (no ad-hoc UI numbers).
+- [Phase 01-design-system-guardrails]: Added AppOpacity.capsuleNavFill to eliminate magic opacity in CapsuleNavBar.
+- [Phase 01-design-system-guardrails]: Used AppRadius.capsule for CapsuleNavBar container radius (preserves AppRadius.pill semantics).
+- [Phase 01-design-system-guardrails]: Kept GlassOverlay API stable; prefer GlassSurface/GlassBoard primitives for new screens.
 
 ### Pending Todos
 
@@ -56,6 +60,6 @@ None
 
 ## Session
 
-**Last session:** 2026-02-18T04:26:37.276Z
-**Stopped At:** Completed 01-design-system-guardrails-03-PLAN.md
+**Last session:** 2026-02-18T08:41:57.309Z
+**Stopped At:** Completed 01-design-system-guardrails-02-PLAN.md
 **Resume File:** None
