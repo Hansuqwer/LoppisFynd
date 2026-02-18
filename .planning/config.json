@@ -7,6 +7,8 @@
   "branching_strategy": "none",
   "phase_branch_template": "gsd/phase-{phase}-{slug}",
   "milestone_branch_template": "gsd/{milestone}-{slug}",
+  "parallelization": true,
+  "brave_search": false,
   "workflow": {
     "research": true,
     "plan_check": true,
@@ -16,12 +18,25 @@
   "git": {
     "branching_strategy": "none"
   },
+  "model_overrides": {
+    "gsd-project-researcher": "inherit",
+    "gsd-phase-researcher": "inherit",
+    "gsd-research-synthesizer": "inherit"
+  },
   "agent_model_overrides": {
     "main": {
       "model": "openai/gpt-5.2",
       "variant": "high"
     },
+    "research": {
+      "model": "openai/gpt-5.2",
+      "variant": "low"
+    },
     "research_preferred": [
+      {
+        "model": "openai/gpt-5.2",
+        "variant": "low"
+      },
       {
         "model": "moonshotai/kimi-k2.5",
         "tier": "free"
@@ -31,7 +46,5 @@
         "tier": "free"
       }
     ]
-  },
-  "parallelization": true,
-  "brave_search": false
+  }
 }
