@@ -76,7 +76,7 @@ void main() {
     // Haul
     await tester.tap(find.byKey(const Key('nav_haul')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Aktuellt fynd'), findsWidgets);
+    expect(find.text('Pågående fynd'), findsWidgets);
 
     // History
     await tester.tap(find.byKey(const Key('nav_history')));
