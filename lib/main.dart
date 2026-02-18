@@ -41,8 +41,19 @@ Future<void> main() async {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: BentoCard(
-            child: Text(
-              'Something went wrong.\n\n${details.exceptionAsString()}',
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.errorSomethingWentWrong),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(details.exceptionAsString()),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -214,8 +225,7 @@ class LoppisfyndApp extends ConsumerWidget {
         .maybeWhen(data: (v) => v, orElse: () => false);
 
     return MaterialApp(
-      onGenerateTitle: (context) =>
-          AppLocalizations.of(context)?.appTitle ?? 'Loppisfynd',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: highContrast ? AppTheme.highContrast() : AppTheme.light(),
       localizationsDelegates: const [
         AppLocalizations.delegate,

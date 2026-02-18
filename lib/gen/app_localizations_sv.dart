@@ -106,6 +106,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get commonSave => 'Spara';
 
   @override
+  String get commonAdd => 'Lägg till';
+
+  @override
   String get errorCameraTitle => 'Kamerafel';
 
   @override
@@ -317,7 +320,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get scannerBatchTrayTitle => 'Skanningsbricka';
 
   @override
-  String get haulTitle => 'Aktuellt fynd';
+  String get haulTitle => 'Pågående fynd';
 
   @override
   String get haulSubtitle =>
@@ -994,4 +997,261 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get loginErrorGeneric => 'Något gick fel.';
+
+  @override
+  String get errorSomethingWentWrong => 'Något gick fel.';
+
+  @override
+  String syncStatusRowStatusUpdated(String status, String timestamp) {
+    return '$status · $timestamp';
+  }
+
+  @override
+  String get itemDetailKeywordAddTitle => 'Lägg till nyckelord';
+
+  @override
+  String get itemDetailKeywordEditTitle => 'Redigera nyckelord';
+
+  @override
+  String get itemDetailKeywordHint => 't.ex. rorstrand';
+
+  @override
+  String get itemDetailUnnamedItem => 'Namnlöst fynd';
+
+  @override
+  String itemDetailStatusValue(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get itemDetailMarketTitle => 'Marknad';
+
+  @override
+  String itemDetailAiConfidence(int percent) {
+    return 'AI-säkerhet: $percent%';
+  }
+
+  @override
+  String get itemDetailStatMin => 'Min';
+
+  @override
+  String get itemDetailStatMedian => 'Median';
+
+  @override
+  String get itemDetailStatMax => 'Max';
+
+  @override
+  String get itemDetailIdentifying => 'Identifierar…';
+
+  @override
+  String get itemDetailIdentifyNow => 'Identifiera nu';
+
+  @override
+  String get itemDetailDraftListing => 'Annonsutkast';
+
+  @override
+  String get itemDetailTraderaQueryLabel => 'Tradera-sökning';
+
+  @override
+  String get itemDetailTraderaQueryHint => 't.ex. rorstrand mon amie tallrik';
+
+  @override
+  String get itemDetailQueueSync => 'Köa synk';
+
+  @override
+  String get itemDetailQueuedForSync => 'Köad för synk.';
+
+  @override
+  String get itemDetailSyncCompleted => 'Synk klar.';
+
+  @override
+  String get itemDetailProfitTitle => 'Vinst';
+
+  @override
+  String get itemDetailPurchasePriceLabel => 'Inköp (SEK)';
+
+  @override
+  String get itemDetailFixedFeesLabel => 'Fasta avgifter (SEK)';
+
+  @override
+  String get itemDetailShippingSellerLabel => 'Frakt (säljare) (SEK)';
+
+  @override
+  String get itemDetailNotesLabel => 'Anteckningar';
+
+  @override
+  String get itemDetailNotesHint => 't.ex. defekter, saknade delar, färg';
+
+  @override
+  String get itemDetailNoMarketDataYet => 'Ingen marknadsdata ännu.';
+
+  @override
+  String get itemDetailConditionTitle => 'Skick';
+
+  @override
+  String itemDetailConditionValue(String label, String percent) {
+    return '$label ($percent%)';
+  }
+
+  @override
+  String get itemDetailConditionMint => 'Toppskick';
+
+  @override
+  String get itemDetailConditionGood => 'Bra';
+
+  @override
+  String get itemDetailConditionFair => 'OK';
+
+  @override
+  String get itemDetailConditionRough => 'Slitet';
+
+  @override
+  String get itemDetailFlipLabel => 'Flip';
+
+  @override
+  String get itemDetailKeywordsTitle => 'Nyckelord';
+
+  @override
+  String get modelCalloutTitle => 'Ladda ned AI-modellen (Gemma)';
+
+  @override
+  String get modelCalloutBody =>
+      'Gör identifiering snabbare offline. Du kan ladda ned nu eller senare i Inställningar.';
+
+  @override
+  String get modelDownloadCta => 'Ladda ned';
+
+  @override
+  String get modelRetry => 'Försök igen';
+
+  @override
+  String get modelNotInstalled => 'Inte installerad';
+
+  @override
+  String get modelDownloading => 'Hämtar…';
+
+  @override
+  String modelDownloadingPercent(int percent) {
+    return 'Hämtar $percent%';
+  }
+
+  @override
+  String get modelInstalling => 'Installerar…';
+
+  @override
+  String get modelInstalled => 'Installerad ✓';
+
+  @override
+  String modelFailed(String message) {
+    return 'Misslyckades: $message';
+  }
+
+  @override
+  String get modelWhyLink => 'Varför?';
+
+  @override
+  String get modelWhyTitle => 'Varför behöver jag ladda ned en modell?';
+
+  @override
+  String get modelWhyBody =>
+      'För att kunna använda AI-funktioner offline. Modellen laddas ned till din enhet och skickas inte till en server.';
+
+  @override
+  String get authTitleWelcome => 'Välkommen';
+
+  @override
+  String get authModeSignUp => 'Skapa konto';
+
+  @override
+  String get authModeSignIn => 'Logga in';
+
+  @override
+  String get authEmailLabel => 'E-post';
+
+  @override
+  String get authEmailHint => 'namn@exempel.se';
+
+  @override
+  String get authCodeLabel => 'Kod';
+
+  @override
+  String get authCtaCreateAccount => 'Skapa konto';
+
+  @override
+  String get authCtaSignIn => 'Logga in';
+
+  @override
+  String get authVerify => 'Verifiera';
+
+  @override
+  String get authResendCode => 'Skicka igen';
+
+  @override
+  String get authTroubleLink => 'Problem att logga in?';
+
+  @override
+  String get authTroubleTitle => 'Problem att logga in?';
+
+  @override
+  String get authTroubleBody =>
+      'Kontrollera skräppost, och försök skicka en ny kod. Om det fortfarande inte fungerar kan du prova en annan e-postadress.';
+
+  @override
+  String authError(String message) {
+    return 'Något gick fel: $message';
+  }
+
+  @override
+  String get homeHeroTitle => 'Starta scanner';
+
+  @override
+  String get homeHeroBody =>
+      'Skanna prislappen. Spara offline. Synka priser när du är online.';
+
+  @override
+  String get homeTileActiveFinds => 'Aktiva fynd';
+
+  @override
+  String get homeTileProfitEst => 'Vinst (est.)';
+
+  @override
+  String get homeTileDrafts => 'Utkast';
+
+  @override
+  String get homeTileHistory => 'Historik';
+
+  @override
+  String get homeTileCtaOpen => 'Öppna';
+
+  @override
+  String get homeTileCtaSeeAll => 'Se alla';
+
+  @override
+  String get haulUnnamedFind => 'Namnlöst fynd';
+
+  @override
+  String get haulStatusIdentifying => 'Identifierar…';
+
+  @override
+  String get haulStatusSaved => 'Sparad';
+
+  @override
+  String haulTotalValue(String value) {
+    return 'Totalt värde: $value';
+  }
+
+  @override
+  String get draftTitleLabel => 'Rubrik';
+
+  @override
+  String get draftDescriptionLabel => 'Beskrivning';
+
+  @override
+  String get draftPriceLabel => 'Pris (SEK)';
+
+  @override
+  String get save => 'Spara';
+
+  @override
+  String get delete => 'Ta bort';
 }

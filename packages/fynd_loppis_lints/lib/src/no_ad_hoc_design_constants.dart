@@ -43,7 +43,7 @@ class NoAdHocDesignConstants extends DartLintRule {
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     if (!_isInGuardrailScope(resolver.source.fullName)) return;
@@ -77,7 +77,7 @@ class NoAdHocDesignConstants extends DartLintRule {
 
   void _checkEdgeInsets(
     InstanceCreationExpression node,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
   ) {
     // Flags EdgeInsets.* where any direct numeric literal appears.
     for (final arg in node.argumentList.arguments) {
@@ -88,7 +88,10 @@ class NoAdHocDesignConstants extends DartLintRule {
     }
   }
 
-  void _checkImageFilterBlur(MethodInvocation node, ErrorReporter reporter) {
+  void _checkImageFilterBlur(
+    MethodInvocation node,
+    DiagnosticReporter reporter,
+  ) {
     for (final arg in node.argumentList.arguments) {
       if (arg is! NamedExpression) continue;
       final name = arg.name.label.name;
@@ -103,7 +106,7 @@ class NoAdHocDesignConstants extends DartLintRule {
 
   void _checkBoxShadow(
     InstanceCreationExpression node,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
   ) {
     for (final arg in node.argumentList.arguments) {
       if (arg is! NamedExpression) continue;

@@ -193,22 +193,27 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     return showDialog<String>(
       context: context,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(initial == null ? 'Add keyword' : 'Edit keyword'),
+          title: Text(
+            initial == null
+                ? l10n.itemDetailKeywordAddTitle
+                : l10n.itemDetailKeywordEditTitle,
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'e.g. rorstrand'),
+            decoration: InputDecoration(hintText: l10n.itemDetailKeywordHint),
             onSubmitted: (v) => Navigator.of(context).pop(v),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Save'),
+              child: Text(l10n.commonSave),
             ),
           ],
         );
@@ -340,7 +345,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.desc ?? item.query ?? 'Unnamed item',
+                              item.desc ??
+                                  item.query ??
+                                  l10n.itemDetailUnnamedItem,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleLarge
@@ -348,7 +355,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              'Status: ${item.status.name}',
+                              l10n.itemDetailStatusValue(item.status.name),
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -363,7 +370,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Market',
+                        l10n.itemDetailMarketTitle,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -371,7 +378,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       if (item.confidence != null) ...[
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
-                          'AI confidence: ${(item.confidence! * 100).toStringAsFixed(0)}%',
+                          l10n.itemDetailAiConfidence(
+                            (item.confidence! * 100).round(),
+                          ),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -393,19 +402,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         children: [
                           Expanded(
                             child: _StatLine(
-                              label: 'Min',
+                              label: l10n.itemDetailStatMin,
                               value: _formatSek(item.minPrice),
                             ),
                           ),
                           Expanded(
                             child: _StatLine(
-                              label: 'Median',
+                              label: l10n.itemDetailStatMedian,
                               value: _formatSek(item.medianPrice),
                             ),
                           ),
                           Expanded(
                             child: _StatLine(
-                              label: 'Max',
+                              label: l10n.itemDetailStatMax,
                               value: _formatSek(item.maxPrice),
                             ),
                           ),
@@ -417,8 +426,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           Expanded(
                             child: GlassButton(
                               label: _identifying
-                                  ? 'Identifying…'
-                                  : 'Identify now',
+                                  ? l10n.itemDetailIdentifying
+                                  : l10n.itemDetailIdentifyNow,
                               icon: const Icon(Icons.psychology_alt_rounded),
                               onPressed: _identifying
                                   ? null
@@ -445,7 +454,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           if (_identifying) ...[
                             const SizedBox(width: AppSpacing.sm),
                             GlassButton(
-                              label: 'Cancel',
+                              label: l10n.commonCancel,
                               tone: GlassButtonTone.neutral,
                               icon: const Icon(Icons.stop_rounded),
                               onPressed: () {
@@ -457,7 +466,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       GlassButton(
-                        label: 'Draft listing',
+                        label: l10n.itemDetailDraftListing,
                         tone: GlassButtonTone.neutral,
                         icon: const Icon(Icons.edit_note_rounded),
                         onPressed: () {
@@ -505,9 +514,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       TextField(
                         controller: _queryController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tradera query',
-                          hintText: 'e.g. rorstrand mon amie tallrik',
+                        decoration: InputDecoration(
+                          labelText: l10n.itemDetailTraderaQueryLabel,
+                          hintText: l10n.itemDetailTraderaQueryHint,
                         ),
                         onSubmitted: (v) => _setQuery(db, v),
                         onEditingComplete: () =>
@@ -518,14 +527,14 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         children: [
                           Expanded(
                             child: GlassButton(
-                              label: 'Queue sync',
+                              label: l10n.itemDetailQueueSync,
                               onPressed: () async {
                                 final messenger = ScaffoldMessenger.of(context);
                                 await _queueSync(db);
                                 if (!mounted) return;
                                 messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Queued for sync.'),
+                                  SnackBar(
+                                    content: Text(l10n.itemDetailQueuedForSync),
                                   ),
                                 );
                               },
@@ -535,7 +544,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: GlassButton(
-                              label: 'Sync now',
+                              label: l10n.settingsSyncNow,
                               tone: GlassButtonTone.neutral,
                               onPressed: () async {
                                 final messenger = ScaffoldMessenger.of(context);
@@ -543,8 +552,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                 await syncScheduler.syncOnce();
                                 if (!mounted) return;
                                 messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Sync completed.'),
+                                  SnackBar(
+                                    content: Text(l10n.itemDetailSyncCompleted),
                                   ),
                                 );
                               },
@@ -562,7 +571,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Profit',
+                        l10n.itemDetailProfitTitle,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -573,9 +582,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: const InputDecoration(
-                          labelText: 'Purchase price (SEK)',
-                          hintText: '0',
+                        decoration: InputDecoration(
+                          labelText: l10n.itemDetailPurchasePriceLabel,
                         ),
                         onSubmitted: (v) => _savePurchasePrice(db, v),
                         onEditingComplete: () =>
@@ -591,9 +599,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: const InputDecoration(
-                                labelText: 'Fixed fees (SEK)',
-                                hintText: '0',
+                              decoration: InputDecoration(
+                                labelText: l10n.itemDetailFixedFeesLabel,
                               ),
                               onSubmitted: (_) => _saveFees(db),
                               onEditingComplete: () => _saveFees(db),
@@ -607,9 +614,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: const InputDecoration(
-                                labelText: 'Shipping (seller) (SEK)',
-                                hintText: '0',
+                              decoration: InputDecoration(
+                                labelText: l10n.itemDetailShippingSellerLabel,
                               ),
                               onSubmitted: (_) => _saveFees(db),
                               onEditingComplete: () => _saveFees(db),
@@ -643,9 +649,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                       TextField(
                         controller: _notesController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes',
-                          hintText: 'e.g. defects, missing parts, color',
+                        decoration: InputDecoration(
+                          labelText: l10n.itemDetailNotesLabel,
+                          hintText: l10n.itemDetailNotesHint,
                         ),
                         onSubmitted: (v) => _saveNotes(db, v),
                         onEditingComplete: () =>
@@ -736,10 +742,12 @@ class _ConditionAdjuster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final clamped = value.clamp(0.7, 1.1);
-    final label = _conditionLabel(clamped);
+    final label = _conditionLabel(l10n, clamped);
     final percent = ((clamped - 1.0) * 100).round();
     final sign = percent > 0 ? '+' : '';
+    final percentText = percent == 0 ? '0' : '$sign$percent';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,12 +756,12 @@ class _ConditionAdjuster extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Condition',
+                l10n.itemDetailConditionTitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Text(
-              '$label ($sign$percent%)',
+              l10n.itemDetailConditionValue(label, percentText),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -787,10 +795,14 @@ class _KeywordChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Keywords', style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          l10n.itemDetailKeywordsTitle,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Wrap(
           spacing: AppSpacing.xs,
@@ -803,7 +815,7 @@ class _KeywordChips extends StatelessWidget {
                 onDeleted: () => onDelete(i),
               ),
             ActionChip(
-              label: const Text('Add'),
+              label: Text(l10n.commonAdd),
               onPressed: tokens.length >= 5 ? null : onAdd,
               avatar: const Icon(Icons.add_rounded, size: 18),
             ),
@@ -814,11 +826,11 @@ class _KeywordChips extends StatelessWidget {
   }
 }
 
-String _conditionLabel(double multiplier) {
-  if (multiplier >= 1.05) return 'Mint';
-  if (multiplier >= 0.95) return 'Good';
-  if (multiplier >= 0.85) return 'Fair';
-  return 'Rough';
+String _conditionLabel(AppLocalizations l10n, double multiplier) {
+  if (multiplier >= 1.05) return l10n.itemDetailConditionMint;
+  if (multiplier >= 0.95) return l10n.itemDetailConditionGood;
+  if (multiplier >= 0.85) return l10n.itemDetailConditionFair;
+  return l10n.itemDetailConditionRough;
 }
 
 class _PriceChart extends StatelessWidget {
@@ -926,7 +938,7 @@ class _PriceChart extends StatelessWidget {
           border: Border.all(color: AppColors.borderSubtle),
         ),
         alignment: Alignment.center,
-        child: const Text('No market data yet.'),
+        child: Text(AppLocalizations.of(context)!.itemDetailNoMarketDataYet),
       );
     }
 

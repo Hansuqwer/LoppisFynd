@@ -47,7 +47,7 @@ class BatchTray extends StatelessWidget {
                 ),
               ),
               Text(
-                '${items.length}',
+                items.length.toString(),
                 style: AppTypography.metricsFrom(
                   Theme.of(
                     context,

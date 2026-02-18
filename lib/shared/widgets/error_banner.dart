@@ -20,7 +20,7 @@ class ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveRetryLabel =
-        retryLabel ?? (AppLocalizations.of(context)?.buttonRetry ?? 'Retry');
+        retryLabel ?? AppLocalizations.of(context)!.buttonRetry;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(

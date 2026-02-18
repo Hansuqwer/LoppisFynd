@@ -14,19 +14,6 @@ class NoHardcodedUiStrings extends DartLintRule {
 
   static bool _isInLib(String fullPath) {
     final normalized = fullPath.replaceAll('\\\\', '/');
-
-    // Legacy allowlist: keep CI clean while we migrate older screens.
-    // Remove entries as each file is fully localized.
-    const allowlisted = <String>{
-      '/lib/features/analyzer/item_detail_screen.dart',
-      '/lib/features/scanner/widgets/batch_tray.dart',
-      '/lib/features/settings/sync_status_screen.dart',
-      '/lib/main.dart',
-    };
-    for (final suffix in allowlisted) {
-      if (normalized.endsWith(suffix)) return false;
-    }
-
     return normalized.contains('/lib/') &&
         !normalized.contains('/lib/gen/') &&
         !normalized.contains('/lib/l10n/');
@@ -35,7 +22,7 @@ class NoHardcodedUiStrings extends DartLintRule {
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     if (!_isInLib(resolver.source.fullName)) return;
@@ -69,7 +56,10 @@ class NoHardcodedUiStrings extends DartLintRule {
     });
   }
 
-  void _checkText(InstanceCreationExpression node, ErrorReporter reporter) {
+  void _checkText(
+    InstanceCreationExpression node,
+    DiagnosticReporter reporter,
+  ) {
     final args = node.argumentList.arguments;
 
     if (args.isEmpty) return;
@@ -81,7 +71,7 @@ class NoHardcodedUiStrings extends DartLintRule {
 
   void _checkNamedStringArg(
     InstanceCreationExpression node,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     Set<String> names,
   ) {
     for (final arg in node.argumentList.arguments) {

@@ -24,7 +24,7 @@ class NoRawBackdropFilter extends DartLintRule {
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     final sourcePath = resolver.source.fullName;

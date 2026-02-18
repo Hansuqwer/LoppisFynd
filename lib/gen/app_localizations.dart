@@ -278,6 +278,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get commonSave;
 
+  /// No description provided for @commonAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get commonAdd;
+
   /// No description provided for @errorCameraTitle.
   ///
   /// In en, this message translates to:
@@ -1897,6 +1903,480 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong.'**
   String get loginErrorGeneric;
+
+  /// No description provided for @errorSomethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get errorSomethingWentWrong;
+
+  /// No description provided for @syncStatusRowStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'{status} · {timestamp}'**
+  String syncStatusRowStatusUpdated(String status, String timestamp);
+
+  /// No description provided for @itemDetailKeywordAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add keyword'**
+  String get itemDetailKeywordAddTitle;
+
+  /// No description provided for @itemDetailKeywordEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit keyword'**
+  String get itemDetailKeywordEditTitle;
+
+  /// No description provided for @itemDetailKeywordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. rorstrand'**
+  String get itemDetailKeywordHint;
+
+  /// No description provided for @itemDetailUnnamedItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed item'**
+  String get itemDetailUnnamedItem;
+
+  /// No description provided for @itemDetailStatusValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String itemDetailStatusValue(String status);
+
+  /// No description provided for @itemDetailMarketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Market'**
+  String get itemDetailMarketTitle;
+
+  /// No description provided for @itemDetailAiConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'AI confidence: {percent}%'**
+  String itemDetailAiConfidence(int percent);
+
+  /// No description provided for @itemDetailStatMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get itemDetailStatMin;
+
+  /// No description provided for @itemDetailStatMedian.
+  ///
+  /// In en, this message translates to:
+  /// **'Median'**
+  String get itemDetailStatMedian;
+
+  /// No description provided for @itemDetailStatMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get itemDetailStatMax;
+
+  /// No description provided for @itemDetailIdentifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Identifying…'**
+  String get itemDetailIdentifying;
+
+  /// No description provided for @itemDetailIdentifyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Identify now'**
+  String get itemDetailIdentifyNow;
+
+  /// No description provided for @itemDetailDraftListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft listing'**
+  String get itemDetailDraftListing;
+
+  /// No description provided for @itemDetailTraderaQueryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tradera query'**
+  String get itemDetailTraderaQueryLabel;
+
+  /// No description provided for @itemDetailTraderaQueryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. rorstrand mon amie plate'**
+  String get itemDetailTraderaQueryHint;
+
+  /// No description provided for @itemDetailQueueSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue sync'**
+  String get itemDetailQueueSync;
+
+  /// No description provided for @itemDetailQueuedForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued for sync.'**
+  String get itemDetailQueuedForSync;
+
+  /// No description provided for @itemDetailSyncCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync completed.'**
+  String get itemDetailSyncCompleted;
+
+  /// No description provided for @itemDetailProfitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get itemDetailProfitTitle;
+
+  /// No description provided for @itemDetailPurchasePriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase price (SEK)'**
+  String get itemDetailPurchasePriceLabel;
+
+  /// No description provided for @itemDetailFixedFeesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed fees (SEK)'**
+  String get itemDetailFixedFeesLabel;
+
+  /// No description provided for @itemDetailShippingSellerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping (seller) (SEK)'**
+  String get itemDetailShippingSellerLabel;
+
+  /// No description provided for @itemDetailNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get itemDetailNotesLabel;
+
+  /// No description provided for @itemDetailNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. defects, missing parts, color'**
+  String get itemDetailNotesHint;
+
+  /// No description provided for @itemDetailNoMarketDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No market data yet.'**
+  String get itemDetailNoMarketDataYet;
+
+  /// No description provided for @itemDetailConditionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition'**
+  String get itemDetailConditionTitle;
+
+  /// No description provided for @itemDetailConditionValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({percent}%)'**
+  String itemDetailConditionValue(String label, String percent);
+
+  /// No description provided for @itemDetailConditionMint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mint'**
+  String get itemDetailConditionMint;
+
+  /// No description provided for @itemDetailConditionGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get itemDetailConditionGood;
+
+  /// No description provided for @itemDetailConditionFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get itemDetailConditionFair;
+
+  /// No description provided for @itemDetailConditionRough.
+  ///
+  /// In en, this message translates to:
+  /// **'Rough'**
+  String get itemDetailConditionRough;
+
+  /// No description provided for @itemDetailFlipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip'**
+  String get itemDetailFlipLabel;
+
+  /// No description provided for @itemDetailKeywordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords'**
+  String get itemDetailKeywordsTitle;
+
+  /// No description provided for @modelCalloutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the AI model (Gemma)'**
+  String get modelCalloutTitle;
+
+  /// No description provided for @modelCalloutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Make identification faster offline. You can download now or later in Settings.'**
+  String get modelCalloutBody;
+
+  /// No description provided for @modelDownloadCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get modelDownloadCta;
+
+  /// No description provided for @modelRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get modelRetry;
+
+  /// No description provided for @modelNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get modelNotInstalled;
+
+  /// No description provided for @modelDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get modelDownloading;
+
+  /// No description provided for @modelDownloadingPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {percent}%'**
+  String modelDownloadingPercent(int percent);
+
+  /// No description provided for @modelInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get modelInstalling;
+
+  /// No description provided for @modelInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed ✓'**
+  String get modelInstalled;
+
+  /// No description provided for @modelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {message}'**
+  String modelFailed(String message);
+
+  /// No description provided for @modelWhyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Why?'**
+  String get modelWhyLink;
+
+  /// No description provided for @modelWhyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why do I need to download a model?'**
+  String get modelWhyTitle;
+
+  /// No description provided for @modelWhyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To use AI features offline. The model is downloaded to your device and is not sent to a server.'**
+  String get modelWhyBody;
+
+  /// No description provided for @authTitleWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get authTitleWelcome;
+
+  /// No description provided for @authModeSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get authModeSignUp;
+
+  /// No description provided for @authModeSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authModeSignIn;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmailLabel;
+
+  /// No description provided for @authEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@example.com'**
+  String get authEmailHint;
+
+  /// No description provided for @authCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get authCodeLabel;
+
+  /// No description provided for @authCtaCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get authCtaCreateAccount;
+
+  /// No description provided for @authCtaSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authCtaSignIn;
+
+  /// No description provided for @authVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get authVerify;
+
+  /// No description provided for @authResendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get authResendCode;
+
+  /// No description provided for @authTroubleLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Trouble signing in?'**
+  String get authTroubleLink;
+
+  /// No description provided for @authTroubleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trouble signing in?'**
+  String get authTroubleTitle;
+
+  /// No description provided for @authTroubleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your spam folder and try resending a new code. If it still doesn’t work, try another email address.'**
+  String get authTroubleBody;
+
+  /// No description provided for @authError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong: {message}'**
+  String authError(String message);
+
+  /// No description provided for @homeHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start scanner'**
+  String get homeHeroTitle;
+
+  /// No description provided for @homeHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the price tag. Save offline. Sync prices when you’re online.'**
+  String get homeHeroBody;
+
+  /// No description provided for @homeTileActiveFinds.
+  ///
+  /// In en, this message translates to:
+  /// **'Active finds'**
+  String get homeTileActiveFinds;
+
+  /// No description provided for @homeTileProfitEst.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit (est.)'**
+  String get homeTileProfitEst;
+
+  /// No description provided for @homeTileDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get homeTileDrafts;
+
+  /// No description provided for @homeTileHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get homeTileHistory;
+
+  /// No description provided for @homeTileCtaOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get homeTileCtaOpen;
+
+  /// No description provided for @homeTileCtaSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get homeTileCtaSeeAll;
+
+  /// No description provided for @haulUnnamedFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed find'**
+  String get haulUnnamedFind;
+
+  /// No description provided for @haulStatusIdentifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Identifying…'**
+  String get haulStatusIdentifying;
+
+  /// No description provided for @haulStatusSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get haulStatusSaved;
+
+  /// No description provided for @haulTotalValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total value: {value}'**
+  String haulTotalValue(String value);
+
+  /// No description provided for @draftTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get draftTitleLabel;
+
+  /// No description provided for @draftDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get draftDescriptionLabel;
+
+  /// No description provided for @draftPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (SEK)'**
+  String get draftPriceLabel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 }
 
 class _AppLocalizationsDelegate

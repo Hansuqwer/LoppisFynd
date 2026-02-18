@@ -39,6 +39,7 @@
   "commonOff": "Av",
   "commonHaul": "Fynd",
   "commonSave": "Spara",
+  "commonAdd": "Lägg till",
   "errorCameraTitle": "Kamerafel",
   "historyEmptyTitle": "Inga fynd ännu",
   "historyEmptyMessage": "Skapa ett fynd för att börja spåra dina köp.",
@@ -110,7 +111,7 @@
   "scannerNoScansYet": "Inga skanningar ännu.",
   "scannerBatchTrayTitle": "Skanningsbricka",
 
-  "haulTitle": "Aktuellt fynd",
+  "haulTitle": "Pågående fynd",
   "haulSubtitle": "Offline först. Lägg till medan du skannar, synka comps när du är online.",
   "haulItems": "Fynd",
   "haulReady": "Klart",
@@ -366,5 +367,118 @@
   "loginSendCode": "Skicka kod",
   "loginVerifyCode": "Verifiera kod",
   "loginCodeLabel": "Kod",
-  "loginErrorGeneric": "Något gick fel."
+  "loginErrorGeneric": "Något gick fel.",
+
+  "errorSomethingWentWrong": "Något gick fel.",
+
+  "syncStatusRowStatusUpdated": "{status} · {timestamp}",
+  "@syncStatusRowStatusUpdated": {
+    "placeholders": {
+      "status": {"type": "String"},
+      "timestamp": {"type": "String"}
+    }
+  },
+
+  "itemDetailKeywordAddTitle": "Lägg till nyckelord",
+  "itemDetailKeywordEditTitle": "Redigera nyckelord",
+  "itemDetailKeywordHint": "t.ex. rorstrand",
+  "itemDetailUnnamedItem": "Namnlöst fynd",
+  "itemDetailStatusValue": "Status: {status}",
+  "@itemDetailStatusValue": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "itemDetailMarketTitle": "Marknad",
+  "itemDetailAiConfidence": "AI-säkerhet: {percent}%",
+  "@itemDetailAiConfidence": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "itemDetailStatMin": "Min",
+  "itemDetailStatMedian": "Median",
+  "itemDetailStatMax": "Max",
+  "itemDetailIdentifying": "Identifierar…",
+  "itemDetailIdentifyNow": "Identifiera nu",
+  "itemDetailDraftListing": "Annonsutkast",
+  "itemDetailTraderaQueryLabel": "Tradera-sökning",
+  "itemDetailTraderaQueryHint": "t.ex. rorstrand mon amie tallrik",
+  "itemDetailQueueSync": "Köa synk",
+  "itemDetailQueuedForSync": "Köad för synk.",
+  "itemDetailSyncCompleted": "Synk klar.",
+  "itemDetailProfitTitle": "Vinst",
+  "itemDetailPurchasePriceLabel": "Inköp (SEK)",
+  "itemDetailFixedFeesLabel": "Fasta avgifter (SEK)",
+  "itemDetailShippingSellerLabel": "Frakt (säljare) (SEK)",
+  "itemDetailNotesLabel": "Anteckningar",
+  "itemDetailNotesHint": "t.ex. defekter, saknade delar, färg",
+  "itemDetailNoMarketDataYet": "Ingen marknadsdata ännu.",
+  "itemDetailConditionTitle": "Skick",
+  "itemDetailConditionValue": "{label} ({percent}%)",
+  "@itemDetailConditionValue": {
+    "placeholders": {
+      "label": {"type": "String"},
+      "percent": {"type": "String"}
+    }
+  },
+  "itemDetailConditionMint": "Toppskick",
+  "itemDetailConditionGood": "Bra",
+  "itemDetailConditionFair": "OK",
+  "itemDetailConditionRough": "Slitet",
+  "itemDetailFlipLabel": "Flip",
+  "itemDetailKeywordsTitle": "Nyckelord",
+
+  "modelCalloutTitle": "Ladda ned AI-modellen (Gemma)",
+  "modelCalloutBody": "Gör identifiering snabbare offline. Du kan ladda ned nu eller senare i Inställningar.",
+  "modelDownloadCta": "Ladda ned",
+  "modelRetry": "Försök igen",
+  "modelNotInstalled": "Inte installerad",
+  "modelDownloading": "Hämtar…",
+  "modelDownloadingPercent": "Hämtar {percent}%",
+  "@modelDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
+  "modelInstalling": "Installerar…",
+  "modelInstalled": "Installerad ✓",
+  "modelFailed": "Misslyckades: {message}",
+  "@modelFailed": {"placeholders": {"message": {"type": "String"}}},
+  "modelWhyLink": "Varför?",
+  "modelWhyTitle": "Varför behöver jag ladda ned en modell?",
+  "modelWhyBody": "För att kunna använda AI-funktioner offline. Modellen laddas ned till din enhet och skickas inte till en server.",
+
+  "authTitleWelcome": "Välkommen",
+  "authModeSignUp": "Skapa konto",
+  "authModeSignIn": "Logga in",
+  "authEmailLabel": "E-post",
+  "authEmailHint": "namn@exempel.se",
+  "authCodeLabel": "Kod",
+  "authCtaCreateAccount": "Skapa konto",
+  "authCtaSignIn": "Logga in",
+  "authVerify": "Verifiera",
+  "authResendCode": "Skicka igen",
+  "authTroubleLink": "Problem att logga in?",
+  "authTroubleTitle": "Problem att logga in?",
+  "authTroubleBody": "Kontrollera skräppost, och försök skicka en ny kod. Om det fortfarande inte fungerar kan du prova en annan e-postadress.",
+  "authError": "Något gick fel: {message}",
+  "@authError": {"placeholders": {"message": {"type": "String"}}},
+
+  "homeHeroTitle": "Starta scanner",
+  "homeHeroBody": "Skanna prislappen. Spara offline. Synka priser när du är online.",
+  "homeTileActiveFinds": "Aktiva fynd",
+  "homeTileProfitEst": "Vinst (est.)",
+  "homeTileDrafts": "Utkast",
+  "homeTileHistory": "Historik",
+  "homeTileCtaOpen": "Öppna",
+  "homeTileCtaSeeAll": "Se alla",
+
+  "haulUnnamedFind": "Namnlöst fynd",
+  "haulStatusIdentifying": "Identifierar…",
+  "haulStatusSaved": "Sparad",
+  "haulTotalValue": "Totalt värde: {value}",
+  "@haulTotalValue": {"placeholders": {"value": {"type": "String"}}},
+
+  "draftTitleLabel": "Rubrik",
+  "draftDescriptionLabel": "Beskrivning",
+  "draftPriceLabel": "Pris (SEK)",
+  "save": "Spara",
+  "delete": "Ta bort"
 }

@@ -125,7 +125,10 @@ class SyncStatusScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: AppSpacing.xxs),
                                       Text(
-                                        '${r.status} · ${r.updatedAt.toIso8601String()}',
+                                        l10n.syncStatusRowStatusUpdated(
+                                          r.status,
+                                          r.updatedAt.toIso8601String(),
+                                        ),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.bodySmall,

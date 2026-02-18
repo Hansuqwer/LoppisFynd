@@ -106,6 +106,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSave => 'Save';
 
   @override
+  String get commonAdd => 'Add';
+
+  @override
   String get errorCameraTitle => 'Camera error';
 
   @override
@@ -994,4 +997,261 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginErrorGeneric => 'Something went wrong.';
+
+  @override
+  String get errorSomethingWentWrong => 'Something went wrong.';
+
+  @override
+  String syncStatusRowStatusUpdated(String status, String timestamp) {
+    return '$status · $timestamp';
+  }
+
+  @override
+  String get itemDetailKeywordAddTitle => 'Add keyword';
+
+  @override
+  String get itemDetailKeywordEditTitle => 'Edit keyword';
+
+  @override
+  String get itemDetailKeywordHint => 'e.g. rorstrand';
+
+  @override
+  String get itemDetailUnnamedItem => 'Unnamed item';
+
+  @override
+  String itemDetailStatusValue(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get itemDetailMarketTitle => 'Market';
+
+  @override
+  String itemDetailAiConfidence(int percent) {
+    return 'AI confidence: $percent%';
+  }
+
+  @override
+  String get itemDetailStatMin => 'Min';
+
+  @override
+  String get itemDetailStatMedian => 'Median';
+
+  @override
+  String get itemDetailStatMax => 'Max';
+
+  @override
+  String get itemDetailIdentifying => 'Identifying…';
+
+  @override
+  String get itemDetailIdentifyNow => 'Identify now';
+
+  @override
+  String get itemDetailDraftListing => 'Draft listing';
+
+  @override
+  String get itemDetailTraderaQueryLabel => 'Tradera query';
+
+  @override
+  String get itemDetailTraderaQueryHint => 'e.g. rorstrand mon amie plate';
+
+  @override
+  String get itemDetailQueueSync => 'Queue sync';
+
+  @override
+  String get itemDetailQueuedForSync => 'Queued for sync.';
+
+  @override
+  String get itemDetailSyncCompleted => 'Sync completed.';
+
+  @override
+  String get itemDetailProfitTitle => 'Profit';
+
+  @override
+  String get itemDetailPurchasePriceLabel => 'Purchase price (SEK)';
+
+  @override
+  String get itemDetailFixedFeesLabel => 'Fixed fees (SEK)';
+
+  @override
+  String get itemDetailShippingSellerLabel => 'Shipping (seller) (SEK)';
+
+  @override
+  String get itemDetailNotesLabel => 'Notes';
+
+  @override
+  String get itemDetailNotesHint => 'e.g. defects, missing parts, color';
+
+  @override
+  String get itemDetailNoMarketDataYet => 'No market data yet.';
+
+  @override
+  String get itemDetailConditionTitle => 'Condition';
+
+  @override
+  String itemDetailConditionValue(String label, String percent) {
+    return '$label ($percent%)';
+  }
+
+  @override
+  String get itemDetailConditionMint => 'Mint';
+
+  @override
+  String get itemDetailConditionGood => 'Good';
+
+  @override
+  String get itemDetailConditionFair => 'Fair';
+
+  @override
+  String get itemDetailConditionRough => 'Rough';
+
+  @override
+  String get itemDetailFlipLabel => 'Flip';
+
+  @override
+  String get itemDetailKeywordsTitle => 'Keywords';
+
+  @override
+  String get modelCalloutTitle => 'Download the AI model (Gemma)';
+
+  @override
+  String get modelCalloutBody =>
+      'Make identification faster offline. You can download now or later in Settings.';
+
+  @override
+  String get modelDownloadCta => 'Download';
+
+  @override
+  String get modelRetry => 'Try again';
+
+  @override
+  String get modelNotInstalled => 'Not installed';
+
+  @override
+  String get modelDownloading => 'Downloading…';
+
+  @override
+  String modelDownloadingPercent(int percent) {
+    return 'Downloading $percent%';
+  }
+
+  @override
+  String get modelInstalling => 'Installing…';
+
+  @override
+  String get modelInstalled => 'Installed ✓';
+
+  @override
+  String modelFailed(String message) {
+    return 'Failed: $message';
+  }
+
+  @override
+  String get modelWhyLink => 'Why?';
+
+  @override
+  String get modelWhyTitle => 'Why do I need to download a model?';
+
+  @override
+  String get modelWhyBody =>
+      'To use AI features offline. The model is downloaded to your device and is not sent to a server.';
+
+  @override
+  String get authTitleWelcome => 'Welcome';
+
+  @override
+  String get authModeSignUp => 'Create account';
+
+  @override
+  String get authModeSignIn => 'Sign in';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authEmailHint => 'name@example.com';
+
+  @override
+  String get authCodeLabel => 'Code';
+
+  @override
+  String get authCtaCreateAccount => 'Create account';
+
+  @override
+  String get authCtaSignIn => 'Sign in';
+
+  @override
+  String get authVerify => 'Verify';
+
+  @override
+  String get authResendCode => 'Resend code';
+
+  @override
+  String get authTroubleLink => 'Trouble signing in?';
+
+  @override
+  String get authTroubleTitle => 'Trouble signing in?';
+
+  @override
+  String get authTroubleBody =>
+      'Check your spam folder and try resending a new code. If it still doesn’t work, try another email address.';
+
+  @override
+  String authError(String message) {
+    return 'Something went wrong: $message';
+  }
+
+  @override
+  String get homeHeroTitle => 'Start scanner';
+
+  @override
+  String get homeHeroBody =>
+      'Scan the price tag. Save offline. Sync prices when you’re online.';
+
+  @override
+  String get homeTileActiveFinds => 'Active finds';
+
+  @override
+  String get homeTileProfitEst => 'Profit (est.)';
+
+  @override
+  String get homeTileDrafts => 'Drafts';
+
+  @override
+  String get homeTileHistory => 'History';
+
+  @override
+  String get homeTileCtaOpen => 'Open';
+
+  @override
+  String get homeTileCtaSeeAll => 'See all';
+
+  @override
+  String get haulUnnamedFind => 'Unnamed find';
+
+  @override
+  String get haulStatusIdentifying => 'Identifying…';
+
+  @override
+  String get haulStatusSaved => 'Saved';
+
+  @override
+  String haulTotalValue(String value) {
+    return 'Total value: $value';
+  }
+
+  @override
+  String get draftTitleLabel => 'Title';
+
+  @override
+  String get draftDescriptionLabel => 'Description';
+
+  @override
+  String get draftPriceLabel => 'Price (SEK)';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get delete => 'Delete';
 }

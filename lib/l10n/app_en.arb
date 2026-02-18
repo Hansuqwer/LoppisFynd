@@ -38,6 +38,7 @@
   "commonOff": "Off",
   "commonHaul": "Haul",
   "commonSave": "Save",
+  "commonAdd": "Add",
   "errorCameraTitle": "Camera error",
   "historyEmptyTitle": "No hauls yet",
   "historyEmptyMessage": "Create a haul to start tracking your finds.",
@@ -365,5 +366,118 @@
   "loginSendCode": "Send code",
   "loginVerifyCode": "Verify code",
   "loginCodeLabel": "Code",
-  "loginErrorGeneric": "Something went wrong."
+  "loginErrorGeneric": "Something went wrong.",
+
+  "errorSomethingWentWrong": "Something went wrong.",
+
+  "syncStatusRowStatusUpdated": "{status} · {timestamp}",
+  "@syncStatusRowStatusUpdated": {
+    "placeholders": {
+      "status": {"type": "String"},
+      "timestamp": {"type": "String"}
+    }
+  },
+
+  "itemDetailKeywordAddTitle": "Add keyword",
+  "itemDetailKeywordEditTitle": "Edit keyword",
+  "itemDetailKeywordHint": "e.g. rorstrand",
+  "itemDetailUnnamedItem": "Unnamed item",
+  "itemDetailStatusValue": "Status: {status}",
+  "@itemDetailStatusValue": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "itemDetailMarketTitle": "Market",
+  "itemDetailAiConfidence": "AI confidence: {percent}%",
+  "@itemDetailAiConfidence": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "itemDetailStatMin": "Min",
+  "itemDetailStatMedian": "Median",
+  "itemDetailStatMax": "Max",
+  "itemDetailIdentifying": "Identifying…",
+  "itemDetailIdentifyNow": "Identify now",
+  "itemDetailDraftListing": "Draft listing",
+  "itemDetailTraderaQueryLabel": "Tradera query",
+  "itemDetailTraderaQueryHint": "e.g. rorstrand mon amie plate",
+  "itemDetailQueueSync": "Queue sync",
+  "itemDetailQueuedForSync": "Queued for sync.",
+  "itemDetailSyncCompleted": "Sync completed.",
+  "itemDetailProfitTitle": "Profit",
+  "itemDetailPurchasePriceLabel": "Purchase price (SEK)",
+  "itemDetailFixedFeesLabel": "Fixed fees (SEK)",
+  "itemDetailShippingSellerLabel": "Shipping (seller) (SEK)",
+  "itemDetailNotesLabel": "Notes",
+  "itemDetailNotesHint": "e.g. defects, missing parts, color",
+  "itemDetailNoMarketDataYet": "No market data yet.",
+  "itemDetailConditionTitle": "Condition",
+  "itemDetailConditionValue": "{label} ({percent}%)",
+  "@itemDetailConditionValue": {
+    "placeholders": {
+      "label": {"type": "String"},
+      "percent": {"type": "String"}
+    }
+  },
+  "itemDetailConditionMint": "Mint",
+  "itemDetailConditionGood": "Good",
+  "itemDetailConditionFair": "Fair",
+  "itemDetailConditionRough": "Rough",
+  "itemDetailFlipLabel": "Flip",
+  "itemDetailKeywordsTitle": "Keywords",
+
+  "modelCalloutTitle": "Download the AI model (Gemma)",
+  "modelCalloutBody": "Make identification faster offline. You can download now or later in Settings.",
+  "modelDownloadCta": "Download",
+  "modelRetry": "Try again",
+  "modelNotInstalled": "Not installed",
+  "modelDownloading": "Downloading…",
+  "modelDownloadingPercent": "Downloading {percent}%",
+  "@modelDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
+  "modelInstalling": "Installing…",
+  "modelInstalled": "Installed ✓",
+  "modelFailed": "Failed: {message}",
+  "@modelFailed": {"placeholders": {"message": {"type": "String"}}},
+  "modelWhyLink": "Why?",
+  "modelWhyTitle": "Why do I need to download a model?",
+  "modelWhyBody": "To use AI features offline. The model is downloaded to your device and is not sent to a server.",
+
+  "authTitleWelcome": "Welcome",
+  "authModeSignUp": "Create account",
+  "authModeSignIn": "Sign in",
+  "authEmailLabel": "Email",
+  "authEmailHint": "name@example.com",
+  "authCodeLabel": "Code",
+  "authCtaCreateAccount": "Create account",
+  "authCtaSignIn": "Sign in",
+  "authVerify": "Verify",
+  "authResendCode": "Resend code",
+  "authTroubleLink": "Trouble signing in?",
+  "authTroubleTitle": "Trouble signing in?",
+  "authTroubleBody": "Check your spam folder and try resending a new code. If it still doesn’t work, try another email address.",
+  "authError": "Something went wrong: {message}",
+  "@authError": {"placeholders": {"message": {"type": "String"}}},
+
+  "homeHeroTitle": "Start scanner",
+  "homeHeroBody": "Scan the price tag. Save offline. Sync prices when you’re online.",
+  "homeTileActiveFinds": "Active finds",
+  "homeTileProfitEst": "Profit (est.)",
+  "homeTileDrafts": "Drafts",
+  "homeTileHistory": "History",
+  "homeTileCtaOpen": "Open",
+  "homeTileCtaSeeAll": "See all",
+
+  "haulUnnamedFind": "Unnamed find",
+  "haulStatusIdentifying": "Identifying…",
+  "haulStatusSaved": "Saved",
+  "haulTotalValue": "Total value: {value}",
+  "@haulTotalValue": {"placeholders": {"value": {"type": "String"}}},
+
+  "draftTitleLabel": "Title",
+  "draftDescriptionLabel": "Description",
+  "draftPriceLabel": "Price (SEK)",
+  "save": "Save",
+  "delete": "Delete"
 }
