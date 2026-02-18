@@ -88,7 +88,7 @@ None - no external service configuration required.
 ## Next Phase Readiness
 
 - DS-02 perceptual validation is now recorded as VERIFIED; Phase 02 work can proceed with higher confidence in clipped blur primitives.
-- Phase 01 still tracks DS-01 as PARTIAL due to token/lint gaps called out in `.planning/phases/01-design-system-guardrails/01-VERIFICATION.md`.
+- DS-01 tokenization + guardrail lint cleanliness is now VERIFIED in `.planning/phases/01-design-system-guardrails/01-VERIFICATION.md`.
 
 ---
 *Phase: 01-design-system-guardrails*
