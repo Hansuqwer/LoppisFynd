@@ -18,6 +18,23 @@ abstract final class AppShadows {
     ),
   ];
 
+  /// Shadow stack used by the Nature Distilled login motif overlay.
+  /// Kept here to avoid ad-hoc constants inside shared primitives.
+  static const motifOverlay = <BoxShadow>[
+    BoxShadow(
+      color: AppColors.shadowInk,
+      blurRadius: 24,
+      offset: Offset(0, 10),
+      spreadRadius: -6,
+    ),
+    BoxShadow(
+      color: Color(0x0DFFFFFF),
+      blurRadius: 12,
+      offset: Offset(0, -2),
+      spreadRadius: 0,
+    ),
+  ];
+
   static const pressed = <BoxShadow>[
     BoxShadow(
       color: AppColors.shadowInk,
