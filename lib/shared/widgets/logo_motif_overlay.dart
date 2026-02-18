@@ -106,14 +106,7 @@ class _MotifMark extends StatelessWidget {
             color: AppColors.glassStroke.withAlpha(0x2E),
             width: 1,
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x180F1720),
-              blurRadius: 22,
-              offset: Offset(0, 14),
-              spreadRadius: -14,
-            ),
-          ],
+          boxShadow: AppShadows.motifOverlay,
         ),
         child: ClipOval(
           child: Transform.scale(

@@ -22,16 +22,10 @@ abstract final class AppShadows {
   /// Kept here to avoid ad-hoc constants inside shared primitives.
   static const motifOverlay = <BoxShadow>[
     BoxShadow(
-      color: AppColors.shadowInk,
-      blurRadius: 24,
-      offset: Offset(0, 10),
-      spreadRadius: -6,
-    ),
-    BoxShadow(
-      color: Color(0x0DFFFFFF),
-      blurRadius: 12,
-      offset: Offset(0, -2),
-      spreadRadius: 0,
+      color: Color(0x180F1720),
+      blurRadius: 22,
+      offset: Offset(0, 14),
+      spreadRadius: -14,
     ),
   ];
 
