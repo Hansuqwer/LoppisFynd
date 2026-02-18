@@ -82,36 +82,36 @@ Which phases cover which requirements. Populated/updated during roadmap creation
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DS-01 | Phase ? | Pending |
-| DS-02 | Phase ? | Pending |
-| DS-03 | Phase ? | Pending |
-| NAV-01 | Phase ? | Pending |
-| NAV-02 | Phase ? | Pending |
-| NAV-03 | Phase ? | Pending |
-| ONB-01 | Phase ? | Pending |
-| ONB-02 | Phase ? | Pending |
-| ONB-03 | Phase ? | Pending |
-| MDL-01 | Phase ? | Pending |
-| MDL-02 | Phase ? | Pending |
-| MDL-03 | Phase ? | Pending |
-| MDL-04 | Phase ? | Pending |
-| AUTH-01 | Phase ? | Pending |
-| AUTH-02 | Phase ? | Pending |
-| SCR-01 | Phase ? | Pending |
-| SCR-02 | Phase ? | Pending |
-| SCR-03 | Phase ? | Pending |
-| SCR-04 | Phase ? | Pending |
-| SCR-05 | Phase ? | Pending |
-| L10N-01 | Phase ? | Pending |
-| L10N-02 | Phase ? | Pending |
-| L10N-03 | Phase ? | Pending |
-| QA-01 | Phase ? | Pending |
-| OFF-01 | Phase ? | Pending |
+| DS-01 | Phase 1 | Pending |
+| DS-02 | Phase 1 | Pending |
+| DS-03 | Phase 1 | Pending |
+| NAV-01 | Phase 2 | Pending |
+| NAV-02 | Phase 2 | Pending |
+| NAV-03 | Phase 2 | Pending |
+| ONB-01 | Phase 3 | Pending |
+| ONB-02 | Phase 3 | Pending |
+| ONB-03 | Phase 3 | Pending |
+| MDL-01 | Phase 3 | Pending |
+| MDL-02 | Phase 3 | Pending |
+| MDL-03 | Phase 3 | Pending |
+| MDL-04 | Phase 3 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| SCR-01 | Phase 4 | Pending |
+| SCR-02 | Phase 4 | Pending |
+| SCR-03 | Phase 4 | Pending |
+| SCR-04 | Phase 4 | Pending |
+| SCR-05 | Phase 4 | Pending |
+| L10N-01 | Phase 1 | Pending |
+| L10N-02 | Phase 1 | Pending |
+| L10N-03 | Phase 1 | Pending |
+| QA-01 | Phase 4 | Pending |
+| OFF-01 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25 ⚠️
+- Mapped to phases: 25
+- Unmapped: 0
 
 ## Spec References (Implementation Contract)
 
