@@ -16,6 +16,8 @@ import '../../features/analyzer/item_detail_screen.dart';
 import 'spring_route.dart';
 import '../../shared/widgets/capsule_nav_bar.dart';
 import '../../shared/widgets/nature_background.dart';
+import '../../shared/widgets/model_download_status_chip.dart';
+import '../../core/tokens/app_tokens.dart';
 
 enum AppTab { dashboard, scanner, haul, history, profile }
 
@@ -163,6 +165,18 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
                 OfflineBanner(
                   message: AppLocalizations.of(context)!.bannerOffline,
                 ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  0,
+                ),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: ModelDownloadStatusChip(),
+                ),
+              ),
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
