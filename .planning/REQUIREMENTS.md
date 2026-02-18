@@ -82,12 +82,12 @@ Which phases cover which requirements. Populated/updated during roadmap creation
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DS-01 | Phase 1 | Pending |
-| DS-02 | Phase 1 | Pending |
-| DS-03 | Phase 1 | Pending |
-| NAV-01 | Phase 2 | Pending |
-| NAV-02 | Phase 2 | Pending |
-| NAV-03 | Phase 2 | Pending |
+| DS-01 | Phase 1 | Verified |
+| DS-02 | Phase 1 | Verified |
+| DS-03 | Phase 1 | Verified |
+| NAV-01 | Phase 2 | Verified |
+| NAV-02 | Phase 2 | Verified |
+| NAV-03 | Phase 2 | Verified |
 | ONB-01 | Phase 3 | Pending |
 | ONB-02 | Phase 3 | Pending |
 | ONB-03 | Phase 3 | Pending |
@@ -102,9 +102,9 @@ Which phases cover which requirements. Populated/updated during roadmap creation
 | SCR-03 | Phase 4 | Pending |
 | SCR-04 | Phase 4 | Pending |
 | SCR-05 | Phase 4 | Pending |
-| L10N-01 | Phase 1 | Pending |
-| L10N-02 | Phase 1 | Pending |
-| L10N-03 | Phase 1 | Pending |
+| L10N-01 | Phase 1 | Verified |
+| L10N-02 | Phase 1 | Verified |
+| L10N-03 | Phase 1 | Verified |
 | QA-01 | Phase 4 | Pending |
 | OFF-01 | Phase 4 | Pending |
 

@@ -11,7 +11,7 @@ Implement the Nature Distilled overhaul as a contract-driven retrofit: first loc
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Design System + Guardrails** - Tokens, clipped-blur glass primitives, and localization/copy rules. (completed 2026-02-18)
-- [ ] **Phase 2: Capsule Navigation Shell** - Persistent Nature background + capsule nav with the 5-tab contract and state retention.
+- [x] **Phase 2: Capsule Navigation Shell** - Persistent Nature background + capsule nav with the 5-tab contract and state retention. (completed 2026-02-18)
 - [ ] **Phase 3: Startup + Auth + Model Download** - Onboarding 1-3 + signup-first login + consent-gated, real-state Gemma download.
 - [ ] **Phase 4: Core Screens + Goldens** - Visual parity for core tabs/settings, offline-first safety, and golden regression coverage.
 
@@ -26,12 +26,14 @@ Implement the Nature Distilled overhaul as a contract-driven retrofit: first loc
   2. Any glass/blur surface is clipped to its bounds (no full-screen backdrop blur), and it looks correct in motion on-device.
   3. Swedish UI copy in the updated surfaces ships with correct spelling and diacritics (å, ä, ö), and known reference-pack placeholders/typos are not shipped.
   4. Handwritten accent typography is used only for brand accents (never for buttons, forms, or long paragraphs).
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: Tokens + theme wiring (colors/spacing/radius/blur/motion/typography)
-- [ ] 01-02: Shared primitives (NatureBackground, LogoMotifOverlay, GlassSurface, GlassBoard, StackedBackplates, CapsuleNavBar)
-- [ ] 01-03: Localization/copy guardrails (AppLocalizations-only + copy fix pass)
+- [x] 01-01: Tokens + theme wiring (colors/spacing/radius/blur/motion/typography)
+- [x] 01-02: Shared primitives (NatureBackground, LogoMotifOverlay, GlassSurface, GlassBoard, StackedBackplates, CapsuleNavBar)
+- [x] 01-03: Localization/copy guardrails (AppLocalizations-only + copy fix pass)
+- [x] 01-04: Gap closure — tokenize LogoMotifOverlay shadows + clean custom_lint
+- [x] 01-05: Gap closure — on-device glass blur motion/perf verification
 
 ### Phase 2: Capsule Navigation Shell
 **Goal**: Users can navigate via the Nature Distilled capsule nav while keeping the 5-tab contract and preserving each tab's state.
@@ -46,7 +48,7 @@ Plans:
 
 Plans:
 - [x] 02-01: Replace app shell with persistent Nature background + IndexedStack state retention
-- [ ] 02-02: Capsule nav selected-bubble behavior + tab contract assertions (human NAV-03 verify pending)
+- [x] 02-02: Capsule nav selected-bubble behavior + tab contract assertions
 
 ### Phase 3: Startup + Auth + Model Download
 **Goal**: Users complete onboarding and access the app via a signup-first login, while optionally consenting to a real-state Gemma model download that continues in the background.
@@ -88,7 +90,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design System + Guardrails | 0/3 | Complete    | 2026-02-18 |
-| 2. Capsule Navigation Shell | 1/2 | In progress | - |
+| 1. Design System + Guardrails | 5/5 | Complete    | 2026-02-18 |
+| 2. Capsule Navigation Shell | 2/2 | Complete    | 2026-02-18 |
 | 3. Startup + Auth + Model Download | 0/3 | Not started | - |
 | 4. Core Screens + Goldens | 0/3 | Not started | - |

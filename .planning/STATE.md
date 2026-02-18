@@ -5,33 +5,33 @@
 See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Core value:** Users can reliably scan and manage finds offline, with on-device AI enabling fast identification without network.
-**Current focus:** Phase 2: Capsule Navigation Shell
+**Current focus:** Phase 3: Startup + Auth + Model Download
 
 ## Current Position
 
-**Current Phase:** 2
-**Current Phase Name:** Capsule Navigation Shell
-**Current Plan:** 02-02 (NAV-03 human verify approved)
-**Total Plans in Phase:** 2
-**Status:** Phase complete (verified)
+**Current Phase:** 3
+**Current Phase Name:** Startup + Auth + Model Download
+**Current Plan:** Not started
+**Total Plans in Phase:** 3
+**Status:** Ready to plan
 **Last Activity:** 2026-02-18
-**Last Activity Description:** Completed 02-02 with NAV-03 human verification approved
+**Last Activity Description:** Phase 2 complete (verified)
 
-**Progress:** [██████████] 100%
+**Progress:** [█████-----] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 15 min
-- Total execution time: 1.0 hours
+- Total plans completed: 7
+- Average duration: -
+- Total execution time: -
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Design System + Guardrails | 4 | 5 | 15 min |
-| 2. Capsule Navigation Shell | 1 | 2 | - |
+| 1. Design System + Guardrails | 5 | 5 | - |
+| 2. Capsule Navigation Shell | 2 | 2 | - |
 | 3. Startup + Auth + Model Download | 0 | 3 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
@@ -67,5 +67,5 @@ None
 ## Session
 
 **Last session:** 2026-02-18T16:06:42.701Z
-**Stopped At:** Completed 02-02-PLAN.md
+**Stopped At:** Phase 2 complete, ready to plan Phase 3
 **Resume File:** None
