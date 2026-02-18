@@ -5,19 +5,19 @@
 See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Core value:** Users can reliably scan and manage finds offline, with on-device AI enabling fast identification without network.
-**Current focus:** Phase 1: Design System + Guardrails
+**Current focus:** Phase 2: Capsule Navigation Shell
 
 ## Current Position
 
-**Current Phase:** 1
-**Current Phase Name:** Design System + Guardrails
-**Current Plan:** Not started
-**Total Plans in Phase:** 5
-**Status:** Milestone complete
+**Current Phase:** 2
+**Current Phase Name:** Capsule Navigation Shell
+**Current Plan:** 02-02 (human NAV-03 verify pending)
+**Total Plans in Phase:** 2
+**Status:** In progress
 **Last Activity:** 2026-02-18
-**Last Activity Description:** Phase 1 complete
+**Last Activity Description:** Completed 02-01 and automated tasks for 02-02
 
-**Progress:** [██████████] 100%
+**Progress:** [█████-----] 50%
 
 ## Performance Metrics
 
@@ -31,7 +31,7 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Design System + Guardrails | 4 | 5 | 15 min |
-| 2. Capsule Navigation Shell | 0 | 2 | - |
+| 2. Capsule Navigation Shell | 1 | 2 | - |
 | 3. Startup + Auth + Model Download | 0 | 3 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |

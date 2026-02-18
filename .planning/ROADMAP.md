@@ -45,8 +45,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Replace app shell with persistent Nature background + IndexedStack state retention
-- [ ] 02-02: Capsule nav selected-bubble behavior + tab contract assertions
+- [x] 02-01: Replace app shell with persistent Nature background + IndexedStack state retention
+- [ ] 02-02: Capsule nav selected-bubble behavior + tab contract assertions (human NAV-03 verify pending)
 
 ### Phase 3: Startup + Auth + Model Download
 **Goal**: Users complete onboarding and access the app via a signup-first login, while optionally consenting to a real-state Gemma model download that continues in the background.
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Design System + Guardrails | 0/3 | Complete    | 2026-02-18 |
-| 2. Capsule Navigation Shell | 0/2 | Not started | - |
+| 2. Capsule Navigation Shell | 1/2 | In progress | - |
 | 3. Startup + Auth + Model Download | 0/3 | Not started | - |
 | 4. Core Screens + Goldens | 0/3 | Not started | - |
