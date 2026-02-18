@@ -9,6 +9,16 @@ abstract final class AppTypography {
   static const metricsFontFamily = 'Space Grotesk';
   static const accentFontFamily = 'Homemade Apple';
 
+  static final TextStyle accentBrand = accentFrom(
+    const TextStyle(
+      fontSize: 24,
+      height: 1.0,
+      fontWeight: FontWeight.w400,
+      letterSpacing: -0.2,
+      color: AppColors.textPrimary,
+    ),
+  );
+
   static TextStyle uiFrom(TextStyle base) {
     return base.copyWith(fontFamily: uiFontFamily);
   }

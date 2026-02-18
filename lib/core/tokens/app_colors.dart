@@ -21,6 +21,9 @@ abstract final class AppColors {
   static const textOnDark = cloudDancer;
   static const textOnPrimary = Colors.white;
 
+  static Color get textSecondary => deepSapphire.withValues(alpha: 0.72);
+  static Color get textMuted => deepSapphire.withValues(alpha: 0.54);
+
   static const success = eucalyptus;
   static const accentEarth = terracottaClay;
   static const primaryAction = dopamineRed;
@@ -29,6 +32,7 @@ abstract final class AppColors {
   static const activeVoiceGps = electricBlue;
 
   static const borderSubtle = Color(0x1A1E2B3C);
+  static const border = borderSubtle;
   static const shadowInk = Color(0x160F1720);
 
   static const heroScrim = Color(0x381E2B3C);
