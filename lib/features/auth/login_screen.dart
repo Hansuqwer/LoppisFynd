@@ -178,8 +178,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       hintText: hint,
       filled: true,
       fillColor: AppColors.glassFill,
-      labelStyle: const TextStyle(color: AppColors.textOnDark),
-      floatingLabelStyle: const TextStyle(color: AppColors.textOnDark),
+      labelStyle: const TextStyle(color: AppColors.textPrimary),
+      floatingLabelStyle: const TextStyle(color: AppColors.textPrimary),
+      hintStyle: TextStyle(color: AppColors.textMuted),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.pill),
         borderSide: const BorderSide(color: AppColors.glassStroke),
@@ -233,7 +234,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 l10n.loginWelcome,
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineLarge
-                                    ?.copyWith(color: AppColors.textOnDark),
+                                    ?.copyWith(color: AppColors.textPrimary),
                               ),
                               const SizedBox(height: AppSpacing.lg),
                               Row(
@@ -266,7 +267,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           .textTheme
                                           .headlineSmall
                                           ?.copyWith(
-                                            color: AppColors.textOnDark,
+                                            color: AppColors.textPrimary,
                                           ),
                                     ),
                                   ),
@@ -284,9 +285,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 style: const TextStyle(
-                                  color: AppColors.textOnDark,
+                                  color: AppColors.textPrimary,
                                 ),
-                                cursorColor: AppColors.textOnDark,
+                                cursorColor: AppColors.textPrimary,
                                 decoration: _pillInputDecoration(
                                   label: l10n.authEmailLabel,
                                   hint: l10n.authEmailHint,
@@ -306,9 +307,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 autocorrect: false,
                                 textInputAction: TextInputAction.done,
                                 style: const TextStyle(
-                                  color: AppColors.textOnDark,
+                                  color: AppColors.textPrimary,
                                 ),
-                                cursorColor: AppColors.textOnDark,
+                                cursorColor: AppColors.textPrimary,
                                 decoration: _pillInputDecoration(
                                   label: l10n.loginPasswordLabel,
                                 ),
@@ -420,7 +421,7 @@ class _ModeChip extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppColors.textOnDark,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -547,8 +548,9 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
       hintText: hint,
       filled: true,
       fillColor: AppColors.glassFill,
-      labelStyle: const TextStyle(color: AppColors.textOnDark),
-      floatingLabelStyle: const TextStyle(color: AppColors.textOnDark),
+      labelStyle: const TextStyle(color: AppColors.textPrimary),
+      floatingLabelStyle: const TextStyle(color: AppColors.textPrimary),
+      hintStyle: TextStyle(color: AppColors.textMuted),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.pill),
         borderSide: const BorderSide(color: AppColors.glassStroke),
@@ -591,8 +593,8 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             readOnly: _step == _TroubleOtpStep.code,
-            style: const TextStyle(color: AppColors.textOnDark),
-            cursorColor: AppColors.textOnDark,
+            style: const TextStyle(color: AppColors.textPrimary),
+            cursorColor: AppColors.textPrimary,
             decoration: _pillInputDecoration(
               label: l10n.authEmailLabel,
               hint: l10n.authEmailHint,
@@ -615,8 +617,8 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.oneTimeCode],
-              style: const TextStyle(color: AppColors.textOnDark),
-              cursorColor: AppColors.textOnDark,
+              style: const TextStyle(color: AppColors.textPrimary),
+              cursorColor: AppColors.textPrimary,
               decoration: _pillInputDecoration(label: l10n.authCodeLabel),
               onSubmitted: (_) => _verifyCode(),
             ),
@@ -676,7 +678,9 @@ class _LoginPillButtonState extends State<_LoginPillButton> {
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null;
 
-    final fg = AppColors.textOnPrimary;
+    final fg = widget.tone == _LoginPillTone.glass
+        ? AppColors.textPrimary
+        : AppColors.textOnPrimary;
 
     final decoration = switch (widget.tone) {
       _LoginPillTone.primary => BoxDecoration(
