@@ -10,6 +10,12 @@ import '../../shared/widgets/glass_overlay.dart';
 import 'email_otp_auth.dart';
 import 'login_motif_layer.dart';
 
+String _formatAuthError(AppLocalizations l10n, AuthException e) {
+  final msg = e.message.trim();
+  if (msg.isNotEmpty) return msg;
+  return l10n.loginErrorGeneric;
+}
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.authOverride});
 
@@ -104,9 +110,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       await auth.signInWithPassword(email: email, password: password);
-    } on AuthException {
-      _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
-    } catch (_) {
+    } on AuthException catch (e) {
+      _showErrorSnackBar(messenger, _formatAuthError(l10n, e));
+    } catch (e) {
+      debugPrint('Auth error: $e');
       _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -488,11 +495,14 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
         _code.clear();
       });
       _focusCodeSoon();
-    } on AuthException {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } on AuthException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(_formatAuthError(l10n, e))),
+      );
     } on EmailOtpAuthException {
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auth OTP send error: $e');
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -517,11 +527,14 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
       await widget.auth.verifyOtp(email, code);
       if (!mounted) return;
       Navigator.of(context).pop();
-    } on AuthException {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } on AuthException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(_formatAuthError(l10n, e))),
+      );
     } on EmailOtpAuthException {
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auth OTP verify error: $e');
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } finally {
       if (mounted) setState(() => _busy = false);
