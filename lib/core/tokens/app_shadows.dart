@@ -26,4 +26,7 @@ abstract final class AppShadows {
       spreadRadius: -6,
     ),
   ];
+
+  /// Alias used by contract samples.
+  static const soft = bento;
 }
