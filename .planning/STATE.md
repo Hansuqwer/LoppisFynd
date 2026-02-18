@@ -23,20 +23,20 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 
 **Velocity:**
 - Total plans completed: 3
-- Average duration: 15 min
-- Total execution time: 0.8 hours
+- Average duration: 17 min
+- Total execution time: 0.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Design System + Guardrails | 3 | 3 | 15 min |
+| 1. Design System + Guardrails | 3 | 3 | 17 min |
 | 2. Capsule Navigation Shell | 0 | 2 | - |
 | 3. Startup + Auth + Model Download | 0 | 3 | - |
 | 4. Core Screens + Goldens | 0 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
 | Phase 01-design-system-guardrails P03 | 29 min | 2 tasks | 25 files |
-| Phase 01-design-system-guardrails P02 | 11 min | 2 tasks | 6 files |
+| Phase 01-design-system-guardrails P02 | 16 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 

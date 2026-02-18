@@ -23,22 +23,25 @@ key-files:
   created:
     - lib/shared/widgets/nature_background.dart
     - lib/shared/widgets/logo_motif_overlay.dart
-  modified:
     - lib/shared/widgets/glass_surface.dart
     - lib/shared/widgets/glass_board.dart
+  modified:
     - lib/shared/widgets/capsule_nav_bar.dart
     - lib/core/tokens/app_opacity.dart
     - lib/features/auth/login_motif_layer.dart
+    - test/fl_065_nav_smoke_test.dart
 
 key-decisions:
   - Kept GlassOverlay as a legacy wrapper while introducing GlassSurface/GlassBoard as the contract-named primitives.
+  - Added AppOpacity.capsuleNavFill to eliminate magic opacity in CapsuleNavBar.
+  - Used AppRadius.capsule for CapsuleNavBar container radius (preserves AppRadius.pill semantics).
 
 patterns-established:
   - "Blur lives in shared primitives only": BackdropFilter usage stays inside lib/shared/widgets/
 
 requirements-completed: [DS-01, DS-02, DS-03]
 
-duration: 15 min
+duration: 16 min
 completed: 2026-02-18
 ---
 
@@ -48,9 +51,9 @@ completed: 2026-02-18
 
 ## Performance
 
-- **Duration:** 15 min
-- **Started:** 2026-02-18T08:25:16Z
-- **Completed:** 2026-02-18T08:40:24Z
+- **Duration:** 16 min
+- **Started:** 2026-02-18T08:26:19Z
+- **Completed:** 2026-02-18T08:42:39Z
 - **Tasks:** 2
 - **Files modified:** 8
 
@@ -64,10 +67,10 @@ completed: 2026-02-18
 
 Each task was committed atomically:
 
-1. **Task 1: Implement contract-named background + motif primitives** - `b6b2e3a` (feat)
-2. **Task 2: Implement clipped-blur glass primitives + align existing widgets** - `c8cfe04` (feat), `a1a4f47` (refactor)
+1. **Task 1: Implement contract-named background + motif primitives** - `b6b2e3a` (feat), `a1a4f47` (refactor)
+2. **Task 2: Implement clipped-blur glass primitives + align existing widgets** - `c8cfe04` (feat)
 
-**Plan metadata:** (recorded in follow-up docs commit)
+**Plan metadata:** `8ce5f88` (docs)
 
 ## Files Created/Modified
 
@@ -76,18 +79,31 @@ Each task was committed atomically:
 - `lib/shared/widgets/glass_surface.dart` - Canonical clipped-blur glass container
 - `lib/shared/widgets/glass_board.dart` - GlassBoard + StackedBackplates primitives for stacked-glass layouts
 - `lib/shared/widgets/capsule_nav_bar.dart` - Capsule nav blur remains clipped and uses contract-friendly radius token
+- `lib/core/tokens/app_opacity.dart` - Adds `AppOpacity.capsuleNavFill` for tokenized nav fill
+- `lib/features/auth/login_motif_layer.dart` - Delegates to `LogoMotifOverlay`
+- `test/fl_065_nav_smoke_test.dart` - Updates expected Swedish haul title
 
 ## Decisions Made
 
 - Kept `lib/shared/widgets/glass_overlay.dart` API stable for existing callers; new work should prefer `lib/shared/widgets/glass_surface.dart` / `lib/shared/widgets/glass_board.dart`.
+- Added `AppOpacity.capsuleNavFill` to avoid magic opacity in capsule nav.
+- Used `AppRadius.capsule` for capsule nav container radius while keeping `pill` semantics.
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] Updated nav smoke test expectation after Swedish copy drift**
+- **Found during:** Task 1 (verification: `flutter test`)
+- **Issue:** Test expected older haul title ('Aktuellt fynd') which no longer matches localized copy.
+- **Fix:** Updated expectation to 'Pågående fynd'.
+- **Files modified:** `test/fl_065_nav_smoke_test.dart`
+- **Verification:** `flutter test`
+- **Committed in:** `a1a4f47`
 
 ## Issues Encountered
 
-None
+- Golden tests are sensitive to paint-path changes in legacy `GlassOverlay`; new primitives were added without breaking existing goldens.
 
 ## User Setup Required
 
@@ -105,4 +121,4 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - FOUND: `.planning/phases/01-design-system-guardrails/01-02-SUMMARY.md`
-- FOUND commits: `b6b2e3a`, `c8cfe04`, `a1a4f47`
+- FOUND commits: `b6b2e3a`, `a1a4f47`, `c8cfe04`, `8ce5f88`
