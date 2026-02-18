@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fynd_loppis/core/app/providers.dart';
 import 'package:fynd_loppis/core/database/app_database.dart';
 import 'package:fynd_loppis/core/theme/app_theme.dart';
-import 'package:fynd_loppis/features/auth/email_masking.dart';
 import 'package:fynd_loppis/features/auth/email_otp_auth.dart';
 import 'package:fynd_loppis/features/auth/login_screen.dart';
 import 'package:fynd_loppis/gen/app_localizations.dart';
@@ -58,9 +57,7 @@ Finder _textFieldWithLabel(String label) {
 
 void main() {
   group('LoginScreen', () {
-    testWidgets('shows “Fortsätt som …” when last email exists (masked)', (
-      tester,
-    ) async {
+    testWidgets('prefills email from last saved value', (tester) async {
       GoogleFonts.config.allowRuntimeFetching = false;
 
       final db = AppDatabase.inMemory();
@@ -77,49 +74,46 @@ void main() {
 
       final context = tester.element(find.byType(LoginScreen));
       final l10n = AppLocalizations.of(context)!;
-      final masked = maskEmailForUi(lastEmail);
 
-      expect(find.text(l10n.loginContinueAs(masked)), findsOneWidget);
+      final emailField = tester.widget<TextField>(
+        _textFieldWithLabel(l10n.authEmailLabel),
+      );
+      expect(emailField.controller?.text, lastEmail);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
     });
 
-    testWidgets(
-      'primary CTA on email step sends OTP and transitions to code step',
-      (tester) async {
-        GoogleFonts.config.allowRuntimeFetching = false;
+    testWidgets('segmented control defaults to sign up', (tester) async {
+      GoogleFonts.config.allowRuntimeFetching = false;
 
-        final db = AppDatabase.inMemory();
-        addTearDown(db.close);
+      final db = AppDatabase.inMemory();
+      addTearDown(db.close);
 
-        final api = _FakeEmailOtpAuthApi();
-        final auth = EmailOtpAuth(api: api);
+      final api = _FakeEmailOtpAuthApi();
+      final auth = EmailOtpAuth(api: api);
 
-        await tester.pumpWidget(_wrap(db: db, auth: auth));
-        await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pumpWidget(_wrap(db: db, auth: auth));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
 
-        final context = tester.element(find.byType(LoginScreen));
-        final l10n = AppLocalizations.of(context)!;
+      final context = tester.element(find.byType(LoginScreen));
+      final l10n = AppLocalizations.of(context)!;
 
-        await tester.enterText(
-          _textFieldWithLabel(l10n.loginEmailLabel),
-          'user@example.com',
-        );
+      // "Skapa konto" appears both in the segmented control and as the primary CTA.
+      expect(find.text(l10n.authModeSignUp), findsNWidgets(2));
+      expect(find.text(l10n.authModeSignIn), findsOneWidget);
+      expect(find.text(l10n.authCtaCreateAccount), findsNWidgets(2));
 
-        await tester.tap(find.text(l10n.loginSendCode));
-        await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.tap(find.text(l10n.authModeSignIn));
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      // "Logga in" appears both in the segmented control and as the primary CTA.
+      expect(find.text(l10n.authCtaSignIn), findsNWidgets(2));
 
-        expect(api.sendCalls, 1);
-        expect(api.lastEmail, 'user@example.com');
-        expect(find.text('Kod'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    });
 
-        await tester.pumpWidget(const SizedBox.shrink());
-        await tester.pumpAndSettle();
-      },
-    );
-
-    testWidgets('entering 6 digits and tapping primary CTA calls verifyOtp', (
+    testWidgets('trouble flow sends and verifies OTP (no user creation)', (
       tester,
     ) async {
       GoogleFonts.config.allowRuntimeFetching = false;
@@ -137,17 +131,22 @@ void main() {
       final l10n = AppLocalizations.of(context)!;
 
       await tester.enterText(
-        _textFieldWithLabel(l10n.loginEmailLabel),
+        _textFieldWithLabel(l10n.authEmailLabel),
         'user@example.com',
       );
+
+      await tester.tap(find.text(l10n.authTroubleLink));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
       await tester.tap(find.text(l10n.loginSendCode));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      await tester.enterText(
-        _textFieldWithLabel(l10n.loginCodeLabel),
-        '123456',
-      );
-      await tester.tap(find.text(l10n.loginSignIn));
+      expect(api.sendCalls, 1);
+      expect(api.lastEmail, 'user@example.com');
+      expect(api.lastShouldCreateUser, false);
+
+      await tester.enterText(_textFieldWithLabel(l10n.authCodeLabel), '123456');
+      await tester.tap(find.text(l10n.authVerify));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
       expect(api.verifyCalls, 1);

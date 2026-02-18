@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/app/providers.dart';
@@ -9,7 +8,6 @@ import '../../gen/app_localizations.dart';
 import '../../shared/widgets/glass_overlay.dart';
 
 import 'email_otp_auth.dart';
-import 'email_masking.dart';
 import 'login_motif_layer.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -23,13 +21,14 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
-  final _code = TextEditingController();
+  final _password = TextEditingController();
   final _emailFocus = FocusNode();
-  final _codeFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
   bool _busy = false;
   bool _introShown = false;
   String? _lastEmailFromSettings;
-  _LoginOtpStep _step = _LoginOtpStep.email;
+  _AuthMode _mode = _AuthMode.signUp;
 
   static const _kLastEmail = 'auth_last_email_v1';
 
@@ -57,9 +56,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void dispose() {
     _email.dispose();
-    _code.dispose();
+    _password.dispose();
     _emailFocus.dispose();
-    _codeFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -77,48 +76,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _focusCodeFieldSoon() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      FocusScope.of(context).requestFocus(_codeFocus);
-    });
-  }
-
-  void _focusEmailFieldSoon() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      FocusScope.of(context).requestFocus(_emailFocus);
-    });
-  }
-
-  Future<void> _sendCode() async {
+  Future<void> _submitPasswordAuth() async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     if (_busy) return;
 
     await _persistEmailAttempt();
+
     final email = _email.text.trim();
-    if (email.isEmpty) return;
+    final password = _password.text;
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
+      return;
+    }
 
     setState(() => _busy = true);
     try {
-      final auth =
-          widget.authOverride ??
-          EmailOtpAuth.supabase(Supabase.instance.client);
-      await auth.sendOtp(email);
-      if (!mounted) return;
-      setState(() {
-        _step = _LoginOtpStep.code;
-        _code.clear();
-      });
-      _focusCodeFieldSoon();
-    } on AuthException catch (e) {
-      _showErrorSnackBar(messenger, e.message);
-    } on EmailOtpAuthException catch (e) {
-      _showErrorSnackBar(
-        messenger,
-        e.message.isEmpty ? l10n.loginErrorGeneric : e.message,
-      );
+      final auth = Supabase.instance.client.auth;
+      if (_mode == _AuthMode.signUp) {
+        final response = await auth.signUp(email: email, password: password);
+        final session = response.session ?? auth.currentSession;
+        if (session == null) {
+          if (!mounted) return;
+          _showEmailConfirmationSheet(context);
+        }
+        return;
+      }
+
+      await auth.signInWithPassword(email: email, password: password);
+    } on AuthException {
+      _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
     } catch (_) {
       _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
     } finally {
@@ -126,58 +113,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _verifyCode() async {
+  void _showEmailConfirmationSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-    if (_busy) return;
-
-    await _persistEmailAttempt();
-    final email = _email.text.trim();
-    final code = _code.text.trim();
-    if (email.isEmpty || code.length != 6) return;
-
-    setState(() => _busy = true);
-    try {
-      final auth =
-          widget.authOverride ??
-          EmailOtpAuth.supabase(Supabase.instance.client);
-      await auth.verifyOtp(email, code);
-    } on AuthException catch (e) {
-      _showErrorSnackBar(messenger, e.message);
-    } on EmailOtpAuthException catch (e) {
-      _showErrorSnackBar(
-        messenger,
-        e.message.isEmpty ? l10n.loginErrorGeneric : e.message,
-      );
-    } catch (_) {
-      _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.authTroubleTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.authTroubleBody, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  void _backToEmailStep() {
-    if (_step == _LoginOtpStep.email) return;
-    setState(() {
-      _step = _LoginOtpStep.email;
-      _code.clear();
-    });
-    _focusEmailFieldSoon();
+  void _openTroubleOtpFlow() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return _TroubleOtpSheet(
+          initialEmail: _email.text.trim().isEmpty
+              ? (_lastEmailFromSettings ?? '')
+              : _email.text.trim(),
+          auth:
+              widget.authOverride ??
+              EmailOtpAuth.supabase(Supabase.instance.client),
+          persistEmail: (email) async {
+            _email.text = email;
+            _email.selection = TextSelection.collapsed(offset: email.length);
+            await _persistEmailAttempt();
+          },
+        );
+      },
+    );
   }
 
-  void _continueAsLastEmail() {
-    final last = _lastEmailFromSettings?.trim();
-    if (last == null || last.isEmpty) return;
-    if (_email.text.trim() != last) {
-      _email.text = last;
-      _email.selection = TextSelection.collapsed(offset: last.length);
-    }
-    _sendCode();
-  }
-
-  InputDecoration _pillInputDecoration({required String label}) {
+  InputDecoration _pillInputDecoration({required String label, String? hint}) {
     return InputDecoration(
       labelText: label,
+      hintText: hint,
       filled: true,
       fillColor: AppColors.glassFill,
       labelStyle: const TextStyle(color: AppColors.textOnDark),
@@ -196,10 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    final lastEmail = (_lastEmailFromSettings ?? '').trim();
-    final showContinueAs = _step == _LoginOtpStep.email && lastEmail.isNotEmpty;
-    final maskedLastEmail = showContinueAs ? maskEmailForUi(lastEmail) : '';
 
     return Scaffold(
       body: Stack(
@@ -279,81 +266,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ],
                               ),
                               const SizedBox(height: AppSpacing.xl),
+                              _AuthModeToggle(
+                                mode: _mode,
+                                onChanged: (m) => setState(() => _mode = m),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
                               TextField(
                                 controller: _email,
                                 focusNode: _emailFocus,
                                 keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.done,
-                                readOnly: _step == _LoginOtpStep.code,
+                                textInputAction: TextInputAction.next,
                                 style: const TextStyle(
                                   color: AppColors.textOnDark,
                                 ),
                                 cursorColor: AppColors.textOnDark,
                                 decoration: _pillInputDecoration(
-                                  label: l10n.loginEmailLabel,
+                                  label: l10n.authEmailLabel,
+                                  hint: l10n.authEmailHint,
                                 ),
-                                onTap: _step == _LoginOtpStep.code
-                                    ? _backToEmailStep
-                                    : null,
                                 onSubmitted: (_) {
-                                  if (_step == _LoginOtpStep.email) {
-                                    _sendCode();
-                                  }
+                                  FocusScope.of(
+                                    context,
+                                  ).requestFocus(_passwordFocus);
                                 },
-                                onChanged: (_) => setState(() {}),
                               ),
-                              if (_step == _LoginOtpStep.code) ...[
-                                const SizedBox(height: AppSpacing.md),
-                                TextField(
-                                  controller: _code,
-                                  focusNode: _codeFocus,
-                                  keyboardType: TextInputType.number,
-                                  textInputAction: TextInputAction.done,
-                                  autofillHints: const [
-                                    AutofillHints.oneTimeCode,
-                                  ],
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(6),
-                                  ],
-                                  onSubmitted: (_) => _verifyCode(),
-                                  style: const TextStyle(
-                                    color: AppColors.textOnDark,
-                                  ),
-                                  cursorColor: AppColors.textOnDark,
-                                  decoration: _pillInputDecoration(
-                                    label: l10n.loginCodeLabel,
-                                  ),
-                                  onChanged: (_) => setState(() {}),
+                              const SizedBox(height: AppSpacing.md),
+                              TextField(
+                                controller: _password,
+                                focusNode: _passwordFocus,
+                                obscureText: true,
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                textInputAction: TextInputAction.done,
+                                style: const TextStyle(
+                                  color: AppColors.textOnDark,
                                 ),
-                              ],
+                                cursorColor: AppColors.textOnDark,
+                                decoration: _pillInputDecoration(
+                                  label: l10n.loginPasswordLabel,
+                                ),
+                                onSubmitted: (_) => _submitPasswordAuth(),
+                              ),
                               const SizedBox(height: AppSpacing.lg),
                               _LoginPillButton(
                                 label: _busy
                                     ? l10n.loginWorking
-                                    : switch (_step) {
-                                        _LoginOtpStep.email =>
-                                          l10n.loginSendCode,
-                                        _LoginOtpStep.code => l10n.loginSignIn,
-                                      },
+                                    : _mode == _AuthMode.signUp
+                                    ? l10n.authCtaCreateAccount
+                                    : l10n.authCtaSignIn,
                                 tone: _LoginPillTone.primary,
                                 onPressed: _busy
                                     ? null
-                                    : switch (_step) {
-                                        _LoginOtpStep.email => _sendCode,
-                                        _LoginOtpStep.code => _verifyCode,
-                                      },
+                                    : () => _submitPasswordAuth(),
                               ),
-                              if (showContinueAs) ...[
-                                const SizedBox(height: AppSpacing.md),
-                                _LoginPillButton(
-                                  label: l10n.loginContinueAs(maskedLastEmail),
-                                  tone: _LoginPillTone.glass,
-                                  onPressed: _busy
-                                      ? null
-                                      : _continueAsLastEmail,
-                                ),
-                              ],
+                              const SizedBox(height: AppSpacing.md),
+                              _LoginPillButton(
+                                label: l10n.authTroubleLink,
+                                tone: _LoginPillTone.glass,
+                                onPressed: _busy ? null : _openTroubleOtpFlow,
+                              ),
                             ],
                           ),
                         ),
@@ -370,9 +341,300 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-enum _LoginOtpStep { email, code }
+enum _AuthMode { signUp, signIn }
 
 enum _LoginPillTone { primary, glass }
+
+class _AuthModeToggle extends StatelessWidget {
+  const _AuthModeToggle({required this.mode, required this.onChanged});
+
+  final _AuthMode mode;
+  final ValueChanged<_AuthMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = mode == _AuthMode.signUp ? 0 : 1;
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.glassFill,
+        border: Border.all(color: AppColors.glassStroke),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModeChip(
+              label: l10n.authModeSignUp,
+              selected: selected == 0,
+              onTap: () => onChanged(_AuthMode.signUp),
+            ),
+          ),
+          Expanded(
+            child: _ModeChip(
+              label: l10n.authModeSignIn,
+              selected: selected == 1,
+              onTap: () => onChanged(_AuthMode.signIn),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  const _ModeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.curve,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryAction : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: AppColors.textOnDark,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _TroubleOtpStep { email, code }
+
+class _TroubleOtpSheet extends StatefulWidget {
+  const _TroubleOtpSheet({
+    required this.initialEmail,
+    required this.auth,
+    required this.persistEmail,
+  });
+
+  final String initialEmail;
+  final EmailOtpAuth auth;
+  final Future<void> Function(String email) persistEmail;
+
+  @override
+  State<_TroubleOtpSheet> createState() => _TroubleOtpSheetState();
+}
+
+class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
+  final _email = TextEditingController();
+  final _code = TextEditingController();
+  final _codeFocus = FocusNode();
+  bool _busy = false;
+  _TroubleOtpStep _step = _TroubleOtpStep.email;
+
+  @override
+  void initState() {
+    super.initState();
+    _email.text = widget.initialEmail;
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _code.dispose();
+    _codeFocus.dispose();
+    super.dispose();
+  }
+
+  void _focusCodeSoon() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(_codeFocus);
+    });
+  }
+
+  Future<void> _sendCode() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    if (_busy) return;
+
+    final email = _email.text.trim();
+    if (email.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await widget.persistEmail(email);
+      await widget.auth.sendOtp(email, shouldCreateUser: false);
+      if (!mounted) return;
+      setState(() {
+        _step = _TroubleOtpStep.code;
+        _code.clear();
+      });
+      _focusCodeSoon();
+    } on AuthException {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } on EmailOtpAuthException {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _verifyCode() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    if (_busy) return;
+
+    final email = _email.text.trim();
+    final code = _code.text.trim();
+    if (email.isEmpty || code.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await widget.persistEmail(email);
+      await widget.auth.verifyOtp(email, code);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on AuthException {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } on EmailOtpAuthException {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  InputDecoration _pillInputDecoration({required String label, String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      filled: true,
+      fillColor: AppColors.glassFill,
+      labelStyle: const TextStyle(color: AppColors.textOnDark),
+      floatingLabelStyle: const TextStyle(color: AppColors.textOnDark),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderSide: const BorderSide(color: AppColors.glassStroke),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderSide: const BorderSide(color: AppColors.textOnDark, width: 1.2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final bottomPad = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg + bottomPad,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.authTroubleTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(l10n.authTroubleBody, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            readOnly: _step == _TroubleOtpStep.code,
+            style: const TextStyle(color: AppColors.textOnDark),
+            cursorColor: AppColors.textOnDark,
+            decoration: _pillInputDecoration(
+              label: l10n.authEmailLabel,
+              hint: l10n.authEmailHint,
+            ),
+            onTap: _step == _TroubleOtpStep.code
+                ? () => setState(() {
+                    _step = _TroubleOtpStep.email;
+                    _code.clear();
+                  })
+                : null,
+            onSubmitted: (_) {
+              if (_step == _TroubleOtpStep.email) _sendCode();
+            },
+          ),
+          if (_step == _TroubleOtpStep.code) ...[
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _code,
+              focusNode: _codeFocus,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              style: const TextStyle(color: AppColors.textOnDark),
+              cursorColor: AppColors.textOnDark,
+              decoration: _pillInputDecoration(label: l10n.authCodeLabel),
+              onSubmitted: (_) => _verifyCode(),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          _LoginPillButton(
+            label: _busy
+                ? l10n.loginWorking
+                : _step == _TroubleOtpStep.email
+                ? l10n.loginSendCode
+                : l10n.authVerify,
+            tone: _LoginPillTone.primary,
+            onPressed: _busy
+                ? null
+                : _step == _TroubleOtpStep.email
+                ? _sendCode
+                : _verifyCode,
+          ),
+          if (_step == _TroubleOtpStep.code) ...[
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              onPressed: _busy ? null : _sendCode,
+              child: Text(l10n.authResendCode),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+  }
+}
 
 class _LoginPillButton extends StatefulWidget {
   const _LoginPillButton({
