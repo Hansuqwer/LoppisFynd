@@ -11,6 +11,7 @@ import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
 import '../../services/ai/model_manager.dart';
+import '../../services/ai/model_install_controller.dart';
 import '../../services/sync/cloud_photo_sync_service.dart';
 import '../../services/sync/cloud_metadata_sync_service.dart';
 import '../../services/sync/background/background_sync.dart';
@@ -137,18 +138,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _downloadModel() async {
     if (_modelDownloading) return;
     final config = ref.read(appConfigProvider);
-    final modelManager = ref.read(modelManagerProvider);
     if (!config.hasGemmaModelUrl) return;
 
     setState(() => _modelDownloading = true);
     try {
       setState(() => _installError = null);
-      await modelManager.downloadFromUrl(url: Uri.parse(config.gemmaModelUrl));
-      if (!mounted) return;
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _installError = '$e');
+      final db = ref.read(appDatabaseProvider);
+      await db.appSettingsDao.setInt(kGemmaConsentKeyV1, 1);
+
+      await ref
+          .read(modelInstallControllerProvider.notifier)
+          .startIfNeeded(force: true);
+
+      final controllerState = ref.read(modelInstallControllerProvider);
+      if (controllerState is ModelInstallControllerStateFailed) {
+        setState(() => _installError = controllerState.error);
+      } else {
+        setState(() {});
+      }
     } finally {
       if (mounted) setState(() => _modelDownloading = false);
     }

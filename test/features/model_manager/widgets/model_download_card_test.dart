@@ -26,6 +26,7 @@ void main() {
             body: ModelDownloadCard(
               title: 'Gemma 2B',
               subtitle: 'Size: 1.5GB',
+              statusText: 'Downloading... 45%',
               isDownloading: true,
               progress: 0.45,
             ),
@@ -45,6 +46,7 @@ void main() {
             body: ModelDownloadCard(
               title: 'Gemma 2B',
               subtitle: 'Size: 1.5GB',
+              statusText: 'Ready to use',
               isCompleted: true,
             ),
           ),

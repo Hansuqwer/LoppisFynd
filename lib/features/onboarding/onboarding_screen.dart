@@ -83,6 +83,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await db.appSettingsDao.setInt(_gemmaConsentKey, consent);
   }
 
+  Future<void> _acceptConsentAndStartModelInstall() async {
+    await _setConsent(1);
+    unawaited(
+      ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
+    );
+  }
+
   void _next() {
     _controller?.nextPage(duration: AppMotion.normal, curve: AppMotion.curve);
   }
@@ -236,7 +243,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                               l10n.onboardingDownloadNow,
                                           notNowLabel: l10n.onboardingNotNow,
                                           consent: _gemmaConsent,
-                                          onDownloadNow: () => _setConsent(1),
+                                          onDownloadNow:
+                                              _acceptConsentAndStartModelInstall,
                                           onNotNow: () => _setConsent(2),
                                           whyRecognizer: _whyRecognizer,
                                         ),

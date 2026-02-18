@@ -13,6 +13,7 @@ class ModelDownloadCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    this.statusText,
     this.progress = 0.0,
     this.isDownloading = false,
     this.isCompleted = false,
@@ -22,6 +23,7 @@ class ModelDownloadCard extends StatelessWidget {
 
   final String title;
   final String subtitle;
+  final String? statusText;
   final double progress;
   final bool isDownloading;
   final bool isCompleted;
@@ -88,12 +90,7 @@ class ModelDownloadCard extends StatelessWidget {
                               ),
                               const SizedBox(height: AppSpacing.xxs),
                               Text(
-                                errorText ??
-                                    (isDownloading
-                                        ? 'Downloading... ${(progress * 100).toInt()}%'
-                                        : (isCompleted
-                                              ? 'Ready to use'
-                                              : subtitle)),
+                                errorText ?? statusText ?? subtitle,
                                 style: AppTypography.textTheme.bodyMedium
                                     ?.copyWith(
                                       color: errorText != null
