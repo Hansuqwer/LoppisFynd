@@ -9,7 +9,7 @@ class GlassOverlay extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.md),
-    this.blurSigma = 15,
+    this.blurSigma = AppBlur.cardSigma,
     this.fillColor = AppColors.glassFill,
   });
 
@@ -33,6 +33,30 @@ class GlassOverlay extends StatelessWidget {
           ),
           child: child,
         ),
+      ),
+    );
+  }
+}
+
+class GlassBackdrop extends StatelessWidget {
+  const GlassBackdrop({
+    super.key,
+    required this.child,
+    required this.borderRadius,
+    this.blurSigma = AppBlur.tileSigma,
+  });
+
+  final Widget child;
+  final BorderRadius borderRadius;
+  final double blurSigma;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: child,
       ),
     );
   }

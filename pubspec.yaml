@@ -73,8 +73,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  custom_lint: ^0.8.0
   drift_dev: ^2.31.0
   build_runner: ^2.11.1
+
+  fynd_loppis_lints:
+    path: packages/fynd_loppis_lints
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

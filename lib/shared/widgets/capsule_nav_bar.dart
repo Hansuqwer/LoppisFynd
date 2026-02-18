@@ -46,22 +46,18 @@ class CapsuleNavBar extends StatelessWidget {
           marginBottom,
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        height: 76,
+        height: AppCapsuleNav.barHeight,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.inkDeep.withValues(alpha: 0.14),
-              blurRadius: 22,
-              offset: const Offset(0, 12),
-              spreadRadius: -8,
-            ),
-          ],
+          boxShadow: AppShadows.capsuleNav,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            filter: ImageFilter.blur(
+              sigmaX: AppBlur.navSigma,
+              sigmaY: AppBlur.navSigma,
+            ),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: AppColors.cloudDancer.withValues(alpha: 0.68),
@@ -115,17 +111,19 @@ class _NavItem extends StatelessWidget {
       label: destination.label,
       child: InkResponse(
         onTap: onTap,
-        radius: 34,
+        radius: AppCapsuleNav.inkRadius,
         highlightShape: BoxShape.circle,
         containedInkWell: false,
         child: SizedBox(
-          width: isPrimary ? 66 : 56,
-          height: 56,
+          width: isPrimary ? AppCapsuleNav.primaryItemWidth : AppSpacing.xxxl,
+          height: AppSpacing.xxxl,
           child: Center(
             child: AnimatedContainer(
               duration: AppMotion.normal,
               curve: AppMotion.curve,
-              padding: EdgeInsets.all(isPrimary ? 14 : 12),
+              padding: EdgeInsets.all(
+                isPrimary ? AppCapsuleNav.primaryIconPadding : AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: isPrimary
                     ? AppColors.accentEarth

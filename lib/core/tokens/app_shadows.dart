@@ -29,4 +29,13 @@ abstract final class AppShadows {
 
   /// Alias used by contract samples.
   static const soft = bento;
+
+  static const capsuleNav = <BoxShadow>[
+    BoxShadow(
+      color: AppColors.shadowInk,
+      blurRadius: 22,
+      offset: Offset(0, 12),
+      spreadRadius: -8,
+    ),
+  ];
 }

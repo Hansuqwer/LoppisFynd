@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -467,12 +465,10 @@ class _LoginPillButtonState extends State<_LoginPillButton> {
 
     if (widget.tone != _LoginPillTone.glass) return child;
 
-    return ClipRRect(
+    return GlassBackdrop(
       borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: child,
-      ),
+      blurSigma: AppBlur.tileSigma,
+      child: child,
     );
   }
 }

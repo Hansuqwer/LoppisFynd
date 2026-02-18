@@ -1,5 +1,6 @@
 export 'app_colors.dart';
 export 'app_blur.dart';
+export 'app_capsule_nav.dart';
 export 'app_motion.dart';
 export 'app_opacity.dart';
 export 'app_radius.dart';
