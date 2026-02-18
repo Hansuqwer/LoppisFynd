@@ -10,4 +10,7 @@ abstract final class AppOpacity {
 
   /// Motif overlay layer opacity (e.g. repeating logo wallpaper).
   static const double motifOverlay = 0.10;
+
+  /// Capsule nav bar background fill opacity.
+  static const double capsuleNavFill = 0.68;
 }

@@ -35,6 +35,8 @@ class CapsuleNavBar extends StatelessWidget {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final marginBottom = 14.0 + (bottomInset > 0 ? 6.0 : 18.0);
 
+    final barRadius = BorderRadius.circular(AppRadius.capsule);
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -48,11 +50,11 @@ class CapsuleNavBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         height: AppCapsuleNav.barHeight,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderRadius: barRadius,
           boxShadow: AppShadows.capsuleNav,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderRadius: barRadius,
           child: BackdropFilter(
             filter: ImageFilter.blur(
               sigmaX: AppBlur.navSigma,
@@ -60,9 +62,11 @@ class CapsuleNavBar extends StatelessWidget {
             ),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.cloudDancer.withValues(alpha: 0.68),
+                color: AppColors.cloudDancer.withValues(
+                  alpha: AppOpacity.capsuleNavFill,
+                ),
                 border: Border.all(color: AppColors.glassStroke),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
+                borderRadius: barRadius,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
