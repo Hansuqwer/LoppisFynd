@@ -121,11 +121,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get errorCameraTitle => 'Kamerafel';
 
   @override
-  String get historyEmptyTitle => 'Inga fynd ännu';
+  String get historyEmptyTitle => 'Dags för en fika?';
 
   @override
   String get historyEmptyMessage =>
-      'Skapa ett fynd för att börja spåra dina köp.';
+      'Inga historiska fynd ännu.\nGe dig ut och scanna!';
 
   @override
   String get historyTreasureMapTitle => 'Skattkarta';
@@ -213,7 +213,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get historySearchLabel => 'Sök';
 
   @override
-  String get historySearchHint => 'Sök fynd…';
+  String get historySearchHint => 'Sök i historik…';
 
   @override
   String get historyCategoryAll => 'Alla kategorier';

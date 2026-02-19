@@ -11,6 +11,8 @@ import '../../core/navigation/spring_route.dart';
 import '../../features/summary/haul_summary_screen.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
+import '../../shared/widgets/glass_board.dart';
+import '../../shared/widgets/glass_surface.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../gen/app_localizations.dart';
 import '../analyzer/profit_calculator.dart';
@@ -326,6 +328,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         stream: db.haulsDao.watchAll(userId: userId),
         builder: (context, snapshot) {
           final hauls = snapshot.data ?? const [];
+          final historyHauls = hauls
+              .where((h) => h.id != defaultHaulId)
+              .toList(growable: false);
           return StreamBuilder(
             stream: db.scanItemsDao.watchAll(userId: userId),
             builder: (context, scanSnapshot) {
@@ -333,6 +338,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               final profitByHaul = <String, double>{};
               final categoriesByHaul = <String, Set<String>>{};
               for (final it in items) {
+                if (it.haulId == defaultHaulId) continue;
                 final cat = it.category?.trim();
                 if (cat != null && cat.isNotEmpty) {
                   (categoriesByHaul[it.haulId] ??= <String>{}).add(cat);
@@ -364,13 +370,80 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               }
 
               final filteredHauls = filterAndSortHauls(
-                hauls: hauls,
+                hauls: historyHauls,
                 profitByHaul: profitByHaul,
                 categoriesByHaul: categoriesByHaul,
                 search: _search,
                 category: _category,
                 sort: _sort,
               );
+
+              if (historyHauls.isEmpty) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    0,
+                  ),
+                  child: StackedBackplates(
+                    child: GlassBoard(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.historyHistoryTitle,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _HistorySearchBar(
+                            hintText: l10n.historySearchHint,
+                            onChanged: (v) => setState(() => _search = v),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Wrap(
+                            spacing: AppSpacing.xs,
+                            runSpacing: AppSpacing.xs,
+                            children: [
+                              _PebbleChip(
+                                label: l10n.historyViewBoth,
+                                selected: _view == _HistoryView.both,
+                                onPressed: () =>
+                                    setState(() => _view = _HistoryView.both),
+                              ),
+                              _PebbleChip(
+                                label: l10n.historyViewMap,
+                                selected: _view == _HistoryView.map,
+                                onPressed: () =>
+                                    setState(() => _view = _HistoryView.map),
+                              ),
+                              _PebbleChip(
+                                label: l10n.historyViewList,
+                                selected: _view == _HistoryView.list,
+                                onPressed: () =>
+                                    setState(() => _view = _HistoryView.list),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              _PebbleChip(
+                                label: l10n.historySortProfit,
+                                selected: _sort == HistorySort.profit,
+                                onPressed: () =>
+                                    setState(() => _sort = HistorySort.profit),
+                              ),
+                            ],
+                          ),
+                          CoffeeCupEmptyState(
+                            title: l10n.historyEmptyTitle,
+                            message: l10n.historyEmptyMessage,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
 
               final pinsAll = filteredHauls
                   .where((h) => h.lat != null && h.lng != null)
@@ -549,7 +622,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: AppSpacing.sm),
-                          if (hauls.isEmpty)
+                          if (historyHauls.isEmpty)
                             CoffeeCupEmptyState(
                               title: l10n.historyEmptyTitle,
                               message: l10n.historyEmptyMessage,
@@ -628,6 +701,107 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _HistorySearchBar extends StatelessWidget {
+  const _HistorySearchBar({required this.hintText, required this.onChanged});
+
+  final String hintText;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassSurface(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      blurSigma: AppBlur.tileSigma,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      fillOpacity: AppOpacity.glassTile,
+      showInnerHighlight: false,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration.collapsed(
+                hintText: hintText,
+                hintStyle: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+              onChanged: onChanged,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.eucalyptus.withValues(alpha: 0.75),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.borderSubtle),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.search_rounded,
+              size: 18,
+              color: AppColors.textOnPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PebbleChip extends StatelessWidget {
+  const _PebbleChip({
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected
+        ? AppColors.textOnPrimary
+        : AppColors.inkDeep.withValues(alpha: 0.88);
+    final bg = selected
+        ? AppColors.eucalyptus.withValues(alpha: 0.80)
+        : AppColors.textOnPrimary.withValues(alpha: 0.28);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: fg,
+            ),
+          ),
+        ),
       ),
     );
   }

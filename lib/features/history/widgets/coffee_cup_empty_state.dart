@@ -14,31 +14,32 @@ class CoffeeCupEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: AppShadows.bento,
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(
-            width: 84,
-            height: 84,
+            width: 120,
+            height: 120,
             child: CustomPaint(painter: _CoffeeCupPainter()),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             title,
+            textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(message, style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
@@ -51,7 +52,7 @@ class _CoffeeCupPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final stroke = Paint()
-      ..color = AppColors.accentEarth.withValues(alpha: 0.55)
+      ..color = AppColors.inkDeep.withValues(alpha: 0.50)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round
@@ -85,7 +86,7 @@ class _CoffeeCupPainter extends CustomPainter {
     canvas.drawPath(plate, stroke..strokeWidth = 4);
 
     final steam = Paint()
-      ..color = AppColors.atmosphericFog.withValues(alpha: 0.30)
+      ..color = AppColors.dopamineRed.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;

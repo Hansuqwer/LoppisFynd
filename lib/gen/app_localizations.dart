@@ -311,13 +311,13 @@ abstract class AppLocalizations {
   /// No description provided for @historyEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'No hauls yet'**
+  /// **'Time for a fika?'**
   String get historyEmptyTitle;
 
   /// No description provided for @historyEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Create a haul to start tracking your finds.'**
+  /// **'No historic finds yet.\nGet out there and scan!'**
   String get historyEmptyMessage;
 
   /// No description provided for @historyTreasureMapTitle.
@@ -485,7 +485,7 @@ abstract class AppLocalizations {
   /// No description provided for @historySearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search hauls…'**
+  /// **'Search history…'**
   String get historySearchHint;
 
   /// No description provided for @historyCategoryAll.

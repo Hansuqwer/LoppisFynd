@@ -121,11 +121,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorCameraTitle => 'Camera error';
 
   @override
-  String get historyEmptyTitle => 'No hauls yet';
+  String get historyEmptyTitle => 'Time for a fika?';
 
   @override
   String get historyEmptyMessage =>
-      'Create a haul to start tracking your finds.';
+      'No historic finds yet.\nGet out there and scan!';
 
   @override
   String get historyTreasureMapTitle => 'Treasure Map';
@@ -213,7 +213,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historySearchLabel => 'Search';
 
   @override
-  String get historySearchHint => 'Search hauls…';
+  String get historySearchHint => 'Search history…';
 
   @override
   String get historyCategoryAll => 'All categories';
