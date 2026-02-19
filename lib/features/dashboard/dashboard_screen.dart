@@ -264,9 +264,9 @@ double _homeTileAspectRatio(BuildContext context) {
   final scale = MediaQuery.textScalerOf(context).scale(1.0);
 
   // Give tiles a bit more vertical room when users increase text size.
-  if (scale >= 1.25) return 0.90;
-  if (scale >= 1.15) return 0.95;
-  return 1.0;
+  if (scale >= 1.25) return 0.88;
+  if (scale >= 1.15) return 0.93;
+  return 0.98;
 }
 
 double? _estimateNetProfit(List<ScanItem> items) {
@@ -317,8 +317,8 @@ class _HomeTile extends StatelessWidget {
         : const EdgeInsets.all(AppSpacing.lg);
     final iconBox = isCompact ? 32.0 : 34.0;
     final iconSize = isCompact ? 16.0 : 18.0;
-    final iconToTextGap = isCompact ? AppSpacing.sm : AppSpacing.md;
-    final textGap = AppSpacing.xs;
+    final iconToTextGap = AppSpacing.sm;
+    final textGap = AppSpacing.xxs;
 
     final titleStyle =
         (isCompact
