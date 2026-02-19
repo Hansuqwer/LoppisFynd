@@ -80,9 +80,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Reskin core screens to parity (Home, Haul, History empty, Draft editor)
-- [ ] 04-02-PLAN.md — Reskin Profile/Settings modules to parity (clean default)
-- [ ] 04-03-PLAN.md — Golden coverage + offline-first regression sanity
+- [x] 04-01-PLAN.md — Reskin core screens to parity (Home, Haul, History empty, Draft editor)
+- [x] 04-02-PLAN.md — Reskin Profile/Settings modules to parity (clean default)
+- [x] 04-03-PLAN.md — Golden coverage + offline-first regression sanity
 
 ## Progress
 
@@ -94,4 +94,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Design System + Guardrails | 5/5 | Complete    | 2026-02-18 |
 | 2. Capsule Navigation Shell | 2/2 | Complete    | 2026-02-18 |
 | 3. Startup + Auth + Model Download | 1/4 | In Progress | - |
-| 4. Core Screens + Goldens | 0/3 | Complete    | 2026-02-19 |
+| 4. Core Screens + Goldens | 3/3 | Complete    | 2026-02-19 |

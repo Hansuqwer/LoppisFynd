@@ -33,7 +33,7 @@ See: `.planning/PROJECT.md` (updated 2026-02-18)
 | 1. Design System + Guardrails | 5 | 5 | - |
 | 2. Capsule Navigation Shell | 2 | 2 | - |
 | 3. Startup + Auth + Model Download | 0 | 4 | - |
-| 4. Core Screens + Goldens | 1 | 3 | - |
+| 4. Core Screens + Goldens | 3 | 3 | - |
 | Phase 01 P01 | 6 min | 2 tasks | 7 files |
 | Phase 01-design-system-guardrails P03 | 29 min | 2 tasks | 25 files |
 | Phase 01-design-system-guardrails P02 | 16 min | 2 tasks | 8 files |
