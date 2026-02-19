@@ -10,7 +10,6 @@ import 'package:fynd_loppis/core/config/app_config.dart';
 import 'package:fynd_loppis/core/database/app_database.dart';
 import 'package:fynd_loppis/core/storage/scan_image_storage.dart';
 import 'package:fynd_loppis/main.dart';
-import 'package:fynd_loppis/shared/widgets/bento_card.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
 import 'package:fynd_loppis/services/ai/model_manager.dart';
 import 'package:fynd_loppis/services/market/market_data_source.dart';
@@ -117,7 +116,10 @@ void main() {
 
     final storage = ScanImageStorage(rootDir: root);
     final modelManager = ModelManager(
-      spec: const ModelSpec(id: 'gemma_vision', fileName: 'gemma_vision.task'),
+      spec: const ModelSpec(
+        id: 'gemma_vision',
+        fileName: 'gemma_vision.litertlm',
+      ),
       baseDirProvider: () async => root,
     );
     final aiInference = AiInferenceIsolateService();
@@ -155,31 +157,20 @@ void main() {
       tester.element(find.text('Tillgänglighet').first),
     )!;
 
-    final aboutTitle = find.text(l10n.appTitle);
-    await tester.scrollUntilVisible(aboutTitle, 400);
-    expect(aboutTitle, findsOneWidget);
-
-    final aboutCard = find.ancestor(
-      of: aboutTitle,
-      matching: find.byType(BentoCard),
+    // Dev-only sync controls should be hidden in normal mode.
+    expect(find.text(l10n.settingsMarketSyncTitle), findsNothing);
+    expect(
+      find.textContaining('--dart-define=TRADERA_PROXY_URL='),
+      findsNothing,
     );
-    expect(aboutCard, findsOneWidget);
 
-    final versionText = find.descendant(
-      of: aboutCard,
-      matching: find.byWidgetPredicate((w) {
-        if (w is! Text) return false;
-        final data = w.data;
-        if (data == null) return false;
-        return data == l10n.settingsModelChecking || data.startsWith('v');
-      }),
+    final versionTapTarget = find.byKey(
+      const Key('settings_dev_mode_tap_target'),
     );
-    expect(versionText, findsOneWidget);
-    await tester.ensureVisible(versionText);
-    await tester.pumpAndSettle();
+    expect(versionTapTarget, findsOneWidget);
 
     for (var i = 0; i < 7; i++) {
-      await tester.tap(versionText);
+      await tester.tap(versionTapTarget);
       await tester.pump(const Duration(milliseconds: 10));
     }
     await tester.pumpAndSettle();
@@ -187,8 +178,8 @@ void main() {
     expect(await db.appSettingsDao.getInt('dev_mode_enabled_v1'), 1);
 
     // Dev-only sync section becomes visible once dev mode is enabled.
-    await tester.scrollUntilVisible(find.text('Marknadssynk'), 400);
-    expect(find.text('Marknadssynk'), findsOneWidget);
+    final marketSyncTitle = find.text(l10n.settingsMarketSyncTitle);
+    expect(marketSyncTitle, findsWidgets);
     expect(
       find.textContaining('--dart-define=TRADERA_PROXY_URL='),
       findsOneWidget,
