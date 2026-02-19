@@ -80,9 +80,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Reskin core screens to parity (Home, Haul, History empty, Draft editor)
-- [ ] 04-02: Reskin Profile/Settings modules to parity (clean default)
-- [ ] 04-03: Golden coverage + offline-first regression sanity
+- [ ] 04-01-PLAN.md — Reskin core screens to parity (Home, Haul, History empty, Draft editor)
+- [ ] 04-02-PLAN.md — Reskin Profile/Settings modules to parity (clean default)
+- [ ] 04-03-PLAN.md — Golden coverage + offline-first regression sanity
 
 ## Progress
 
