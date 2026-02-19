@@ -75,13 +75,15 @@ class DashboardScreen extends ConsumerWidget {
                         ? '—'
                         : '${_formatSek(profit, locale: intl.Intl.getCurrentLocale())} kr';
 
+                    final tileAspectRatio = _homeTileAspectRatio(context);
+
                     return GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 2,
                       crossAxisSpacing: AppSpacing.md,
                       mainAxisSpacing: AppSpacing.md,
-                      childAspectRatio: 1,
+                      childAspectRatio: tileAspectRatio,
                       children: [
                         _HomeTile(
                           icon: Icons.shopping_bag_outlined,
@@ -258,6 +260,15 @@ String _formatSek(double value, {required String locale}) {
   return f.format(value.round());
 }
 
+double _homeTileAspectRatio(BuildContext context) {
+  final scale = MediaQuery.textScalerOf(context).scale(1.0);
+
+  // Give tiles a bit more vertical room when users increase text size.
+  if (scale >= 1.25) return 0.90;
+  if (scale >= 1.15) return 0.95;
+  return 1.0;
+}
+
 double? _estimateNetProfit(List<ScanItem> items) {
   var any = false;
   var total = 0.0;
@@ -297,16 +308,40 @@ class _HomeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final valueText = value;
 
+    final mq = MediaQuery.of(context);
+    final textScale = mq.textScaler.scale(1.0);
+    final isCompact = mq.size.width < 380 || textScale >= 1.15;
+
+    final tilePadding = isCompact
+        ? const EdgeInsets.all(AppSpacing.md)
+        : const EdgeInsets.all(AppSpacing.lg);
+    final iconBox = isCompact ? 32.0 : 34.0;
+    final iconSize = isCompact ? 16.0 : 18.0;
+    final iconToTextGap = isCompact ? AppSpacing.sm : AppSpacing.md;
+    final textGap = AppSpacing.xs;
+
+    final titleStyle =
+        (isCompact
+                ? Theme.of(context).textTheme.bodyMedium
+                : Theme.of(context).textTheme.bodyLarge)
+            ?.copyWith(fontWeight: FontWeight.w800);
+
+    final valueBaseStyle =
+        (isCompact
+                ? Theme.of(context).textTheme.titleLarge
+                : Theme.of(context).textTheme.headlineSmall)
+            ?.copyWith(fontWeight: FontWeight.w900);
+
     return BentoCard(
       backgroundColor: AppColors.textOnPrimary.withValues(alpha: 0.34),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: tilePadding,
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: iconBox,
+            height: iconBox,
             decoration: BoxDecoration(
               color: AppColors.textOnPrimary.withValues(alpha: 0.52),
               borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -315,34 +350,37 @@ class _HomeTile extends StatelessWidget {
             alignment: Alignment.center,
             child: Icon(
               icon,
-              size: 18,
+              size: iconSize,
               color: AppColors.inkDeep.withValues(alpha: 0.82),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: iconToTextGap),
           Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: titleStyle,
           ),
           if (valueText != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              valueText,
-              style: AppTypography.metricsFrom(
-                Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ) ??
-                    const TextStyle(),
+            SizedBox(height: textGap),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                valueText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.metricsFrom(
+                  valueBaseStyle ?? const TextStyle(),
+                ),
               ),
             ),
           ] else if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: textGap),
             Text(
               subtitle!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
