@@ -37,7 +37,10 @@ void main() {
     );
     final storage = ScanImageStorage(rootDir: root);
     final modelManager = ModelManager(
-      spec: const ModelSpec(id: 'gemma_vision', fileName: 'gemma_vision.task'),
+      spec: const ModelSpec(
+        id: 'gemma_vision',
+        fileName: 'gemma_vision.litertlm',
+      ),
       baseDirProvider: () async => root,
     );
     final aiInference = AiInferenceIsolateService();

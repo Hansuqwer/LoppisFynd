@@ -139,7 +139,10 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
   );
 
   final modelManager = ModelManager(
-    spec: const ModelSpec(id: 'gemma_vision', fileName: 'gemma_vision.task'),
+    spec: const ModelSpec(
+      id: 'gemma_vision',
+      fileName: 'gemma_vision.litertlm',
+    ),
   );
 
   final modelFile = await modelManager.modelFile();
