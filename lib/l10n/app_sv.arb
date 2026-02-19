@@ -346,7 +346,7 @@
   "settingsDownloading": "Laddar ner…",
   "settingsDownloadModel": "Ladda ner modell",
   "settingsInstallFromFilePathLabel": "Installera från filsökväg",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.litertlm",
 
   "loginAppName": "Loppisfynd",
   "loginTagline": "Skanna. Bestäm. Flippa.",
@@ -474,7 +474,7 @@
   "authError": "Något gick fel: {message}",
   "@authError": {"placeholders": {"message": {"type": "String"}}},
 
-  "homeHeroTitle": "Starta scanner",
+  "homeHeroTitle": "Starta Scanner",
   "homeHeroBody": "Skanna prislappen. Spara offline. Synka priser när du är online.",
   "homeTileActiveFinds": "Aktiva fynd",
   "homeTileProfitEst": "Vinst (est.)",

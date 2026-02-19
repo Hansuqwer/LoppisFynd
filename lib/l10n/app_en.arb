@@ -345,7 +345,7 @@
   "settingsDownloading": "Downloading…",
   "settingsDownloadModel": "Download model",
   "settingsInstallFromFilePathLabel": "Install from file path",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.litertlm",
 
   "loginAppName": "Loppisfynd",
   "loginTagline": "Scan. Decide. Flip.",
@@ -473,7 +473,7 @@
   "authError": "Something went wrong: {message}",
   "@authError": {"placeholders": {"message": {"type": "String"}}},
 
-  "homeHeroTitle": "Start scanner",
+  "homeHeroTitle": "Start Scanner",
   "homeHeroBody": "Scan the price tag. Save offline. Sync prices when you’re online.",
   "homeTileActiveFinds": "Active finds",
   "homeTileProfitEst": "Profit (est.)",

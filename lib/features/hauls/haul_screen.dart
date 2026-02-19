@@ -1,15 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' as intl;
 
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
-import '../../shared/widgets/bento_card.dart';
-import '../../shared/widgets/glass_button.dart';
+import '../../shared/widgets/glass_board.dart';
+import '../../shared/widgets/glass_surface.dart';
 import '../summary/haul_summary_screen.dart';
-import '../analyzer/profit_calculator.dart';
+import '../analyzer/item_detail_screen.dart';
 import '../../gen/app_localizations.dart';
 
 class HaulScreen extends ConsumerWidget {
@@ -23,69 +26,187 @@ class HaulScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          0,
+        ),
+        child: StackedBackplates(
+          child: GlassBoard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: StreamBuilder<List<ScanItem>>(
+              stream: db.scanItemsDao.watchByHaulId(haulId, userId: userId),
+              builder: (context, snapshot) {
+                final items = snapshot.data ?? const <ScanItem>[];
+                final total = _totalValue(items);
+                final totalText =
+                    '${_formatSek(total, locale: intl.Intl.getCurrentLocale())} kr';
+
+                return Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.haulTitle,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _HaulSummaryRow(
+                            label: _totalValueLabel(l10n),
+                            valueText: totalText,
+                            onOpenSummary: () {
+                              Navigator.of(context).push(
+                                SpringRoute(
+                                  builder: (_) =>
+                                      HaulSummaryScreen(haulId: haulId),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          if (items.isEmpty)
+                            Text(
+                              l10n.scannerNoScansYet,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.textMuted),
+                            )
+                          else
+                            ...items.map(
+                              (it) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
+                                child: _HaulItemRow(
+                                  item: it,
+                                  title:
+                                      (it.desc ?? it.query)
+                                              ?.trim()
+                                              .isNotEmpty ==
+                                          true
+                                      ? (it.desc ?? it.query)!.trim()
+                                      : l10n.haulUnnamedFind,
+                                  statusLabel: _statusLabel(l10n, it.status),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      SpringRoute(
+                                        builder: (_) =>
+                                            ItemDetailScreen(scanItemId: it.id),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: _CameraFab(
+                        onPressed: () {
+                          ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                        },
+                        semanticLabel: l10n.homeHeroTitle,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+double _totalValue(List<ScanItem> items) {
+  var total = 0.0;
+  for (final it in items) {
+    final m = it.medianPrice;
+    if (m == null) continue;
+    total += (m * it.conditionMultiplier);
+  }
+  return total;
+}
+
+String _formatSek(double value, {required String locale}) {
+  final f = intl.NumberFormat.decimalPattern(locale);
+  return f.format(value.round());
+}
+
+String _totalValueLabel(AppLocalizations l10n) {
+  return l10n.haulTotalValue('').trimRight();
+}
+
+String _statusLabel(AppLocalizations l10n, ScanItemStatus status) {
+  return switch (status) {
+    ScanItemStatus.pendingIdentify ||
+    ScanItemStatus.pendingSync ||
+    ScanItemStatus.syncing => l10n.haulStatusIdentifying,
+    ScanItemStatus.complete => l10n.haulStatusSaved,
+    ScanItemStatus.failed => l10n.itemDetailStatusValue(status.name),
+  };
+}
+
+class _HaulSummaryRow extends StatelessWidget {
+  const _HaulSummaryRow({
+    required this.label,
+    required this.valueText,
+    required this.onOpenSummary,
+  });
+
+  final String label;
+  final String valueText;
+  final VoidCallback onOpenSummary;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassSurface(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      blurSigma: AppBlur.tileSigma,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      fillOpacity: AppOpacity.glassTile,
+      child: Row(
         children: [
-          BentoCard(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.haulTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  l10n.haulSubtitle,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                StreamBuilder<List<ScanItem>>(
-                  stream: db.scanItemsDao.watchByHaulId(haulId, userId: userId),
-                  builder: (context, snapshot) {
-                    final items = snapshot.data ?? const [];
-
-                    final counts = _counts(items);
-                    final totals = _totals(items);
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _MetricRow(
-                          leftLabel: l10n.haulItems,
-                          leftValue: '${items.length}',
-                          rightLabel: l10n.haulReady,
-                          rightValue: '${counts.ready}',
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        _MetricRow(
-                          leftLabel: l10n.haulExpected,
-                          leftValue: _formatSek(totals.expected),
-                          rightLabel: l10n.haulNetEst,
-                          rightValue: _formatSek(totals.gross),
-                          emphasizeRight: true,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        GlassButton(
-                          label: l10n.haulOpenSummary,
-                          icon: const Icon(Icons.assessment_rounded),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              SpringRoute(
-                                builder: (_) =>
-                                    HaulSummaryScreen(haulId: haulId),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
+                  valueText,
+                  style: AppTypography.metricsFrom(
+                    Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ) ??
+                        const TextStyle(),
+                  ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          _IconSquareButton(
+            semanticLabel: AppLocalizations.of(context)!.haulOpenSummary,
+            icon: Icons.bar_chart_rounded,
+            onPressed: onOpenSummary,
           ),
         ],
       ),
@@ -93,107 +214,167 @@ class HaulScreen extends ConsumerWidget {
   }
 }
 
-({int ready}) _counts(List<ScanItem> items) {
-  var ready = 0;
-  for (final it in items) {
-    if (it.status == ScanItemStatus.complete) ready += 1;
-  }
-  return (ready: ready);
-}
-
-({double expected, double gross}) _totals(List<ScanItem> items) {
-  var expected = 0.0;
-  var gross = 0.0;
-  for (final it in items) {
-    final m = it.medianPrice;
-    if (m != null) {
-      expected += (m * it.conditionMultiplier);
-    }
-
-    final p = it.purchasePrice;
-    if (p != null && m != null) {
-      gross +=
-          (ProfitCalculator.netProfit(
-            purchasePrice: p,
-            expectedSalePrice: (m * it.conditionMultiplier),
-            fixedFeesSek: it.fixedFeesSek ?? 0,
-            shippingPaidBySellerSek: it.shippingPaidBySellerSek ?? 0,
-          ) ??
-          0);
-    }
-  }
-  return (expected: expected, gross: gross);
-}
-
-String _formatSek(double v) {
-  return '${v.round()} SEK';
-}
-
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({
-    required this.leftLabel,
-    required this.leftValue,
-    required this.rightLabel,
-    required this.rightValue,
-    this.emphasizeRight = false,
+class _HaulItemRow extends StatelessWidget {
+  const _HaulItemRow({
+    required this.item,
+    required this.title,
+    required this.statusLabel,
+    required this.onTap,
   });
 
-  final String leftLabel;
-  final String leftValue;
-  final String rightLabel;
-  final String rightValue;
-  final bool emphasizeRight;
+  final ScanItem item;
+  final String title;
+  final String statusLabel;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatLine(label: leftLabel, value: leftValue),
+    return GlassSurface(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      blurSigma: AppBlur.tileSigma,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      fillOpacity: AppOpacity.glassTile,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: onTap,
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: item.thumbPath == null
+                  ? Container(
+                      width: 56,
+                      height: 56,
+                      color: AppColors.surface,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.image_rounded),
+                    )
+                  : Image.file(
+                      File(item.thumbPath!),
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      cacheWidth: 112,
+                      cacheHeight: 112,
+                      errorBuilder: (context, _, _) {
+                        return Container(
+                          width: 56,
+                          height: 56,
+                          color: AppColors.surface,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  _StatusChip(label: statusLabel),
+                ],
+              ),
+            ),
+          ],
         ),
-        Expanded(
-          child: _StatLine(
-            label: rightLabel,
-            value: rightValue,
-            emphasize: emphasizeRight,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _StatLine extends StatelessWidget {
-  const _StatLine({
-    required this.label,
-    required this.value,
-    this.emphasize = false,
-  });
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label});
 
   final String label;
-  final String value;
-  final bool emphasize;
 
   @override
   Widget build(BuildContext context) {
-    final valueBase =
-        (emphasize
-                ? Theme.of(context).textTheme.titleLarge
-                : Theme.of(context).textTheme.bodyLarge)
-            ?.copyWith(
-              fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
-            );
-    final valueStyle = valueBase == null
-        ? null
-        : AppTypography.metricsFrom(valueBase);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.eucalyptus.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.inkDeep.withValues(alpha: 0.80),
+        ),
+      ),
+    );
+  }
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(value, style: valueStyle),
-      ],
+class _CameraFab extends StatelessWidget {
+  const _CameraFab({required this.onPressed, required this.semanticLabel});
+
+  final VoidCallback onPressed;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return _IconSquareButton(
+      semanticLabel: semanticLabel,
+      icon: Icons.camera_alt_rounded,
+      onPressed: onPressed,
+    );
+  }
+}
+
+class _IconSquareButton extends StatelessWidget {
+  const _IconSquareButton({
+    required this.semanticLabel,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String semanticLabel;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: Material(
+        color: AppColors.dopamineRed,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        elevation: 0,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Icon(
+              icon,
+              color: AppColors.textOnPrimary.withValues(alpha: 0.92),
+              size: 22,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

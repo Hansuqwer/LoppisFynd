@@ -951,7 +951,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsInstallFromFilePathLabel => 'Installera från filsökväg';
 
   @override
-  String get settingsInstallFromFilePathHint => '/path/to/gemma_vision.task';
+  String get settingsInstallFromFilePathHint =>
+      '/path/to/gemma_vision.litertlm';
 
   @override
   String get loginAppName => 'Loppisfynd';
@@ -1239,7 +1240,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get homeHeroTitle => 'Starta scanner';
+  String get homeHeroTitle => 'Starta Scanner';
 
   @override
   String get homeHeroBody =>

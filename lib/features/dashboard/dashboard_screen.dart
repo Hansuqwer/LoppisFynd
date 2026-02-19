@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart' as intl;
 
 import '../../core/app/providers.dart';
+import '../../core/database/app_database.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
-import '../../shared/widgets/glass_button.dart';
+import '../../shared/widgets/glass_board.dart';
 import '../../features/model_manager/widgets/model_download_card.dart';
 import '../../gen/app_localizations.dart';
 import '../summary/haul_summary_screen.dart';
 import '../drafts/drafts_screen.dart';
-import '../drafts/draft_editor_screen.dart';
+import '../analyzer/profit_calculator.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -23,9 +24,6 @@ class DashboardScreen extends ConsumerWidget {
     final defaultHaulId = ref.watch(defaultHaulIdProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    final width = MediaQuery.sizeOf(context).width;
-    final twoUp = width >= 380;
-
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
@@ -34,317 +32,324 @@ class DashboardScreen extends ConsumerWidget {
           AppSpacing.lg,
           0,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.dashboardTitle,
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.7,
-              ),
-            ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.08, end: 0),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              l10n.dashboardSubtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.inkDeep.withValues(alpha: 0.72),
-              ),
-            ).animate().fadeIn(duration: 310.ms).slideY(begin: 0.08, end: 0),
-            const SizedBox(height: AppSpacing.lg),
-            const _ModelPreflightCard()
-                .animate()
-                .fadeIn(duration: 340.ms)
-                .slideY(begin: 0.06, end: 0),
-            const SizedBox(height: AppSpacing.md),
-
-            // Predictive hero action: Start Scanner.
-            BentoCard(
-              backgroundColor: AppColors.glassFill,
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              onTap: () {
-                ref.read(deepLinkTabIndexProvider.notifier).state = 1;
-              },
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.atmosphericFog.withValues(alpha: 0.10),
-                            AppColors.cloudDancer.withValues(alpha: 0.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: -10,
-                    bottom: -12,
-                    child: Icon(
-                      Icons.qr_code_scanner_rounded,
-                      size: 150,
-                      color: AppColors.inkDeep.withValues(alpha: 0.06),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.dashboardQuickScan,
+        child: StackedBackplates(
+          child: GlassBoard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.dashboardTitle,
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        l10n.scannerSubtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.inkDeep.withValues(alpha: 0.68),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      FilledButton.icon(
-                        onPressed: () {
-                          ref.read(deepLinkTabIndexProvider.notifier).state = 1;
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.inkDeep,
-                          foregroundColor: AppColors.cloudDancer,
-                        ),
-                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
-                        label: Text(l10n.dashboardQuickScan),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 360.ms).slideY(begin: 0.06, end: 0),
-            const SizedBox(height: AppSpacing.md),
-
-            if (twoUp)
-              Row(
-                children: [
-                  Expanded(
-                    child: BentoCard(
-                      backgroundColor: AppColors.glassFill,
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.dashboardHaulSummary,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            l10n.haulTitle,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          GlassButton(
-                            label: l10n.dashboardHaulSummary,
-                            tone: GlassButtonTone.neutral,
-                            icon: const Icon(Icons.assessment_rounded),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                SpringRoute(
-                                  builder: (_) =>
-                                      HaulSummaryScreen(haulId: defaultHaulId),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _DraftsMiniCard(dbUserId: userId)),
-                ],
-              )
-            else ...[
-              BentoCard(
-                backgroundColor: AppColors.glassFill,
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.dashboardHaulSummary,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            l10n.haulTitle,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    GlassButton(
-                      label: l10n.dashboardHaulSummary,
-                      tone: GlassButtonTone.neutral,
-                      icon: const Icon(Icons.assessment_rounded),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          SpringRoute(
-                            builder: (_) =>
-                                HaulSummaryScreen(haulId: defaultHaulId),
-                          ),
-                        );
-                      },
+                    IconButton(
+                      onPressed: null,
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      color: AppColors.inkDeep.withValues(alpha: 0.70),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _DraftsMiniCard(dbUserId: userId),
-            ],
-            const SizedBox(height: AppSpacing.md),
-
-            StreamBuilder(
-              stream: db.draftListingsDao.watchAllForUser(userId: userId),
-              builder: (context, snapshot) {
-                final rows = snapshot.data ?? const [];
-                final shown = rows.length > 3 ? rows.take(3).toList() : rows;
-
-                return BentoCard(
-                  backgroundColor: AppColors.glassFill,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.dashboardDraftsTitle,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                SpringRoute(
-                                  builder: (_) => const DraftsScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(l10n.dashboardSeeAll),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      if (rows.isEmpty)
-                        Text(
-                          l10n.dashboardNoDraftsYet,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        )
-                      else
-                        ...shown.map(
-                          (row) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.xs,
-                            ),
-                            child: GlassButton(
-                              tone: GlassButtonTone.neutral,
-                              icon: const Icon(Icons.edit_note_rounded),
-                              label:
-                                  (row.draft.title?.trim().isNotEmpty ?? false)
-                                  ? row.draft.title!.trim()
-                                  : l10n.dashboardUntitledDraft,
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  SpringRoute(
-                                    builder: (_) => DraftEditorScreen(
-                                      scanItemId: row.item.id,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.dashboardTitle,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.inkDeep.withValues(alpha: 0.34),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: AppSpacing.md),
+                _HeroCtaCard(
+                  title: l10n.homeHeroTitle,
+                  body: l10n.homeHeroBody,
+                  onTap: () {
+                    ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                StreamBuilder<List<ScanItem>>(
+                  stream: db.scanItemsDao.watchByHaulId(
+                    defaultHaulId,
+                    userId: userId,
                   ),
-                );
-              },
-            ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.06, end: 0),
-            const SizedBox(height: AppSpacing.xxxl),
-          ],
+                  builder: (context, snapshot) {
+                    final items = snapshot.data ?? const <ScanItem>[];
+                    final profit = _estimateNetProfit(items);
+                    final profitText = profit == null
+                        ? '—'
+                        : '${_formatSek(profit, locale: intl.Intl.getCurrentLocale())} kr';
+
+                    return GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisSpacing: AppSpacing.md,
+                      childAspectRatio: 1,
+                      children: [
+                        _HomeTile(
+                          icon: Icons.shopping_bag_outlined,
+                          title: l10n.homeTileActiveFinds,
+                          value: '${items.length}',
+                          onTap: () {
+                            ref.read(deepLinkTabIndexProvider.notifier).state =
+                                2;
+                          },
+                        ),
+                        _HomeTile(
+                          icon: Icons.trending_up_rounded,
+                          title: l10n.homeTileProfitEst,
+                          value: profitText,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SpringRoute(
+                                builder: (_) =>
+                                    HaulSummaryScreen(haulId: defaultHaulId),
+                              ),
+                            );
+                          },
+                        ),
+                        _HomeTile(
+                          icon: Icons.bookmark_border_rounded,
+                          title: l10n.commonSave,
+                          subtitle: l10n.homeTileDrafts,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SpringRoute(builder: (_) => const DraftsScreen()),
+                            );
+                          },
+                        ),
+                        _HomeTile(
+                          icon: Icons.history_toggle_off_rounded,
+                          title: l10n.homeTileHistory,
+                          subtitle: l10n.homeTileCtaSeeAll,
+                          onTap: () {
+                            ref.read(deepLinkTabIndexProvider.notifier).state =
+                                3;
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const _ModelPreflightCard(),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _DraftsMiniCard extends ConsumerWidget {
-  const _DraftsMiniCard({required this.dbUserId});
+class _HeroCtaCard extends StatelessWidget {
+  const _HeroCtaCard({
+    required this.title,
+    required this.body,
+    required this.onTap,
+  });
 
-  final String? dbUserId;
+  final String title;
+  final String body;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.watch(appDatabaseProvider);
-    final l10n = AppLocalizations.of(context)!;
-    return StreamBuilder(
-      stream: db.draftListingsDao.watchAllForUser(userId: dbUserId),
-      builder: (context, snapshot) {
-        final rows = snapshot.data ?? const [];
-        return BentoCard(
-          backgroundColor: AppColors.glassFill,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.dashboardDraftsTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                rows.isEmpty
-                    ? l10n.dashboardNoDraftsYet
-                    : '${rows.length} ${l10n.dashboardDraftsTitle}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkDeep.withValues(alpha: 0.7),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              GlassButton(
-                label: l10n.dashboardSeeAll,
-                tone: GlassButtonTone.neutral,
-                icon: const Icon(Icons.edit_note_rounded),
-                onPressed: () {
-                  Navigator.of(
-                    context,
-                  ).push(SpringRoute(builder: (_) => const DraftsScreen()));
-                },
-              ),
+  Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(AppRadius.lg);
+
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.dopamineRed,
+              AppColors.terracottaClay.withValues(alpha: 0.96),
             ],
           ),
-        );
-      },
+          borderRadius: borderRadius,
+          border: Border.all(color: AppColors.borderSubtle),
+          boxShadow: AppShadows.bento,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: borderRadius,
+            onTap: onTap,
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -44,
+                  top: -44,
+                  child: Container(
+                    width: 180,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.10),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.textOnPrimary,
+                                  ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              body,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.textOnPrimary.withValues(
+                                      alpha: 0.88,
+                                    ),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.textOnPrimary.withValues(
+                            alpha: 0.16,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(
+                            color: AppColors.textOnPrimary.withValues(
+                              alpha: 0.22,
+                            ),
+                          ),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          child: Icon(
+                            Icons.qr_code_scanner_rounded,
+                            size: 40,
+                            color: AppColors.textOnPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatSek(double value, {required String locale}) {
+  final f = intl.NumberFormat.decimalPattern(locale);
+  return f.format(value.round());
+}
+
+double? _estimateNetProfit(List<ScanItem> items) {
+  var any = false;
+  var total = 0.0;
+  for (final it in items) {
+    final purchase = it.purchasePrice;
+    final median = it.medianPrice;
+    if (purchase == null || median == null) continue;
+    final net = ProfitCalculator.netProfit(
+      purchasePrice: purchase,
+      expectedSalePrice: median * it.conditionMultiplier,
+      fixedFeesSek: it.fixedFeesSek ?? 0,
+      shippingPaidBySellerSek: it.shippingPaidBySellerSek ?? 0,
+    );
+    if (net == null) continue;
+    any = true;
+    total += net;
+  }
+  return any ? total : null;
+}
+
+class _HomeTile extends StatelessWidget {
+  const _HomeTile({
+    required this.icon,
+    required this.title,
+    this.value,
+    this.subtitle,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? value;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final valueText = value;
+
+    return BentoCard(
+      backgroundColor: AppColors.textOnPrimary.withValues(alpha: 0.34),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.textOnPrimary.withValues(alpha: 0.52),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: AppColors.borderSubtle),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppColors.inkDeep.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          if (valueText != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              valueText,
+              style: AppTypography.metricsFrom(
+                Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ) ??
+                    const TextStyle(),
+              ),
+            ),
+          ] else if (subtitle != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              subtitle!,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
