@@ -63,5 +63,8 @@ void main() {
       find.byKey(boundaryKey),
       matchesGoldenFile('../goldens/login_screen.png'),
     );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 }
