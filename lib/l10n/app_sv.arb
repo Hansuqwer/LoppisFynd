@@ -122,6 +122,20 @@
   "haulNetEst": "Netto (est.)",
   "haulOpenSummary": "Öppna sammanfattning",
 
+  "settingsProfileTitle": "Fyndjagare",
+  "settingsVersionUnknown": "Version okänd",
+  "settingsVersionPill": "Version {version} (Build {build})",
+  "@settingsVersionPill": {
+    "placeholders": {
+      "version": {},
+      "build": {}
+    }
+  },
+  "settingsModuleSyncDataTitle": "Molnsynk & Data",
+  "settingsModuleSyncDataDescription": "Molnsynk är under utveckling.",
+  "settingsModuleAiModelTitle": "AI & Modell",
+  "settingsModulePrivacyTitle": "Integritet",
+
   "settingsMarketSyncTitle": "Marknadssynk",
   "settingsTraderaProxyConfigured": "Tradera-proxy konfigurerad.",
   "settingsTraderaProxyNotConfigured": "Tradera-proxy är inte konfigurerad.",

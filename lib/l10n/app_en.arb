@@ -121,6 +121,20 @@
   "haulNetEst": "Net (est.)",
   "haulOpenSummary": "Open haul summary",
 
+  "settingsProfileTitle": "Treasure Hunter",
+  "settingsVersionUnknown": "Version unknown",
+  "settingsVersionPill": "Version {version} (Build {build})",
+  "@settingsVersionPill": {
+    "placeholders": {
+      "version": {},
+      "build": {}
+    }
+  },
+  "settingsModuleSyncDataTitle": "Cloud Sync & Data",
+  "settingsModuleSyncDataDescription": "Cloud sync is under development.",
+  "settingsModuleAiModelTitle": "AI & Model",
+  "settingsModulePrivacyTitle": "Privacy",
+
   "settingsMarketSyncTitle": "Market sync",
   "settingsTraderaProxyConfigured": "Tradera proxy configured.",
   "settingsTraderaProxyNotConfigured": "Tradera proxy not configured.",

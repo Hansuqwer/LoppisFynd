@@ -351,6 +351,30 @@ class AppLocalizationsSv extends AppLocalizations {
   String get haulOpenSummary => 'Öppna sammanfattning';
 
   @override
+  String get settingsProfileTitle => 'Fyndjagare';
+
+  @override
+  String get settingsVersionUnknown => 'Version okänd';
+
+  @override
+  String settingsVersionPill(Object version, Object build) {
+    return 'Version $version (Build $build)';
+  }
+
+  @override
+  String get settingsModuleSyncDataTitle => 'Molnsynk & Data';
+
+  @override
+  String get settingsModuleSyncDataDescription =>
+      'Molnsynk är under utveckling.';
+
+  @override
+  String get settingsModuleAiModelTitle => 'AI & Modell';
+
+  @override
+  String get settingsModulePrivacyTitle => 'Integritet';
+
+  @override
   String get settingsMarketSyncTitle => 'Marknadssynk';
 
   @override

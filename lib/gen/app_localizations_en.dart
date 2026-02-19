@@ -349,6 +349,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get haulOpenSummary => 'Open haul summary';
 
   @override
+  String get settingsProfileTitle => 'Treasure Hunter';
+
+  @override
+  String get settingsVersionUnknown => 'Version unknown';
+
+  @override
+  String settingsVersionPill(Object version, Object build) {
+    return 'Version $version (Build $build)';
+  }
+
+  @override
+  String get settingsModuleSyncDataTitle => 'Cloud Sync & Data';
+
+  @override
+  String get settingsModuleSyncDataDescription =>
+      'Cloud sync is under development.';
+
+  @override
+  String get settingsModuleAiModelTitle => 'AI & Model';
+
+  @override
+  String get settingsModulePrivacyTitle => 'Privacy';
+
+  @override
   String get settingsMarketSyncTitle => 'Market sync';
 
   @override

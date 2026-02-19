@@ -728,6 +728,48 @@ abstract class AppLocalizations {
   /// **'Open haul summary'**
   String get haulOpenSummary;
 
+  /// No description provided for @settingsProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Treasure Hunter'**
+  String get settingsProfileTitle;
+
+  /// No description provided for @settingsVersionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Version unknown'**
+  String get settingsVersionUnknown;
+
+  /// No description provided for @settingsVersionPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} (Build {build})'**
+  String settingsVersionPill(Object version, Object build);
+
+  /// No description provided for @settingsModuleSyncDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Sync & Data'**
+  String get settingsModuleSyncDataTitle;
+
+  /// No description provided for @settingsModuleSyncDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync is under development.'**
+  String get settingsModuleSyncDataDescription;
+
+  /// No description provided for @settingsModuleAiModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI & Model'**
+  String get settingsModuleAiModelTitle;
+
+  /// No description provided for @settingsModulePrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsModulePrivacyTitle;
+
   /// No description provided for @settingsMarketSyncTitle.
   ///
   /// In en, this message translates to:
