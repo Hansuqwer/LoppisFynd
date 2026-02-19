@@ -346,7 +346,7 @@
   "settingsDownloading": "Laddar ner…",
   "settingsDownloadModel": "Ladda ner modell",
   "settingsInstallFromFilePathLabel": "Installera från filsökväg",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.litertlm",
 
   "loginAppName": "Loppisfynd",
   "loginTagline": "Skanna. Bestäm. Flippa.",

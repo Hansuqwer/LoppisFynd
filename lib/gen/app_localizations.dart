@@ -1817,7 +1817,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsInstallFromFilePathHint.
   ///
   /// In en, this message translates to:
-  /// **'/path/to/gemma_vision.task'**
+  /// **'/path/to/gemma_vision.litertlm'**
   String get settingsInstallFromFilePathHint;
 
   /// No description provided for @loginAppName.

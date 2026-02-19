@@ -345,7 +345,7 @@
   "settingsDownloading": "Downloading…",
   "settingsDownloadModel": "Download model",
   "settingsInstallFromFilePathLabel": "Install from file path",
-  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.task",
+  "settingsInstallFromFilePathHint": "/path/to/gemma_vision.litertlm",
 
   "loginAppName": "Loppisfynd",
   "loginTagline": "Scan. Decide. Flip.",

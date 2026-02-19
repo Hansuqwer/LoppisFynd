@@ -951,7 +951,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsInstallFromFilePathLabel => 'Install from file path';
 
   @override
-  String get settingsInstallFromFilePathHint => '/path/to/gemma_vision.task';
+  String get settingsInstallFromFilePathHint =>
+      '/path/to/gemma_vision.litertlm';
 
   @override
   String get loginAppName => 'Loppisfynd';
