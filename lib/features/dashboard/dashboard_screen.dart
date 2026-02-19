@@ -363,27 +363,34 @@ class _HomeTile extends StatelessWidget {
           ),
           if (valueText != null) ...[
             SizedBox(height: textGap),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                valueText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.metricsFrom(
-                  valueBaseStyle ?? const TextStyle(),
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    valueText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.metricsFrom(
+                      valueBaseStyle ?? const TextStyle(),
+                    ),
+                  ),
                 ),
               ),
             ),
           ] else if (subtitle != null) ...[
             SizedBox(height: textGap),
-            Text(
-              subtitle!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            Flexible(
+              child: Text(
+                subtitle!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+              ),
             ),
           ],
         ],
