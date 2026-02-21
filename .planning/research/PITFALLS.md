@@ -1,398 +1,506 @@
 # Pitfalls Research
 
-**Domain:** Flutter UI overhaul with strict visual spec (glass/blur), offline-first, Swedish localization
-**Researched:** 2026-02-18
+**Domain:** Flutter offline-first mobile app (iOS/Android) with cloud AI inference (images) + optional offline ML fallback + tokenized UI (dark mode)
+**Researched:** 2026-02-21
 **Confidence:** MEDIUM
 
 ## Critical Pitfalls
 
-### Pitfall 1: Unclipped blur blurs the whole screen
+### Pitfall 1: Shipping cloud image upload without explicit, in-flow disclosure + controls
 
 **What goes wrong:**
-Glass cards/nav use `BackdropFilter` without a clip, so the blur expands to the nearest ancestor clip (often none) and effectively blurs the entire screen. Frame time spikes, scroll jank, and battery drain follow.
+Users take a photo locally, but the app silently sends the image (or crop) to a third-party AI provider. App Store / Play policy review flags it as unexpected data transfer, and users feel betrayed.
 
 **Why it happens:**
-`BackdropFilter` applies to "all the area within its parent or ancestor widget's clip"; when developers rely on rounded corners without explicitly clipping, the engine may blur far more pixels than intended.
+Teams treat cloud inference like any other API call and only mention it in a privacy policy or a deep settings page.
 
 **How to avoid:**
-- Enforce a rule: every `BackdropFilter` must be wrapped in a clip that matches the intended region (`ClipRect`/`ClipRRect`).
-- Put blur tokens in one place (e.g. `AppBlur`) and cap sigma values so designers don't "turn it up" per-screen.
+- Add a first-run (or first-use) consent gate for "Cloud identification" that clearly states: what is sent (image/crop + metadata), to whom (service/provider), why (identify item), and how long it is retained.
+- Keep the toggle user-accessible and reversible (Settings + per-scan "cloud" switch).
+- Make the cloud path optional and preserve core offline flows.
+- Keep disclosures consistent across: in-app copy, Privacy Policy, App Store privacy details, and Play Data Safety.
 
 **Warning signs:**
-- FPS drops when any glass surface is visible, even if the glass region is small.
-- DevTools shows raster/GPU time rising with screen size rather than glass size.
+- Review notes / store rejection mentions "user data" or "unexpected data collection".
+- Support tickets: "Why is the app uploading my photos?".
+- Engineers cannot answer "Do we retain the image?" without checking provider dashboards.
 
 **Phase to address:**
-Phase 2 (Shared Primitives + Perf Baseline)
+Milestone 1 (Hybrid AI Enablement) + Milestone 4 (Token adoption/dark mode, for the settings UX patterns).
 
 ---
 
-### Pitfall 2: Too many independent blurs in lists
+### Pitfall 2: Incorrect App Store Privacy / Play Data Safety declarations (especially for ephemerally processed photos)
 
 **What goes wrong:**
-History/haul/drafts lists render each row as its own blurred surface; scrolling becomes expensive because each row triggers a separate backdrop blur.
+Store listing declarations drift from actual behavior (e.g., photos are uploaded for inference, but marked as "not collected" or missing). This triggers policy enforcement or forced updates under pressure.
 
 **Why it happens:**
-The design language encourages repeated glass tiles. Naively implementing each tile with its own `BackdropFilter` multiplies cost.
+Developers misunderstand "collect" vs "ephemeral processing" and forget to include third-party SDK/service behavior.
 
 **How to avoid:**
-- For repeated blurs (list rows), group backdrop filters using `BackdropGroup`/`BackdropFilter.grouped` so the engine can combine operations.
-- Prefer non-backdrop effects where possible: use translucency + border + shadow, and reserve blur for hero surfaces.
+- Inventory all off-device transmissions (app + Edge Functions + AI provider + crash/analytics SDKs).
+- Treat "photo upload to cloud AI" as collected user content unless you can confidently assert ephemeral processing per store definitions.
+- Add a release checklist item: update App Store privacy details + Play Data Safety as part of any cloud AI change.
 
 **Warning signs:**
-- Performance is fine on static screens but tanks on scroll.
-- Disabling blur makes scrolling instantly smooth.
+- Privacy label answers are based on "what we think" rather than a data-flow doc.
+- Different team members give different answers about whether data is stored.
 
 **Phase to address:**
-Phase 2 (Shared Primitives + Perf Baseline)
+Milestone 1.
 
 ---
 
-### Pitfall 3: Blur + Opacity/saveLayer produces "wrong" glass
+### Pitfall 3: Prompt/image data leaking into logs, crash reports, or analytics
 
 **What goes wrong:**
-Glass surfaces look washed out, double-blended, or inconsistent across screens, especially when wrapped in `Opacity` or other widgets that create temporary buffers.
+Raw prompts, AI JSON, or image URLs/paths end up in Sentry breadcrumbs, Edge Function logs, or analytics events. This expands the privacy surface area and complicates deletion/export guarantees.
 
 **Why it happens:**
-`BackdropFilter` blending interacts with save layers; default `BlendMode.srcOver` is safest cross-platform but can look surprising in these compositions.
+Debug logging is left enabled; errors are captured with full request bodies; "AI JSON" is treated like harmless metadata.
 
 **How to avoid:**
-- Avoid wrapping glass in `Opacity`/`AnimatedOpacity`; drive translucency via colors/gradients inside the glass widget.
-- If a save layer is unavoidable, validate blend mode behavior (consider `BlendMode.src` for affected compositions, but test on both iOS/Android).
+- Redact request/response payloads by default; log only non-sensitive identifiers + sizes + timing.
+- Split "attempt" vs "success" telemetry, and never include image content.
+- Add automated checks in Edge Functions to reject oversized payloads and strip unexpected fields.
 
 **Warning signs:**
-- Glass looks correct on one screen but wrong on another with identical tokens.
-- Visual differences between debug/release or between iOS/Android.
+- Sentry issues include full AI responses or user-provided text.
+- Edge Function logs show base64 blobs or signed URLs.
 
 **Phase to address:**
-Phase 2 (Shared Primitives + Perf Baseline)
+Milestone 1 (cloud AI rollout) + Milestone 3 (dependency modernization, logging SDK changes).
 
 ---
 
-### Pitfall 4: Platform-view/camera content doesn't blur as expected
+### Pitfall 4: Unbounded cloud inference spend (no budgets, no dedupe, no backoff)
 
 **What goes wrong:**
-Trying to blur the scanner camera preview (or other platform views) either fails visually, flickers, or performs poorly.
+Costs spike due to repeated retries, background sync loops, or UI re-tries without caching. The project responds by disabling features instead of controlling usage.
 
 **Why it happens:**
-Backdrop blurs have platform restrictions around certain underlying surfaces (especially with iOS platform views).
+Cloud inference is integrated directly in the app without a server-side policy layer; UI triggers multiple calls per scan.
 
 **How to avoid:**
-- Don't design-critical blur over the camera preview; use scrims/gradients and translucent panels that don't depend on backdrop sampling.
-- If blur is required, validate against Flutter's platform-view blur guidance early.
+- Put inference behind a server-side proxy (Supabase Edge Function) that enforces: per-user limits, per-IP/device limits, payload size caps, and daily/monthly budgets.
+- Cache results by content hash (e.g., perceptual hash of crop) to prevent repeated charges.
+- Implement exponential backoff + jitter for 429s and provider transient failures.
+- Cap image resolution/bytes before upload.
 
 **Warning signs:**
-- Blur works on Android but not iOS (or vice versa).
-- Camera overlay compositing artifacts.
+- Many identical requests (same scanId/image) in logs.
+- Frequent 429 (resource exhausted) responses.
+- Billing graphs with sawtooth spikes matching app releases.
 
 **Phase to address:**
-Phase 4 (Screen-by-Screen Rewrite) for scanner overlay decisions, with a perf spike check in Phase 6
+Milestone 1 (must be part of the initial cloud AI architecture).
 
 ---
 
-### Pitfall 5: Hardcoded strings creep in during "pixel-perfect" work
+### Pitfall 5: Client-side API keys / direct-to-provider calls enabling abuse
 
 **What goes wrong:**
-Screens ship with literal strings in widgets (or partially localized UI like button labels). This violates the non-negotiable "no hardcoded UI strings" requirement and makes later copy fixes painful.
+Keys get extracted from the mobile binary or intercepted; attackers call the AI API at scale. Even with TLS, mobile apps cannot keep secrets.
 
 **Why it happens:**
-UI work is faster with literals, especially when copying from PDFs. Later cleanup is usually incomplete.
+Teams optimize for speed by calling the model provider directly from Flutter.
 
 **How to avoid:**
-- Make it impossible to miss: add a CI check that fails on common literal patterns in `lib/` (e.g. `Text('`, `labelText: '`, `SnackBar(content: Text('`) with an allowlist for debug-only strings.
-- Require all new UI strings to be added to ARB first, then used via `AppLocalizations`.
+- Never ship provider secrets in the app.
+- Use Edge Functions as the only caller of the AI provider.
+- Require auth (Supabase JWT) for paid/limited resources and apply rate limits even for public endpoints.
 
 **Warning signs:**
-- PRs include quotes around Swedish/English UI copy.
-- Copy tweaks require code changes instead of ARB edits.
+- Provider dashboards show traffic with unknown user-agents/regions.
+- Edge Function isn't used for inference, only for ancillary calls.
 
 **Phase to address:**
-Phase 1 (Foundations & Guardrails)
+Milestone 1.
 
 ---
 
-### Pitfall 6: Swedish diacritics regress (Valkommen/Anvandarnamn/etc.)
+### Pitfall 6: Misunderstanding provider data retention and "zero data retention" knobs
 
 **What goes wrong:**
-User-facing copy loses `åäö` (or ships with known typos from the reference pack), harming credibility and violating the non-negotiable "Swedish diacritics correct" requirement.
+The app promises "we don't store images" but the chosen provider/product logs prompts for abuse monitoring, caches inputs, or retains content for grounding features. Privacy promises become inaccurate.
 
 **Why it happens:**
-Strings copied from older handoff code, filenames/assets, or quick typing during UI edits. Also easy to miss in review if the reviewer's editor font makes diacritics subtle.
+Teams read marketing summaries and don't map them to specific API features (e.g., caching, prompt logging, grounding).
 
 **How to avoid:**
-- Treat the patch doc's search/replace list as mandatory acceptance criteria.
-- Add a lightweight "Swedish sanity" check in CI for known bad tokens (e.g. `Valkommen`, `Anvandarnamn`, `Losenord`, etc.).
-- Verify custom fonts render Swedish glyphs for every text style used in production.
+- Decide the inference product (e.g., Vertex AI managed models) and document retention behavior per feature.
+- Avoid features that force retention when your product claims zero retention.
+- If supported, disable caching / request exceptions for abuse monitoring and reflect the chosen setting in the privacy policy.
 
 **Warning signs:**
-- ARB contains ASCII-only Swedish.
-- Screenshots show missing diacritics or tofu glyphs.
+- Privacy policy claims are "absolute" without referencing the provider's terms/controls.
+- Engineers enable features like session resumption/grounding without updating disclosures.
 
 **Phase to address:**
-Phase 1 (Foundations & Guardrails)
+Milestone 1.
 
 ---
 
-### Pitfall 7: Tabs "change" unintentionally during nav shell swap
+### Pitfall 7: Offline fallback licensing traps (AGPL model stacks, non-commercial weights, dataset restrictions)
 
 **What goes wrong:**
-Replacing the nav shell breaks the existing tab contract: order/meaning changes, tab state resets unexpectedly, back button behavior changes, or deep links land on the wrong screen. This violates "Tabs remain unchanged."
+The project ships an offline model/runtime that is not commercially compatible (e.g., AGPL), or uses weights trained on a dataset with restrictive terms. This creates legal risk, app store takedown exposure, and forced rework.
 
 **Why it happens:**
-Custom capsule nav + `IndexedStack` requires manually recreating behaviors that Material `NavigationBar` previously handled.
+Teams treat "model" as an asset, not as a licensed dependency chain (code + weights + dataset + tooling).
 
 **How to avoid:**
-- Write down a nav contract (tab order, initial tab, reselection behavior, back behavior per tab, how scanner is reached).
-- Keep each tab's root in an `IndexedStack` (as specified) to preserve state.
-- Add explicit back-gesture handling for nested navigators/screens using `PopScope`/`NavigatorPopHandler` (especially for Android predictive/system back).
+- Treat the offline ML chain like a software dependency: record licenses for code + model weights + dataset.
+- Prefer Apache-2.0 style stacks (e.g., YOLOX code is Apache 2.0) and avoid AGPL stacks (Ultralytics license is AGPL-3.0).
+- Keep a one-page "ML bill of materials" in the repo before shipping.
 
 **Warning signs:**
-- Switching tabs resets scroll position or form state.
-- Android back gesture exits the app unexpectedly or pops within the wrong navigator.
+- Someone says "it's open source so it's fine".
+- No one can answer "what license are the weights under?".
+- Offline model came from a random Kaggle/GitHub link.
 
 **Phase to address:**
-Phase 3 (Navigation Shell Swap)
+Milestone 2 (Lightweight Offline Fallback) + Milestone 6 (Token governance can add governance patterns; mirror for ML BOM governance).
 
 ---
 
-### Pitfall 8: Content gets hidden behind the capsule nav
+### Pitfall 8: Offline fallback quality that feels worse than "no result" (trust collapse)
 
 **What goes wrong:**
-Pages look correct in isolation but the bottom capsule overlaps scroll/content (especially on devices with larger bottom insets), making actions unreachable.
+Offline model returns confident-but-wrong labels, or provides results without evidence/confidence. Users stop trusting both offline and cloud identification.
 
 **Why it happens:**
-Capsule nav is overlaid (Stack/Align), so screens must reserve bottom padding manually; relying on `Scaffold.bottomNavigationBar` behaviors no longer applies.
+Object detection is treated as a replacement for semantic identification. Teams optimize for demo accuracy instead of calibrated confidence and evidence.
 
 **How to avoid:**
-- Define a single "nav height + padding" constant and expose it as an inset helper used by all tab roots.
-- Add golden/integration tests on at least one iPhone-style inset and one Android gesture-nav inset.
+- Make offline fallback explicitly "assistive": show bounding boxes + confidence, not just a single label.
+- Add a "no confident result" path and UI copy that sets expectations.
+- Evaluate on a realistic secondhand taxonomy and measure calibration (false positives are worse than misses).
 
 **Warning signs:**
-- Tappable controls near the bottom are partially obscured.
-- Visual pack matches on emulator but fails on real device.
+- Offline model always returns something, even in hard cases.
+- Support feedback: "it keeps saying everything is a chair".
 
 **Phase to address:**
-Phase 3 (Navigation Shell Swap)
+Milestone 2.
 
 ---
 
-### Pitfall 9: Model download starts automatically (consent regression)
+### Pitfall 9: Reintroducing the first-run blocker via the "optional" offline model
 
 **What goes wrong:**
-The app downloads the Gemma model on startup when missing (current behavior per handoff) even though v2 requires user-initiated download on onboarding screen 3.
+The offline fallback model becomes a large download, auto-downloads unexpectedly, or bloats the app bundle. The original "no multi-GB first-run" goal regresses.
 
 **Why it happens:**
-Existing best-effort startup download code is easy to forget, and new UI only adds another trigger.
+Teams tie offline model install to app startup or scanner screen init for convenience.
 
 **How to avoid:**
-- Gate model download behind a persisted consent flag (as specified in handoff).
-- Ensure there is exactly one entry point that starts downloads (controller/service), and all UI calls it.
+- Keep offline model opt-in and lazy: download only on explicit user action.
+- Enforce a hard size budget (e.g., <10MB as per roadmap) and fail CI if exceeded.
+- Ensure cloud-first works without any offline assets.
 
 **Warning signs:**
-- Network activity occurs on first launch without user action.
-- Model appears installed even if the user skipped the prompt.
+- Scanner screen shows a spinner on first open even when cloud is enabled.
+- Store download size grows unexpectedly.
 
 **Phase to address:**
-Phase 5 (Model Download & AI UX)
+Milestone 1 (remove blocker) + Milestone 2 (offline fallback implementation).
 
 ---
 
-### Pitfall 10: "Fake" progress violates trust (download/install UX)
+### Pitfall 10: Treating background work as reliable scheduling (iOS especially)
 
 **What goes wrong:**
-UI shows percentage that isn't backed by bytes downloaded, or shows an "install progress" percent that's just a timer. This violates "No fake progress."
+The roadmap assumes background sync runs every N hours; in reality, the OS throttles or stops background execution when the app isn't used. Sync appears "random" and support cannot reproduce.
 
 **Why it happens:**
-HTTP responses sometimes don't include `content-length`, and installation often has no measurable progress events.
+Developers interpret background plugins as cron.
 
 **How to avoid:**
-- Only show percent when total bytes are known; otherwise use an indeterminate progress indicator.
-- During install, show an indeterminate "Installerar..." state; never invent a percent.
-- Persist and display real state transitions: Not installed -> Downloading(progress or indeterminate) -> Installing(indeterminate) -> Ready/Failed.
+- Design sync as best-effort and user-triggered first; background runs only reduce staleness.
+- Make background jobs idempotent, bounded, and resumable.
+- Surface "last attempted" and "last successful" sync in UI.
 
 **Warning signs:**
-- Percent always advances smoothly even on slow networks.
-- Percent hits 100% long before the file is ready.
+- QA reports: "background sync didn't run overnight".
+- Users have stale data until they open the app.
 
 **Phase to address:**
-Phase 5 (Model Download & AI UX)
+Milestone 1 (cloud + market sync are the first to feel this) + Milestone 3 (workmanager upgrades).
 
 ---
 
-### Pitfall 11: Model download cancels when navigating away
+### Pitfall 11: Background tasks that do too much (timeouts, OS punishment, silent failures)
 
 **What goes wrong:**
-User taps "Ladda ned", then proceeds; download silently stops because the controller/provider is disposed when onboarding is not visible. The spec requires background continuation while the user proceeds.
+Background jobs try to upload photos, run inference, generate thumbnails, and sync metadata in one go. They exceed time limits, fail mid-flight, and the app swallows errors (current codebase concern).
 
 **Why it happens:**
-Common Riverpod patterns use `autoDispose` or tie async work to widget lifetime.
+Background work is implemented as "call the same sync method" without strict bounds, chunking, or time budgeting.
 
 **How to avoid:**
-- Run downloads in a long-lived service (not tied to the onboarding page lifecycle).
-- If using Riverpod, ensure the provider is not `autoDispose` (or uses `ref.keepAlive()`), and that concurrent calls are serialized.
+- Split jobs: metadata first, photo sync separately, and avoid inference in background unless explicitly required.
+- Chunk network payloads and enforce per-run time budgets.
+- Record outcomes and report errors (Sentry when configured); do not return success on exceptions.
 
 **Warning signs:**
-- Download progress resets when leaving/re-entering onboarding.
-- Partial file exists but state returns to "Not installed."
+- Background runner always reports success while data is stale.
+- Temp files accumulate (already observed in photo download path).
 
 **Phase to address:**
-Phase 5 (Model Download & AI UX)
+Milestone 1 (cloud sync coordination) + Milestone 3 (dependency upgrades) + ongoing hardening.
 
 ---
 
-### Pitfall 12: Partial/corrupt model file is treated as installed
+### Pitfall 12: Camera lifecycle/resource regressions after dependency upgrades
 
 **What goes wrong:**
-Interrupted downloads leave `.partial`/`.download` files; install attempts fail repeatedly or inference crashes, but UI shows "Installed."
+After upgrading Flutter/camera, the plugin no longer manages lifecycle automatically. If the app doesn't dispose/re-init on lifecycle events, the camera breaks on resume or crashes.
 
 **Why it happens:**
-Install readiness is inferred from "file exists" instead of a verified install state (or the installer's own registry).
+Upgrades are treated as "pubspec bump" without reading breaking changes.
 
 **How to avoid:**
-- Use atomic rename for downloads; treat temp files as non-installed.
-- Verify install success via the model runtime/installer (or an explicit DB flag only written after successful install).
-- On failure, delete temp/corrupt artifacts before retry.
+- Add lifecycle handling explicitly (dispose on inactive, re-init on resumed).
+- Add regression tests for scanner flow: open camera, background app, resume, capture.
 
 **Warning signs:**
-- Repeated install failures without re-downloading.
-- "Installed" state but runtime initialization fails.
+- Crash reports spike on `CameraAccessDenied` / native camera exceptions.
+- QA can reproduce "black preview" after app switch.
 
 **Phase to address:**
-Phase 5 (Model Download & AI UX)
+Milestone 3.
 
 ---
 
-### Pitfall 13: Offline-first promise breaks during UI rewrite
+### Pitfall 13: Big-bang dependency modernization without a platform CI matrix
 
 **What goes wrong:**
-New screens assume network availability (e.g. model download prompt blocks onboarding, or screens fetch remote data in build). Users in-store lose core functionality.
+Upgrading Riverpod/Drift/camera/workmanager/Gradle/iOS pods in one sweep causes cascading regressions, and the team can't isolate root cause.
 
 **Why it happens:**
-UI rewrites often start from static/mock content and later wire to services that may be online-only unless guarded.
+Time pressure and a desire to "get to latest" in one milestone.
 
 **How to avoid:**
-- Make "offline by default" a UI acceptance criterion: every screen must render a reasonable state without network.
-- Keep "price fetch" as the only online-only feature; everything else must read from Drift first.
+- Upgrade in thin slices with a green baseline after each slice.
+- Add CI that builds + runs tests on both iOS and Android.
+- Keep a small set of golden UI tests to catch theme regressions during upgrades.
 
 **Warning signs:**
-- Spinners that never resolve when airplane mode is on.
-- Startup/onboarding blocked by connectivity.
+- Multiple native build failures at once.
+- A single PR touches `pubspec.yaml`, `Podfile`, Gradle, and half the codebase.
 
 **Phase to address:**
-Phase 4 (Screen-by-Screen Rewrite) + Phase 6 (Release Hardening)
+Milestone 3.
 
 ---
 
-### Pitfall 14: Visual-spec drift across screens (tokens bypassed)
+### Pitfall 14: Token adoption that is partial ("mostly" tokenized) leading to dark mode gaps
 
 **What goes wrong:**
-Teams reimplement spacing/radii/colors per screen to "match the PDF," and the UI slowly diverges (inconsistent glass opacity, inconsistent corner radii, mismatched text styles).
+Some widgets use tokens, others use hardcoded colors/assets. Dark mode works on a few screens but is unreadable on edge screens. New code reintroduces hardcoded styling.
 
 **Why it happens:**
-Strict visuals create pressure to do one-off tweaks in the closest file rather than adjusting tokens/primitives.
+Token migration is done opportunistically without enforcement and without a strict boundary between tokens and feature UI.
 
 **How to avoid:**
-- A single source of truth: tokens + primitives must be the only way to express glass/background/capsule patterns.
-- Add goldens for the shared primitives and key reference screens.
+- Define a token-only primitive layer (surfaces, text styles, icons/assets) and forbid feature screens from referencing raw colors/assets.
+- Add golden tests (light/dark) for shared primitives + top flows.
+- Add a lint/CI check for new hardcoded colors/assets (roadmap Milestone 6).
 
 **Warning signs:**
-- Multiple near-identical "glass card" implementations.
-- Token files stop changing but per-screen styling keeps growing.
+- "Fix dark mode" becomes a whack-a-mole task after every UI PR.
+- Designers/devs cannot tell which tokens to use for surfaces vs states.
 
 **Phase to address:**
-Phase 2 (Shared Primitives + Perf Baseline)
+Milestone 4 (dark mode + adoption) + Milestone 6 (governance/enforcement).
+
+---
+
+### Pitfall 15: Golden tests that are brittle (fonts, text rendering, platform differences)
+
+**What goes wrong:**
+Golden tests fail intermittently across platforms/CI, so teams disable them. Theme regressions slip through.
+
+**Why it happens:**
+Goldens are added without controlling fonts, text scaling, and animation.
+
+**How to avoid:**
+- Use a deterministic test harness: fixed textScaleFactor, disable animations, load fonts consistently.
+- Prefer component-level goldens (primitives, cards, key screens) rather than whole-app snapshots.
+- Add contrast checks as an additional non-golden assertion for dark mode.
+
+**Warning signs:**
+- PRs include "update all goldens" frequently.
+- Golden failures differ between macOS/Linux runners.
+
+**Phase to address:**
+Milestone 4.
+
+---
+
+### Pitfall 16: Sync + inference state machines that don't handle offline transitions cleanly
+
+**What goes wrong:**
+User captures photos offline, then reconnects; the app triggers multiple sync/inference jobs concurrently. Duplicates appear, or last-sync timestamps suppress retries (already observed in coordinator).
+
+**Why it happens:**
+Offline-first is implemented at storage layer, but not at the orchestration layer (queues, idempotency keys, conflict rules).
+
+**How to avoid:**
+- Use explicit job records with states (queued/running/succeeded/failed) and idempotency keys.
+- Write "last successful" timestamps only after success.
+- Ensure cloud inference calls are idempotent per scan item.
+
+**Warning signs:**
+- Duplicate cloud uploads for the same scan.
+- Sync stops retrying for hours after a single failure.
+
+**Phase to address:**
+Milestone 1 (cloud AI + cloud sync coordinator) + Milestone 3 (workmanager modernization).
+
+---
+
+### Pitfall 17: Edge Function proxy treated as a thin pass-through (no auth boundaries, no rate limits)
+
+**What goes wrong:**
+The proxy is either publicly callable (abuse/cost risk) or accidentally breaks when auth headers are missing. CORS remains wide-open and the team can't explain the threat model.
+
+**Why it happens:**
+Edge Functions are added to bypass CORS/keys quickly, then never hardened.
+
+**How to avoid:**
+- Decide: public endpoint with strict throttles, or authenticated endpoint with JWT verification.
+- Add structured error responses and logging; avoid swallowing errors.
+- Add tests for auth + rate limit behavior (especially for expensive endpoints).
+
+**Warning signs:**
+- App sometimes calls function via raw HTTP, sometimes via Supabase invoke.
+- Function has `access-control-allow-origin: *` with no other controls.
+
+**Phase to address:**
+Milestone 1.
 
 ---
 
 ## Technical Debt Patterns
 
+Shortcuts that seem reasonable but create long-term problems.
+
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Hand-tuned per-screen colors/opacity instead of tokens | Fast visual matching | "Glass drift" and impossible global tweaks | Never |
-| `BackdropFilter` everywhere because "glass" | Quick spec compliance | Jank + battery drain + hard-to-fix later | Only for the few hero surfaces; lists must be grouped/minimized |
-| Copying Swedish strings directly from PDFs into Dart | Faster iteration | I18n regressions and diacritic bugs | Never |
-| Ad-hoc bottom padding values per screen for capsule nav | Screens look right once | Breaks on devices/insets; expensive QA | Only as a temporary spike; replace with shared inset helper in Phase 3 |
+| Call cloud AI directly from the app | Fast to ship | Uncontrollable costs, key leakage risk, weak rate limiting | Never |
+| Reuse the same "sync everything" method in foreground + background | Less code | Timeouts, silent partial sync, battery drain | Only if strictly time-bounded + chunked |
+| Store raw AI JSON forever in the local DB | Debuggable history | Export/delete complexity, privacy exposure, migration burden | Only with explicit retention policy + redaction/export mode |
+| Let tokens be optional (allow hardcoded colors during migration) | Faster UI tweaks | Dark mode gaps and permanent drift | Only in short-lived branches, enforced before merge |
+| Big-bang dependency updates | Faster "latest" | Untriageable regressions across iOS/Android | Never |
 
 ## Integration Gotchas
 
+Common mistakes when connecting to external services.
+
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| `flutter_gemma` model install | Treat install as a simple file copy | Use the runtime/installer API to install/verify; only mark ready after success |
-| Model download over HTTP | Assume `content-length` always exists | Support indeterminate progress when unknown; never fabricate percent |
-| Workmanager/background work | Expect OS background execution to be reliable on iOS | Treat background work as best-effort; UX must still be correct when work pauses |
-| Supabase OTP login | Copy "magic link" flows but label as "code" | Keep copy/UX aligned with project OTP settings; provide retry + error localization |
+| Cloud AI provider (Gemini/Vertex) | Forgetting data retention knobs and then writing absolute privacy claims | Document provider retention behavior; choose settings consistent with privacy policy |
+| Supabase Edge Functions | Wide-open endpoint (public) + no rate limiting | JWT verification and/or explicit rate limits + budgets |
+| Background job runner (workmanager) | Assuming "every N hours" is guaranteed | Best-effort design + UI visibility for last success |
+| Crash reporting (Sentry) | Capturing request bodies / AI output in breadcrumbs | Redact by default; keep payloads out of telemetry |
+| Camera plugin | Assuming lifecycle is handled by plugin | Dispose/re-init on lifecycle; test resume/capture flow |
 
 ## Performance Traps
 
+Patterns that work at small scale but fail as usage grows.
+
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Unclipped `BackdropFilter` | Whole-screen blur, GPU spikes | Always clip the blur region | Immediately on mid/low devices |
-| Many independent blurs in a scroll | Scroll jank, high raster time | Use `BackdropGroup`/grouped blurs; minimize blur usage | Lists of ~10+ items |
-| Blur + saveLayer compositions | Visual artifacts, inconsistent blending | Avoid `Opacity` around glass; validate blend modes | When combining overlays/animations |
-| Overusing `ClipRRect` everywhere | Higher GPU cost | Clip only when necessary (blur region); prefer simpler shapes elsewhere | Complex screens with many tiles |
+| Full-table cloud sync pulls | Sync time grows with user data; timeouts after reconnect | Incremental pull (`updated_at > lastSync`) + pagination | Hundreds to thousands of items |
+| No caching of AI results | Same image re-identified repeatedly | Content-hash cache + idempotency | Immediately (cost + latency) |
+| Repeated runtime/model init in hot path | Slow scans, battery drain | Initialize once per session; long-lived worker isolate | Immediately on mid/low-end devices |
+| Unbounded background work | Battery drain; OS throttling | Chunking + time budgets + backoff | Weeks of use (reliability degrades) |
 
 ## Security Mistakes
 
+Domain-specific security issues beyond general mobile/web security.
+
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Downloading a large model without integrity checks | Corrupt model causes crashes or undefined behavior | Store and verify expected size/hash (if feasible), or verify via installer success + cleanup temp files |
-| Logging model URLs/errors verbosely in release | Leaks internal endpoints/config | Gate verbose logs to debug/dev mode |
+| Provider secrets in the app | Key extraction; unlimited inference abuse | Server-side proxy only; rotate secrets |
+| Public edge proxy to paid APIs | Billing fraud; denial-of-wallet | Auth + rate limiting + quotas |
+| Overbroad CORS on proxies | Cross-site abuse from web contexts | Restrict origins where possible; require auth |
+| Returning detailed provider errors to client | Leaks about quotas/models/keys | Map to safe error codes/messages |
+| Logging user content on server | Privacy breach + retention obligations | Redaction + minimal logs |
 
 ## UX Pitfalls
 
+Common user experience mistakes in this domain.
+
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Blocking onboarding on model download | Users can't start using the app offline | Allow "Börja" immediately; download continues; surface state later |
-| Fake progress bars | Trust breaks; support load increases | Only show measurable progress; otherwise indeterminate |
-| Capsule nav has no semantics/labels | Accessibility regressions | Provide `Semantics` labels using localized tab names |
+| "Cloud AI" toggle buried in dev-only UI | Users can't control photo sending | Visible, plain-language setting + first-use consent |
+| Offline fallback presented as equally reliable | Users trust wrong results | Label as "offline assist" + show evidence/confidence |
+| Silent failure when offline | User thinks feature is broken | Clear offline state + queueing + retry indicators |
+| Dark mode shipped with low contrast | Unusable screens at night | Token-driven ramps + contrast audit + goldens |
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **No hardcoded strings:** zero UI literals in `lib/` (except debug/dev-only allowlist) and all new copy in ARB
-- [ ] **Swedish diacritics:** known-bad spellings (per patch doc) are absent; custom fonts render `åäö` in all used styles
-- [ ] **Tabs unchanged:** tab order + meaning matches prior behavior; state persists across tab switches; Android back gesture behaves correctly
-- [ ] **Capsule nav insets:** no content/actions are obscured on iPhone-style and Android gesture-nav insets
-- [ ] **Model download honesty:** percent only when `content-length` known; install is indeterminate; state persists across navigation
-- [ ] **Consent gating:** model download does not start before user action; consent flag is respected
+- [ ] **Cloud AI:** Has a first-use disclosure + user toggle + store declarations updated (App Privacy + Data Safety).
+- [ ] **Cloud AI cost controls:** Server-side rate limiting + per-user quotas + caching + 429 backoff.
+- [ ] **Offline fallback:** License chain documented (code + weights + dataset) and model is opt-in with a strict size budget.
+- [ ] **Background sync:** Shows last attempted vs last successful; background failures are visible in diagnostics.
+- [ ] **Token/dark mode:** Shared primitives have light/dark goldens; CI blocks new hardcoded colors/assets.
 
 ## Recovery Strategies
 
+When pitfalls occur despite prevention, how to recover.
+
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Blur perf/jank | MEDIUM | Reduce sigma tokens, remove blur from lists, add grouping, profile again on target devices |
-| Localization regressions | LOW | Run string/typo scanners, fix ARB, regenerate l10n, add CI guardrails |
-| Navigation regressions | MEDIUM | Reassert nav contract, add integration tests for tab/back flows, fix nested navigator pop handling |
-| Model download UX incorrect | MEDIUM | Centralize state machine, ensure progress only from bytes, persist state, add retry/cleanup |
+| Store/privacy rejection for cloud image upload | HIGH | Ship a hotfix with explicit disclosure + toggle; update store declarations; add review notes explaining behavior |
+| Cost spike / abuse of inference | HIGH | Rotate keys, lock down to server-only, add rate limits + budgets, add caching; consider temporary feature flag |
+| Licensing issue discovered late | HIGH | Remove/disable offline fallback, replace with permissive stack, publish attribution + update docs |
+| Background sync unreliable | MEDIUM | Make sync user-triggered and visible; reduce job scope; implement retry/backoff and status recording |
+| Dark mode regressions everywhere | MEDIUM | Freeze UI changes, migrate primitives first, add goldens + enforcement, then migrate screens |
 
 ## Pitfall-to-Phase Mapping
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Unclipped blur blurs the whole screen | Phase 2 | DevTools shows blur cost proportional to glass region; no whole-screen GPU spikes |
-| Too many independent blurs in lists | Phase 2 | Scroll performance stable on list-heavy screens; grouped blur used where repeated |
-| Blur + saveLayer produces wrong glass | Phase 2 | Visual parity across iOS/Android in key reference screens |
-| Platform-view/camera blur issues | Phase 4 | Scanner overlay design works on both platforms; no flicker/artifacts |
-| Hardcoded strings creep in | Phase 1 | CI fails on new literals; all UI copy comes from `AppLocalizations` |
-| Swedish diacritics regress | Phase 1 | CI rejects known bad spellings; manual spot-check screenshots match patch fixes |
-| Tabs change during nav shell swap | Phase 3 | Integration test covers tab order/state + back gesture expectations |
-| Capsule nav overlaps content | Phase 3 | Golden/integration tests validate safe-area insets; no obscured CTAs |
-| Model download starts automatically | Phase 5 | First launch shows no network download until user taps "Ladda ned" |
-| Fake progress | Phase 5 | Percent only when measurable; unknown total shows indeterminate |
-| Download cancels when navigating away | Phase 5 | Start download on onboarding, navigate away, return: progress continued |
-| Partial/corrupt file treated as installed | Phase 5 | Kill app mid-download then relaunch: state is consistent; retry recovers |
-| Offline-first breaks during UI rewrite | Phase 4/6 | Airplane mode walkthrough succeeds for all core screens |
-| Visual-spec drift across screens | Phase 2/6 | Goldens for primitives + key screens; token-only styling for shared patterns |
+| Missing disclosure/controls for cloud image upload | Milestone 1 | Manual review: first-use prompt + settings toggle; store declaration checklist passes |
+| Incorrect store privacy declarations | Milestone 1 | Compare data-flow inventory vs App Privacy + Data Safety answers |
+| Payload leaking into logs/Sentry | Milestone 1 | Grep logs/telemetry for base64/image URLs; verify redaction rules |
+| Unbounded cloud inference spend | Milestone 1 | Load test: repeated scans do not increase bill linearly; rate-limit returns 429 with backoff |
+| Client-side secrets / direct provider calls | Milestone 1 | Confirm app has no provider key; all inference via Edge Function |
+| Provider retention mismatch | Milestone 1 | Privacy policy matches chosen provider settings (caching/logging/grounding) |
+| Offline ML licensing trap | Milestone 2 | ML BOM doc exists; licenses verified (Apache vs AGPL) |
+| Offline fallback trust collapse | Milestone 2 | Evaluation set shows calibrated confidence; UI shows evidence + allows "no result" |
+| Offline model reintroduces first-run blocker | Milestone 1/2 | Fresh install: scanner usable immediately; offline model downloads only on opt-in |
+| Background scheduling assumed reliable | Milestone 1/3 | Verify UX shows last success; QA test with app unused for days |
+| Background task overwork/timeouts | Milestone 1/3 | Background runs are bounded and chunked; failures recorded and surfaced |
+| Camera lifecycle regressions | Milestone 3 | Regression test: background/resume/capture works on iOS+Android |
+| Big-bang dependency upgrade | Milestone 3 | PRs upgrade in slices; CI matrix green after each |
+| Partial token adoption -> dark mode gaps | Milestone 4/6 | CI check blocks hardcoded colors/assets; goldens for primitives |
+| Brittle golden tests | Milestone 4 | Goldens stable across CI runners; minimal churn |
+| Offline/online transition races | Milestone 1/3 | Idempotency keys in sync/inference; duplicate prevention tests |
+| Thin pass-through proxy | Milestone 1 | Auth + rate limits tested; CORS + threat model documented |
 
 ## Sources
 
-- `docs/LoppisFynd_Nature_Distilled_Technical_Handoff_v2.md`
-- `docs/UiUxOverHaul/Technical_Handoff_Patch_v2.md`
-- `docs/LoppisFynd_Nature_Distilled_Visual_Reference_Pack.pdf`
-- Flutter API: BackdropFilter (clip scope, cost, grouping) https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html
-- Flutter API: PopScope (system back gesture handling) https://api.flutter.dev/flutter/widgets/PopScope-class.html
-- Flutter docs: Internationalization (gen_l10n, intl, numbers/currencies) https://docs.flutter.dev/ui/internationalization
-- Flutter docs: Impeller (default renderer + perf goals) https://docs.flutter.dev/perf/impeller
+- Apple App Store App Review Guidelines: https://developer.apple.com/app-store/review/guidelines/
+- Apple "App privacy details" (privacy labels, definitions of collection): https://developer.apple.com/support/app-privacy-on-the-app-store/
+- Google Play Data safety form overview (incl. ephemeral processing definition): https://support.google.com/googleplay/android-developer/answer/10787469
+- Google Play User Data policy (prominent disclosure + consent requirements): https://support.google.com/googleplay/android-developer/answer/10144311
+- Vertex AI "zero data retention" and data caching/logging notes: https://cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention
+- Vertex AI throughput quota / 429 guidance: https://cloud.google.com/vertex-ai/generative-ai/docs/resources/throughput-quota
+- Supabase Edge Functions overview (auth/policies at gateway): https://supabase.com/docs/guides/functions
+- Supabase Edge Functions rate limiting example: https://supabase.com/docs/guides/functions/examples/rate-limiting
+- Flutter workmanager plugin (background scheduling wrapper): https://pub.dev/packages/workmanager
+- Flutter background_fetch plugin (iOS cadence limits + termination behavior): https://pub.dev/packages/background_fetch
+- Flutter camera plugin (lifecycle not handled by plugin): https://pub.dev/packages/camera
+- YOLOX Apache 2.0 license (code licensing baseline): https://raw.githubusercontent.com/Megvii-BaseDetection/YOLOX/main/LICENSE
+- Ultralytics AGPL-3.0 license (example of licensing trap): https://raw.githubusercontent.com/ultralytics/ultralytics/main/LICENSE
+- Google Generative AI prohibited use policy (policy constraints relevant to app features): https://policies.google.com/terms/generative-ai/use-policy
 
 ---
-*Pitfalls research for: Nature Distilled UI overhaul*
-*Researched: 2026-02-18*
+*Pitfalls research for: offline-first Flutter app with cloud AI + optional offline ML + tokenized UI*
+*Researched: 2026-02-21*

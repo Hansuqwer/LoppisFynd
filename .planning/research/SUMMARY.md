@@ -1,160 +1,162 @@
 # Project Research Summary
 
-**Project:** LoppisFynd — Nature Distilled UI/UX Overhaul
-**Domain:** Contract-driven Flutter UI/UX retrofit (pixel-accurate “Nature Distilled”), offline-first, strict sv/en localization, golden-regression discipline
-**Researched:** 2026-02-18
-**Confidence:** HIGH
+**Project:** FyndLoppis
+**Domain:** Offline-first Flutter thrift companion (photo-first catalog + cloud-first AI identification + sold-price comps) with optional lightweight offline ML fallback
+**Researched:** 2026-02-21
+**Confidence:** MEDIUM
 
 ## Executive Summary
 
-This project is a UI/UX overhaul of an existing offline-first Flutter app, with a strict visual contract (Nature Distilled reference pack + handoff docs). The safest “expert” approach is to treat it as a design-system retrofit: centralize design tokens and shared primitives (glass, boards, backgrounds, capsule nav) as a churn boundary, then reskin screens by composition while preserving existing Riverpod + Drift data flows.
+FyndLoppis is an offline-first iOS/Android Flutter app for capturing secondhand finds, identifying items from photos, and pulling sold-price comparisons to support buy/no-buy and resale decisions. Experts build this category by making the local database the source of truth (capture/edit/search always works offline) and treating cloud inference/comps/sync as best-effort jobs with clear queueing + retry UX.
 
-The recommended implementation order is: guardrails (localization/no-hardcoded strings, pinned Flutter, golden harness) -> primitives + performance baseline (clipped blur, grouped blurs for lists) -> navigation shell swap (IndexedStack + consistent insets) -> startup/auth + tab screens -> model download UX/state machine (consent-gated, real progress, background continuation) -> release hardening (goldens + device sanity checks). This sequencing minimizes regressions while keeping pixel parity achievable.
+The research strongly points to a cloud-first identification pipeline (Gemini) routed through a server-side proxy (Supabase Edge Functions) to avoid shipping secrets, enable cost controls, and keep results consistent. The offline ML path should exist only as an opt-in, small (<10MB) fallback with evidence/confidence (assistive, not authoritative) to preserve the “instant start” value and avoid multi-GB first-run blockers.
 
-Key risks are (1) blur performance and visual correctness (unclipped BackdropFilter, saveLayer/opacity interactions, too many list blurs), (2) localization/copy drift (hardcoded strings, Swedish diacritics regressions), and (3) navigation regressions when swapping the bottom nav. Mitigate by enforcing blur rules inside primitives, adding CI guardrails for string literals/typos, defining a nav contract + inset helper, and backing the overhaul with goldens for both primitives and key screens.
+The biggest risks are privacy/policy failures (unexpected photo upload, incorrect store declarations, leaking payloads into logs), uncontrolled inference spend, and background/sync reliability assumptions. Mitigation is architectural: a single `PrivacyGate` boundary for any image egress, strict “Edge Function only” AI calls with quotas/caching/backoff, and a unified, idempotent job runner that records last-attempted vs last-successful outcomes.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The current Flutter stack is already appropriate; the primary “stack” decisions are about determinism and enforcement. Pin Flutter (as CI already does) to reduce golden churn, keep Material 3 plumbing but express Nature Distilled through tokens + `ThemeExtension`, and make localization and golden testing first-class quality gates.
+The recommended stack is an incremental evolution of the existing codebase: Flutter + Riverpod + Drift remain the core, Supabase remains the backend surface (Auth/Storage/Edge Functions), and Gemini is called server-side via `@google/genai` to keep keys and policy controls off-device. Add a lightweight on-device inference runtime only as an opt-in fallback.
 
 **Core technologies:**
-- Flutter SDK (stable, pinned to repo revision) : deterministic rendering/tooling -- reduces golden churn and cross-machine drift.
-- Material 3 (`ThemeData`, `ColorScheme`) + `ThemeExtension` : semantic theming -- maps Nature Distilled tokens cleanly without fighting widgets.
-- `gen_l10n` + ARB : strict sv/en localization -- enforces “no hardcoded UI strings” with reports/metadata.
-- `flutter_test` goldens : pixel-regression safety net -- stable output when fonts are loaded via `flutter_test_config.dart`.
+- Flutter + Dart (stable/pinned): iOS/Android app runtime — keep the repo’s pinned stable toolchain to reduce upgrade churn.
+- `flutter_riverpod ^3.2.1`: state/DI and async orchestration boundaries — supports safer refactors with generator + lints.
+- Drift (`drift ^2.31.0`): offline-first SQLite source of truth — type-safe queries, migrations, and stream-based UI updates.
+- `supabase_flutter ^2.12.0` + Supabase Edge Functions (Deno runtime): auth/storage/server proxy — secrets stay server-side; enables caching/rate limiting and consistent AI behavior.
+- Gemini server-side (`npm:@google/genai@1.42.0`): cloud identification — called from Edge Functions, not from Flutter.
+- `workmanager ^0.9.0+3`: best-effort background scheduling — must be treated as non-guaranteed.
+- `sentry_flutter ^9.14.0` (and Sentry for Edge Functions): observability — essential once background jobs and cloud AI are introduced.
 
 ### Expected Features
 
-This milestone is effectively “implement the reference pack.” Table stakes are the tokens + shared atmosphere, glass primitives, capsule nav shell, startup/onboarding + signup-first auth, and reskins for the five core tabs. Differentiators are mostly “feel” (atmosphere layering, capsule motion) rather than new product surface.
+The “table stakes” are a photo-first offline catalog with fast capture, reliable editing, and search; AI identification and comps must support retries and manual correction. Differentiation comes from instant start, hybrid cloud/offline identification with provenance, and a batch capture + review queue.
 
 **Must have (table stakes):**
-- Nature Distilled tokens + theme consistency (including blur/opacity/radius/motion) -- coherence across every screen.
-- Shared primitives: `NatureBackground`, `GlassSurface/GlassBoard/StackedBackplates`, capsule nav -- avoid per-screen one-offs.
-- App shell: 5 tabs with `IndexedStack`, persistent background, preserved tab contract -- no nav regressions.
-- Startup flow Screens 1-5 (Onboarding 1-3 + Login 4-5), incl. Onboarding #3 Gemma callout -- matches the provided screens.
-- Consent-gated model download with real progress, retry, and completion popup; download continues while user proceeds -- mandatory v2 delta.
-- Signup-first OTP login with “Problem att logga in?” affordance -- mandatory v2 delta.
-- Localization + copy fixes (no hardcoded strings; correct Swedish diacritics) -- non-negotiable quality bar.
-- UI drift prevention: goldens for key screens (at least Login/Home/History empty/Draft editor) -- prevents regressions during iteration.
+- Fast photo capture + import and durable local persistence — core thrift workflow; must work offline.
+- Item record + editing with manual overrides — AI output is assistive, not the source of truth.
+- Quick search/filter/sort — the catalog becomes unusable without it as data grows.
+- Cloud-first AI identification + “try again”/re-crop loop — structured fields + confidence + editability.
+- Sold-price comps (start with Tradera) + caching/last-updated — baseline pricing decision support.
+- Offline-first queue + retry transparency for AI/comps/sync — the difference between “offline-first” and “flaky”.
 
 **Should have (competitive):**
-- Layered atmosphere polish (topographic lines + glass inner highlights) -- tactile brand feel.
-- Capsule nav selection-bubble motion tuned via tokens -- premium perceived performance.
-- “Varfor?” explainer sheet for model download -- trust and clarity.
+- Instant start (no mandatory model downloads) — preserves the core value and reduces churn.
+- Batch “thrift run” capture + later review queue — supports high-volume sourcing sessions.
+- Provenance/evidence for AI output (cloud/offline/manual + confidence) — increases trust and debuggability.
 
 **Defer (v2+):**
-- Extra motion polish beyond the handoff (avoid inventing an animation system) -- not essential for launch.
+- Multi-market comps aggregation/normalization — high scope and ongoing maintenance.
+- Listing draft generation — valuable for reseller segment but not required to validate core loop.
 
 ### Architecture Approach
 
-Implement as a design-system layer inserted between existing feature screens and the domain/services layer. Preserve offline-first invariants (Drift is source of truth; “price fetch” remains the only online-only feature) while swapping visuals via tokens + shared widgets, and centralize long-running UX (model install) in a controller-driven state machine.
+The recommended architecture is “ports + adapters” within the existing Riverpod/Drift structure: UI calls controllers, controllers call application services, services depend on domain ports, and integrations implement ports (Supabase/Edge Functions/Gemini/Tradera/TFLite). Background entrypoints compose a minimal runtime that reuses the same jobs/services.
 
 **Major components:**
-1. `lib/core/tokens/**` + `lib/core/theme/**` : tokens + theme composition -- single source of truth for all visuals.
-2. `lib/shared/widgets/**` (+ painters) : primitives for glass/background/nav/empty states -- enforce perf rules (clipped blur) and parity.
-3. `lib/core/navigation/app_nav_shell.dart` (or equivalent) : 5-tab shell -- persistent background + capsule nav + consistent insets.
-4. `lib/features/**` screens : composition layer -- reskin incrementally without rewriting services/DAOs.
-5. `lib/features/*/controllers/**` : Riverpod state machines -- model download/install persists across navigation.
-6. `lib/services/ai/model_manager.dart` + Drift `app_settings` : filesystem + persisted consent -- controller integration point.
+1. `PrivacyGate` — the single boundary for any image leaving device (crop/downscale/redact + auditable metadata).
+2. `AiOrchestrator` + `AiBackend` port — policy-based selection of cloud vs offline vs manual, with retries/backoff and structured results.
+3. `MarketCompsRefresher` — fetch comps via Tradera proxy; cache locally; degrade gracefully offline.
+4. `SyncCoordinator` + outbox tables — optional cloud replication; idempotent, incremental, and status-visible.
+5. `JobRunner` — unified idempotent jobs runnable from foreground, on-resume, and background (workmanager).
 
 ### Critical Pitfalls
 
-1. **Unclipped `BackdropFilter` blurs the whole screen** -- enforce “always clip” inside the shared glass primitives and cap blur tokens.
-2. **Too many independent blurs in lists** -- use `BackdropGroup`/`BackdropFilter.grouped` or reduce blur usage for repeated tiles.
-3. **Blur + Opacity/saveLayer causes visual artifacts** -- avoid `Opacity/AnimatedOpacity` around glass; drive translucency inside the primitive and validate cross-platform.
-4. **Hardcoded strings + Swedish diacritics regress during pixel work** -- add CI guardrails (literal-string scan + known-bad spellings) and require ARB-first.
-5. **Navigation regressions from custom capsule shell** -- define tab contract + inset helper; test back behavior and state retention.
+1. **Unexpected cloud photo upload** — add first-use disclosure + reversible toggles; enforce all egress through `PrivacyGate`.
+2. **Wrong App Store/Play declarations** — maintain a data-flow inventory; treat photo-to-cloud-AI as collected user content unless proven ephemeral per store definitions.
+3. **Payload leaks into logs/Sentry** — redact by default; log identifiers/sizes/timings only; never log prompts/AI JSON/image URLs.
+4. **Unbounded inference spend** — Edge Function proxy must enforce quotas, payload caps, caching by content hash, and exponential backoff for 429s.
+5. **Assuming background scheduling is reliable** — design jobs as best-effort; show last attempted/successful; keep jobs bounded and resumable.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Based on the combined research, the roadmap should be organized around the hard dependencies: privacy/image egress boundary first, then pluggable AI via server proxy, then job orchestration/sync reliability, then optional offline ML, and finally token/dark-mode governance.
 
-### Phase 1: Foundations & Guardrails
-**Rationale:** Prevent the two easiest-to-ship regressions (strings/diacritics, golden instability) before screen work begins.
-**Delivers:** Token scaffolding, l10n workflow gates, golden harness baseline.
-**Addresses:** localization + copy fixes; UI drift prevention.
-**Avoids:** hardcoded strings; Swedish diacritics regressions.
+### Phase 1: Cloud AI Foundation (Privacy + Proxy + No First-Run Blockers)
+**Rationale:** Everything else (AI quality, cost controls, store compliance) depends on a safe and auditable “image egress + server proxy” foundation.
+**Delivers:** `PrivacyGate` + derived image artifacts, Edge Function `ai-identify` calling Gemini via `@google/genai`, `AiBackend` port + `AiOrchestrator`, and settings/consent UX; scanner usable with zero model downloads.
+**Addresses:** Cloud-first AI identification, retry/re-crop loop, settings toggles, instant start.
+**Avoids:** Silent photo upload, client-side secrets, inference spend spikes, payload logging leaks.
 
-### Phase 2: Shared Primitives + Perf Baseline
-**Rationale:** Pixel parity and performance depend on primitives (glass/background) being correct and reusable.
-**Delivers:** `NatureBackground`, glass surfaces/boards/backplates, blur tokens, motion tokens; clipped + grouped blur patterns validated in DevTools.
-**Addresses:** tokens + theme consistency; glass primitives; atmosphere backgrounds.
-**Avoids:** unclipped blur; many independent blurs; saveLayer/opacity artifacts; visual-spec drift.
+### Phase 2: Offline-First Orchestration (Queues + JobRunner + Observability)
+**Rationale:** “Offline-first” is mostly orchestration transparency and idempotency; background work must reuse the same bounded jobs as foreground.
+**Delivers:** Explicit job records (queued/running/succeeded/failed) with idempotency keys; unified `JobRunner` for sync/comps/maintenance; last-attempted vs last-successful surfaced; Sentry breadcrumbs tied to job/run IDs.
+**Addresses:** Offline queue + retry UX for AI/comps/sync; reliability of background behavior.
+**Avoids:** Background errors being swallowed, offline/online transition duplicates, “cron” assumptions.
 
-### Phase 3: Navigation Shell Swap (Capsule Nav)
-**Rationale:** Navigation is cross-cutting; screens must be built against the final shell (persistent background + insets).
-**Delivers:** Capsule nav + `IndexedStack` shell, explicit tab contract, shared inset helper to avoid overlap.
-**Addresses:** capsule navigation shell (5 tabs), persistent background.
-**Avoids:** tabs changing unintentionally; content hidden behind capsule nav.
+### Phase 3: Sync + Comps Hardening (Incremental + Explainable)
+**Rationale:** Once AI is cloud-first, users will notice staleness and repeated failures; incremental replication and caching prevent scale pain early.
+**Delivers:** Incremental metadata sync (cursor/updated_at), batching, proper retry rules (attempted vs succeeded timestamps), comps caching/last-updated + query explainability.
+**Addresses:** Optional sync, sold-price comps stability, catalog search usability.
+**Avoids:** Full-table pulls, repeated paid requests, invisible failures.
 
-### Phase 4: Startup + Auth (Screens 1-5)
-**Rationale:** Startup flow is the acceptance gate and drives model-consent UX; doing it early validates the new primitives in “real” flows.
-**Delivers:** Onboarding 1-3 + Login 4-5 visuals/copy, signup-first OTP flow, “Problem att logga in?” sheet, “Varfor?” sheet wiring.
-**Addresses:** startup flow; auth UX; localization requirements.
-**Avoids:** offline-first breaks (startup must be non-blocking); copy drift.
+### Phase 4: Opt-In Offline Fallback (Lightweight + Evidence-Based)
+**Rationale:** Offline ML is high-risk (licensing + trust) and should be built only after the cloud path is stable and opt-in UX is clear.
+**Delivers:** `OfflineYoloXBackend` (TFLite runtime) behind `AiBackend`, long-lived worker isolate, strict size budget + opt-in download, evidence output (boxes/confidence), and an ML bill of materials.
+**Addresses:** Optional offline fallback; hybrid pipeline with provenance.
+**Avoids:** Licensing traps (AGPL/non-commercial weights), “offline always returns something” trust collapse, reintroduced first-run blockers.
 
-### Phase 5: Model Download & AI UX (Consent-Gated)
-**Rationale:** This is the most failure-prone integration (long-running work, progress honesty, background continuation) and must be centralized.
-**Delivers:** Single controller-owned state machine; consent flag persisted; real download progress (only when measurable), retry, completion popup; shared status surfaces (Onboarding/Dashboard/Settings) render the same state.
-**Addresses:** onboarding #3 callout; consent gating; progress + retry; completion popup; settings AI module status.
-**Avoids:** auto-download regressions; fake progress; download cancel on navigation; partial/corrupt file treated as installed.
-
-### Phase 6: Screen Reskins + Release Hardening
-**Rationale:** Once primitives/shell/startup/model UX are stable, remaining screens can be converted quickly and verified.
-**Delivers:** Home, Current Haul, History empty, Draft editor, Profile/Settings parity; goldens for primitives + key screens; inset coverage on representative devices.
-**Addresses:** the referenced 5 core tabs; UI drift prevention.
-**Avoids:** offline-first regressions; visual drift; nav overlap edge cases.
+### Phase 5: UI System v2 Adoption (Tokens + Dark Mode + Governance)
+**Rationale:** Token migration must be enforced to prevent permanent dark mode gaps and UI drift; better to harden primitives first, then screens.
+**Delivers:** Token-only primitives, dark mode wiring, golden/component tests for shared UI, CI enforcement against new hardcoded colors/assets.
+**Addresses:** Dark mode + responsive layouts + long-term UI maintainability.
+**Avoids:** Partial token adoption and brittle goldens that get disabled.
 
 ### Phase Ordering Rationale
 
-- Guardrails first because they prevent irreversible “cleanup debt” (hardcoded strings and unstable goldens).
-- Primitives before screens to keep all “numbers” in tokens and to enforce blur/perf rules once.
-- Shell before reskins so padding/insets and tab contract are stable and testable.
-- Model download centralized as a controller/service integration to ensure consent gating and background continuation across onboarding/dashboard/settings.
+- Privacy/image egress and server-side AI proxy are prerequisites for compliant cloud AI.
+- Job orchestration and observability are prerequisites for making offline-first and background behavior trustworthy.
+- Sync/comps hardening prevents early scale failures and reduces support load.
+- Offline ML is intentionally delayed until licensing/size/trust constraints can be validated.
+- Token governance is treated as a foundation task to stop UI regressions during ongoing feature work.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 5 (Model Download & AI UX):** integrity/verification approach (hash/size vs installer verification), background-resume expectations, and failure recovery UX details.
-- **Phase 6 (Release Hardening):** scanner overlay compositing (platform-view/camera blur constraints) and cross-device inset coverage strategy.
+- **Phase 1:** Gemini product choice + data retention settings and their impact on App Store/Play disclosures; Edge Function auth/rate-limit patterns for paid endpoints.
+- **Phase 4:** Offline model/weights/dataset licensing validation and evaluation methodology for confidence calibration.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1-3:** tokens + `ThemeExtension`, `gen_l10n` gates, goldens, and a custom tab shell are well-documented and already aligned to repo conventions.
+- **Phase 2:** Job runner + idempotent outbox + “last attempted vs last successful” UX patterns are well-established.
+- **Phase 5:** Token governance + golden test harness patterns are common in mature Flutter codebases.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Direct Flutter docs/API + matches existing repo constraints (pinned Flutter, offline-first, goldens). |
-| Features | HIGH | Derived from project’s handoff + reference pack (contract-driven, not speculative). |
-| Architecture | HIGH | Aligns with existing feature-first/Riverpod/Drift layering; minimizes churn and regression risk. |
-| Pitfalls | MEDIUM | Mostly confirmed by Flutter blur/nav/i18n behaviors; some items (platform-view blur, model integrity strategy) require validation on target devices. |
+| Stack | MEDIUM-HIGH | Most choices are mature Flutter/Supabase defaults; offline ML runtime choice is less certain and depends on model constraints. |
+| Features | MEDIUM | Table stakes are clear; differentiators and competitor comparisons are partly based on marketing sources and inference. |
+| Architecture | MEDIUM | Patterns are standard and fit the existing codebase, but specific seams (photo variants, job records) need validation against current DB schema. |
+| Pitfalls | MEDIUM-HIGH | Privacy/cost/background pitfalls are corroborated by official store/policy docs; app-specific risk depends on exact data flows. |
 
-**Overall confidence:** HIGH
+**Overall confidence:** MEDIUM
 
 ### Gaps to Address
 
-- Platform-view/camera overlay effects: confirm scanner overlay design avoids relying on backdrop blur over camera on both iOS/Android.
-- Model integrity verification: decide whether to implement hash/size checks (if a trusted manifest exists) vs relying on installer success + cleanup/atomic rename.
-- CI enforcement level: choose between a simple string-literal scan vs analyzer-based enforcement (`custom_lint`) for “no hardcoded UI strings.”
+- **Gemini/Vertex retention behavior and “ephemeral processing” alignment:** document the exact provider product/settings and map to store privacy declarations.
+- **Cost model for AI/comps:** define quotas, caching keys (perceptual hash strategy), and a budget policy early.
+- **Offline ML feasibility:** pick model architecture/weights, verify license chain, and test accuracy/calibration on representative secondhand images.
+- **Background constraints on iOS:** validate job time budgets and what can reliably run in background vs on-resume.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `docs/LoppisFynd_Nature_Distilled_Technical_Handoff_v2.md` -- required primitives, startup/auth/model UX requirements.
-- `docs/UiUxOverHaul/Technical_Handoff_Patch_v2.md` -- v2 deltas (copy fixes, new primitives, consent gating).
-- `docs/LoppisFynd_Nature_Distilled_Visual_Reference_Pack.pdf` -- pixel parity contract.
-- Flutter docs: https://docs.flutter.dev/ui/internationalization -- `gen_l10n` quality gates and ARB workflow.
-- Flutter API: https://api.flutter.dev/flutter/flutter_test/matchesGoldenFile.html -- golden testing primitives and update flow.
-- Flutter API: https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html -- clip scope, performance notes, `BackdropGroup`/grouped usage.
-- Flutter docs: https://docs.flutter.dev/perf/ui-performance -- `saveLayer` performance traps relevant to blur/opacity/clipping.
+- https://supabase.com/docs/guides/functions — Edge Functions patterns (auth, secrets, logging)
+- https://pub.dev/packages/drift — offline-first persistence
+- https://pub.dev/packages/flutter_riverpod — state management/DI patterns
+- https://pub.dev/packages/workmanager — background scheduling constraints
+- https://pub.dev/packages/sentry_flutter — Flutter observability
+- https://github.com/googleapis/js-genai/releases — `@google/genai` for Gemini calls
+- Apple App Store privacy details: https://developer.apple.com/support/app-privacy-on-the-app-store/
+- Google Play Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
 
 ### Secondary (MEDIUM confidence)
-- Context7: `/llmstxt/flutter_dev_llms_txt` -- consolidated Flutter testing/i18n references.
-- Flutter API: https://api.flutter.dev/flutter/widgets/PopScope-class.html -- back gesture handling considerations for custom shells.
+- Supabase Sentry monitoring example: https://supabase.com/docs/guides/functions/examples/sentry-monitoring
+- Vertex AI zero data retention notes: https://cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention
+
+### Tertiary (LOW-MEDIUM confidence)
+- Competitor marketing pages used for feature expectations: https://sellerengine.com/profit-bandit/ and https://sellhound.com/ and https://www.inventorylab.com/
 
 ---
-*Research completed: 2026-02-18*
+*Research completed: 2026-02-21*
 *Ready for roadmap: yes*

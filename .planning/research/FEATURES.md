@@ -1,8 +1,8 @@
 # Feature Research
 
-**Domain:** Nature Distilled UI/UX overhaul milestone (existing Flutter app)
-**Researched:** 2026-02-18
-**Confidence:** HIGH
+**Domain:** Secondhand/thrift companion app (photo-first item catalog + AI identification + sold-price comparisons)
+**Researched:** 2026-02-21
+**Confidence:** MEDIUM (competitor claims sourced; some expectations inferred from common mobile UX + reseller workflows)
 
 ## Feature Landscape
 
@@ -12,23 +12,16 @@ Features users assume exist. Missing these = product feels incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Nature Distilled design tokens + theme consistency | Visual overhaul must feel coherent across screens | MEDIUM | Implement/complete token set used by the handoff: colors/spacing/radius/shadows/motion/typography plus blur tokens (`AppBlur`) and patch v2 additions (board radius + opacity helpers). |
-| Shared atmosphere backgrounds | Background is part of the design language, not a per-screen afterthought | MEDIUM | Persistent `NatureBackground` (gradient + subtle topographic lines) and login motif overlay (repeating brand stamps) per handoff.
-| Glass primitives (tile/board/backplates) | Glass panels are the primary container style in the reference pack | MEDIUM | Reusable `GlassSurface`, plus patch v2’s `GlassBoard` and `StackedBackplates` for the stacked-glass look.
-| Capsule navigation shell (5 tabs) | Reference pack shows capsule nav; users expect consistent navigation | MEDIUM | Replace Material `NavigationBar` with capsule nav + `IndexedStack` to keep tab state; patch v2 requires selected “bubble” behavior and canonical 5-tab set.
-| Startup flow Screens 1–5 (Onboarding 1–3 + Login 4–5) | App must match provided startup screenshots + reference pack login visual | HIGH | Screen 3 includes Gemma prompt + clickable “Varför?”; startup must be non-blocking and allow proceeding while downloads continue.
-| Onboarding Screen 3: Gemma download callout | Mandatory v2 delta; user consent required before download | HIGH | Callout module: title/body, primary “Ladda ned” CTA, “Varför?” link to explainer sheet, progress + percent while downloading, installed/failed states, retry.
-| Model download consent gating (no auto-download) | Prevents unexpected downloads; explicitly called out as requirement | MEDIUM | Remove/guard current startup best-effort auto-download; persist `gemma_download_consent=1` on user action and only then allow background download.
-| Model download + install pipeline with progress + retry | Download must feel trustworthy and recoverable | HIGH | Riverpod state machine (`ModelInstallState`), `ModelManager.downloadFromUrlWithProgress`, install service (`GemmaInstallService`), failure messaging + retry.
-| Model download completion feedback (popup) | Users need closure + understanding of what changed | MEDIUM | Mandatory delta: show a completion popup styled with the reference “dopamine red” and explain what the model enables (offline AI features). (Source: milestone requirements + design language.)
-| Auth: signup-first OTP flow + trouble signing in | Mandatory v2 delta; fixes confusion in OTP/magic-link flows | HIGH | Default mode is “Skapa konto”; 2-step (send -> verify) with resend on code step; “Problem att logga in?” bottom sheet; glass + motif visuals match reference pack.
-| Copy + localization (no hard-coded UI strings) | Handoff requires all UI strings be localizable and copy be clean | MEDIUM | All new strings must go through `AppLocalizations`; fix reference-pack typos/placeholders; add the required new l10n keys (model callout, auth, home, haul, draft).
-| Home screen (ref pack page: Home) | Primary app entry must match the new language | MEDIUM | Hero CTA card + bento tiles; replace placeholder subtitle with real Swedish; capsule nav present.
-| Current Haul screen (ref pack page: Current Haul) | Core workflow screen must match the new language | MEDIUM | Glass stack list + “Totalt värde:” summary; red camera action (in-board / FAB as per reference).
-| History empty state (ref pack page: History Empty) | Empty state is part of onboarding into the product | MEDIUM | Search bar, pebble filters (Båda/Karta/Lista/Bäst marginal), coffee-cup illustration + copy.
-| Draft editor (ref pack page: Draft Editor) | Drafting is a key workflow and must match layout language | MEDIUM | Stacked glass feel; preview + AI tag chips; fields (Rubrik/Beskrivning/Pris (SEK)); save (wide red pill) + delete (light pill + trash).
-| Profile/Settings (ref pack page: Profile/Settings) | Users need a clean control center consistent with new UI | MEDIUM | Bento modules: “Molnsynk & Data”, “AI & Modell”, “Integritet”; toggles/buttons shown in reference; show model status in AI module.
-| UI drift prevention (goldens + strictness rule) | Prevents regressions when iterating | MEDIUM | Add/update golden tests for at least: Login, Home, History empty, Draft editor (and any additional screens called out in patch v2). Document any deviations from the reference pack in PR + add a regression test.
+| Fast photo capture + import | Core workflow starts with a photo; users expect camera + gallery import | MEDIUM | Multi-photo per item, retake, flash, focus, basic cropping; should work offline. (Already exists: scanner capture + persistence.) |
+| Basic item record + editing | Users need a reliable “source of truth” beyond AI output | MEDIUM | Title, category, condition, notes, purchase price, store/location, tags; manual override of AI fields; attach photos; haul grouping. (Already exists: Drift-backed persistence.) |
+| Quick search/filter/sort in catalog | Without it, the app becomes unusable after a few hauls | MEDIUM | Text search, tags, category, date, “needs review”, “queued”, “synced”; sort by captured date/value. |
+| AI identification from photos (at least one mode) | Visual identification is the hook; users expect a best-effort guess | MEDIUM | Must support manual correction; should return structured fields (category/brand/model/keywords) and a confidence indicator. |
+| “Try again” / alternate crops | Photo-based ID is noisy; users expect a retry loop | MEDIUM | Allow re-crop / choose best photo; store attempts; avoid repeated uploads when unchanged. |
+| Sold-price comps lookup + basic stats | Pricing decision requires comps; median/range is baseline | MEDIUM | Show sample sold listings, sold date, condition notes, outlier handling (simple); cache results with “last updated”. (Already exists: Tradera sold-price comps via proxy.) |
+| Offline-first core usage | Thrifting often has poor connectivity; capture must not break | HIGH | Capture + edit always available offline; network work queues for later (AI/comps/sync); clear “queued vs done” UI. (Already exists: offline-first local persistence.) |
+| Simple sync (optional) | Users expect phone migration/backup and multi-device continuity | HIGH | Sign-in optional; best-effort background upload of metadata/photos; graceful offline behavior; last-sync status. (Already exists: optional Supabase auth + metadata/photo sync.) |
+| Clear privacy controls | AI + photos implies trust requirements; deletion/export are expected | MEDIUM | Export data, delete local data, delete cloud data/account, clear cached images; explicit consent for cloud processing. (Already exists: export + cloud delete/account delete flows.) |
+| Settings toggles for cloud vs offline behavior | Users want control over uploads, costs, and offline behavior | MEDIUM | Toggles like: cloud identification on/off, fetch comps on/off, cloud sync on/off; Wi‑Fi only / metered behavior; background sync interval; “offline model” opt-in download (not required for first run). |
 
 ### Differentiators (Competitive Advantage)
 
@@ -36,9 +29,16 @@ Features that set the product apart. Not required, but valuable.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Layered “Nature Distilled” atmosphere (topography + glass inner highlights) | Makes the UI feel tactile and brand-distinct vs standard Material | MEDIUM | Implemented via `NatureBackground` + updated `GlassSurface` (inner highlight/gradient) per patch v2.
-| Capsule nav motion/feel (spring-like, selected bubble) | Feels premium and intentional; improves perceived performance | MEDIUM | Use existing motion tokens (`AppMotion`) and the selection bubble behavior from patch v2.
-| Model “Why?” explainer sheet | Reduces fear about on-device model downloads + builds trust | LOW | Bottom sheet copy is specified in required localization keys; keep it short and clear.
+| “Instant start” with no first-run blockers | Eliminates churn; app is usable immediately | MEDIUM | No mandatory multi-GB model download; default path uses cloud; offline fallback is opt-in and lightweight (aligned with active project requirements). |
+| Hybrid identification pipeline (cloud-first + offline fallback) | Works across connectivity conditions while keeping good accuracy | HIGH | Cloud AI for rich metadata; offline object detection/classification for “good enough” category + cues; unify into one UX with a provenance field (“cloud/offline/manual”). |
+| Evidence-based AI output | Builds trust; reduces “black box” frustration | HIGH | Return evidence: bounding boxes/crops used, top candidates, confidence; persist evidence with the scan item for later review. |
+| Smart comps query generation from photos | Faster comps with fewer manual edits | HIGH | Use AI to propose search keywords/category filters; user can adjust; minimize API calls; store the query used so results are explainable and repeatable. |
+| Multi-market comps + normalization | Better pricing decisions than single-market comps | HIGH | Aggregate across markets (e.g., Tradera + others), normalize currency and time window, optionally account for shipping/fees; present per-market breakdown. |
+| ROI / resale profit calculator | Converts comps into a buy/no-buy decision | MEDIUM | Take purchase price + estimated fees/shipping + sell price band; show low/median/high outcomes; keep it simple (avoid full accounting suite). |
+| “Thrift run” batch mode | Reduces friction during sourcing | MEDIUM | Rapid capture flow that queues AI/comps; later “review queue” screen to approve/edit results; supports hundreds of items. |
+| Local-only privacy mode with redaction controls | Differentiates on trust for photo-based AI | HIGH | Global “local-only mode” disables cloud AI/comps/sync; optional on-device redaction (blur faces/background text) and “crop before upload” defaults. |
+| Selective sync + audit trail | Makes sync feel safe and debuggable | HIGH | Sync metadata only vs metadata+photos; per-haul inclusion; basic audit trail (last uploaded/failed) and retry controls; avoid silent data loss. |
+| Listing draft generation (copy-ready) | Helps users monetize finds faster | MEDIUM | Generate title/description/keywords per marketplace tone; do not auto-post; support copy-to-clipboard templates (SellHound positions this as a core benefit). |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
@@ -46,92 +46,94 @@ Features that seem good but create problems.
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Auto-download Gemma on app start | “Make it seamless” | Violates v2 requirement; surprises users with large download/battery use | Ask on Onboarding #3; persist consent; download in background only after user action |
-| Handwritten font used for body/inputs | “More personality” | Hurts readability/accessibility; explicitly prohibited | Use handwritten font only for accent wordmark/brand accents via `AppTypography.accentBrand` |
-| Shipping reference-pack placeholder/typo copy | “It looks fine in mock” | Breaks credibility; spec explicitly calls these out | Fix strings per patch v2; enforce l10n usage |
-| Unclipped / full-screen blur (`BackdropFilter`) | “More glass!” | Perf killer (Impeller); spec forbids | Clip every blur region (`ClipRRect/ClipRect`) and keep blur surfaces small |
-| Adding extra settings toggles beyond the reference pack | “Expose everything” | Breaks “clean by default” settings intent | Keep to the bento modules/controls specified; hide advanced controls elsewhere (e.g., existing Dev Mode) |
+| Auto-posting / auto-listing to marketplaces | “One tap to sell” sounds magical | Requires marketplace auth, policy compliance, content moderation, and creates high liability for wrong listings | Generate copy-ready drafts + deep links; keep user in control of posting |
+| Mandatory sign-in / account gating camera usage | “We want growth + retention” | Kills first-run conversion and breaks offline-first promise | Keep sign-in optional; offer backups/sync as the reason to sign in |
+| Always uploading full-resolution photos by default | Better AI accuracy | Increases privacy risk, bandwidth cost, and user distrust | Upload smallest necessary crop/derivative; provide explicit opt-in and a per-item override |
+| “Guaranteed profit” recommendations | Users want certainty | Creates trust/legal risk and drives bad decisions on noisy data | Provide ranges + confidence + comps transparency; label as estimates |
+| “Everything is a marketplace integration” (scraping) | More comps sources | Scraping breaks, violates ToS, and becomes an endless maintenance burden | Use official APIs/proxies where permitted; start with 1-2 reliable markets and expand deliberately |
 
 ## Feature Dependencies
 
 ```
-[Tokens + Theme]
-    └──requires──> [Shared Primitives: NatureBackground / GlassSurface / GlassBoard / CapsuleNavBar]
-                       └──requires──> [App Shell (persistent background + capsule nav + IndexedStack)]
-                                          └──enables──> [Screen Reskins (Home/Haul/History/Drafts/Profile/Auth)]
+[Fast photo capture + import]
+    └──requires──> [Basic item record + editing]
+                        └──requires──> [Quick search/filter/sort in catalog]
 
-[Model download state + services]
-    └──requires──> [Onboarding Screen 3 callout]
-                       └──enhances──> [Profile AI & Modell module (model status)]
+[AI identification from photos]
+    └──enhances──> [Basic item record + editing]
+    └──enhances──> [Sold-price comps lookup + basic stats]  (better queries)
 
-[Localization keys]
-    └──requires──> [All new UI strings + copy fixes]
+[Offline-first core usage]
+    └──requires──> [Network queue + retry UX for AI/comps/sync]
 
-[Golden tests]
-    └──requires──> [Screens stabilized to reference visuals]
+[Simple sync (optional)]
+    └──requires──> [Auth]
+    └──requires──> [Conflict strategy + status reporting]
+
+[Local-only privacy mode]
+    └──conflicts──> [Cloud identification ON]
+    └──conflicts──> [Cloud sync ON]
 ```
 
 ### Dependency Notes
 
-- **Tokens + Theme requires Shared Primitives:** primitives must be built on tokens to keep spacing/blur/radii consistent.
-- **Shared Primitives require App Shell:** capsule nav + persistent background are cross-screen concerns.
-- **Model download state requires Onboarding callout:** callout drives consent + starts download; state needs to persist while user continues into login.
-- **Localization requires all new UI strings:** v2 explicitly forbids new hard-coded strings in UI.
+- **Fast photo capture + import requires Basic item record + editing:** capture without durable local persistence creates lost work and no offline value.
+- **AI identification enhances Sold-price comps lookup + basic stats:** the quality of comps depends heavily on the query; AI should output keywords/category/brand candidates, but must remain editable.
+- **Offline-first core usage requires a network queue + retry UX:** “offline-first” is mostly a queueing + transparency problem; without it, users perceive the app as flaky.
+- **Simple sync requires an explicit conflict/status strategy:** silent merges or invisible failures break trust; even minimal sync needs “last sync”, “failed items”, and retry.
+- **Local-only privacy mode conflicts with cloud features:** implement as a single gate that disables uploads and clears pending network queues (with user confirmation).
 
 ## MVP Definition
 
 ### Launch With (v1)
 
-Minimum viable product — what's needed to validate the concept.
-
-- [ ] Startup flow matches Screens 1–5 (Onboarding 1–3 + Login 4–5)
-- [ ] Onboarding #3 Gemma prompt: CTA + progress + retry + “Varför?” explainer; download continues in background
-- [ ] No auto-download at startup; consent gating persisted (`gemma_download_consent`)
-- [ ] Signup-first login + “Problem att logga in?” affordance; visuals match glass + motif
-- [ ] Home, Current Haul, History (Empty), Draft Editor, Profile/Settings match the Visual Reference Pack layouts/copy
-- [ ] All new strings localized; reference-pack typos/placeholders removed
-- [ ] Model completion popup (reference red) explains what the model enables (offline AI)
-- [ ] Golden tests added/updated for key screens (at least Login/Home/History empty/Draft editor)
+- [ ] Photo capture/import + local cataloging (offline-first) — the app must be usable during a thrift trip.
+- [ ] Cloud-first AI identification with manual edit loop — remove first-run blockers while keeping users in control.
+- [ ] Sold-price comps (start with Tradera) + caching/last-updated — enables the buy/no-buy decision.
+- [ ] Clear settings toggles (cloud ID, comps, sync; Wi‑Fi/metered behavior) — builds trust and prevents surprise uploads.
+- [ ] Privacy operations (export + local/cloud delete) — required for cloud AI trust and compliance.
 
 ### Add After Validation (v1.x)
 
-Features to add once core is working.
-
-- [ ] Reskin remaining non-referenced screens (e.g., full History list, Drafts list, Scanner overlay) to the same primitives/tokens, if not already covered by the milestone scope
+- [ ] Batch “thrift run” capture + later review queue — add once the single-item flow is solid.
+- [ ] Evidence/provenance for AI results (cloud/offline/manual + confidence) — add once the cloud pipeline stabilizes.
+- [ ] ROI calculator (simple) — add when users rely on comps regularly.
 
 ### Future Consideration (v2+)
 
-Features to defer until product-market fit is established.
-
-- [ ] Additional motion polish beyond what the handoff calls for (avoid adding custom animation systems)
+- [ ] Multi-market comps aggregation + normalization — valuable but high scope and ongoing maintenance.
+- [ ] Offline fallback model (lightweight, opt-in) — ship once licensing/accuracy is validated and model size stays small.
+- [ ] Listing draft generation per marketplace — add if the reseller segment is a primary target.
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Startup flow Screens 1–5 (incl. signup-first login) | HIGH | HIGH | P1 |
-| Gemma download callout + background download + retry | HIGH | HIGH | P1 |
-| Model completion popup (reference red + explanation) | MEDIUM | MEDIUM | P1 |
-| App shell with capsule nav + persistent background | HIGH | MEDIUM | P1 |
-| Home/Haul/History empty/Draft/Profile reskins | HIGH | MEDIUM | P1 |
-| Localization + copy fixes (no hard-coded strings) | HIGH | MEDIUM | P1 |
-| Goldens for key screens | MEDIUM | MEDIUM | P1 |
-
-**Priority key:**
-- P1: Must have for launch
-- P2: Should have, add when possible
-- P3: Nice to have, future consideration
+| Photo capture/import + local catalog | HIGH | MEDIUM | P1 |
+| Cloud-first AI identification + edit loop | HIGH | MEDIUM | P1 |
+| Sold-price comps (Tradera) + caching | HIGH | MEDIUM | P1 |
+| Settings toggles for cloud/offline behavior | HIGH | MEDIUM | P1 |
+| Offline queue + retry transparency for AI/comps | HIGH | HIGH | P1 |
+| Optional cloud sync + status | MEDIUM | HIGH | P2 |
+| Batch capture + review queue | MEDIUM | MEDIUM | P2 |
+| Evidence-based AI output | MEDIUM | HIGH | P3 |
+| Multi-market comps normalization | MEDIUM | HIGH | P3 |
 
 ## Competitor Feature Analysis
 
-Not applicable for this milestone: scope is implementing the provided Nature Distilled handoff + visual reference pack.
+| Feature | Competitor A | Competitor B | Our Approach |
+|---------|--------------|--------------|--------------|
+| Image-based identification/search | Google Search w/ Lens supports “Search with an image” workflows (upload/drag/drop, sidebar search in Chrome) | SellHound markets photo-based identification for listing generation | Photo-first capture persists locally; cloud-first identification by default with clear opt-outs and per-item editability |
+| Barcode scanning + profit calculation | Profit Bandit emphasizes instant barcode scanning, real-time Amazon data, and profit calculations/fee breakdown | InventoryLab/Scoutify positioning emphasizes “scanning to shipping” for Amazon workflows | Not Amazon-first; focus on secondhand photo capture + comps; ROI calculator can mirror the “profit breakdown” mental model without becoming an accounting tool |
+| Listing drafts | SellHound markets multi-platform listing text generation (eBay/Poshmark/Mercari/Facebook Marketplace) | (N/A in sources) | Generate copy-ready drafts and templates; avoid auto-posting/integration-heavy flows until validated |
 
 ## Sources
 
-- `docs/LoppisFynd_Nature_Distilled_Technical_Handoff_v2.md`
-- `docs/UiUxOverHaul/Technical_Handoff_Patch_v2.md`
-- `docs/LoppisFynd_Nature_Distilled_Visual_Reference_Pack.pdf`
+- Google Search Help: “Search with an image on Google” (Lens) https://support.google.com/websearch/answer/1325808 (HIGH)
+- SellerEngine: “Profit Bandit” product page (barcode scanning, real-time Amazon data, profit calculations, export) https://sellerengine.com/profit-bandit/ (MEDIUM; vendor marketing but specific claims)
+- SellHound homepage (photo → AI analysis → listing drafts; multi-platform support; smart pricing from comps) https://sellhound.com/ (MEDIUM; vendor marketing)
+- Threecolts/InventoryLab site (scanning-to-workflow positioning; Scoutify/InventoryLab bundle references) https://www.inventorylab.com/ (LOW; page content is bundle marketing and not a clean feature spec)
 
 ---
-*Feature research for: Nature Distilled UI/UX overhaul milestone*
-*Researched: 2026-02-18*
+*Feature research for: secondhand/thrift companion app*
+*Researched: 2026-02-21*

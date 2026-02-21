@@ -1,207 +1,326 @@
 # Architecture Research
 
-**Domain:** UI/UX overhaul (Nature Distilled) in an existing offline-first Flutter app
-**Researched:** 2026-02-18
-**Confidence:** HIGH
+**Domain:** Offline-first Flutter (iOS/Android) app with cloud-first AI and optional offline ML fallback
+**Researched:** 2026-02-21
+**Confidence:** MEDIUM
 
 ## Standard Architecture
 
 ### System Overview
 
-```
-┌───────────────────────────────────────────────────────────────────────────┐
-│ Presentation (feature-first)                                              │
-│                                                                           │
-│  ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐   │
-│  │ Onboarding/Auth    │   │ 5-Tab Shell       │   │ Feature Screens   │   │
-│  │ (startup gates)    │   │ (background + nav)│   │ (scan/haul/etc)   │   │
-│  └─────────┬─────────┘   └─────────┬─────────┘   └─────────┬─────────┘   │
-│            │                       │                       │             │
-├────────────┴───────────────────────┴───────────────────────┴─────────────┤
-│ Design System Layer (churn shield)                                        │
-│                                                                           │
-│  Tokens + Theme            Shared UI primitives                           │
-│  (colors/type/spacing)     (glass surfaces, boards, nav, backgrounds)     │
-│                                                                           │
-├───────────────────────────────────────────────────────────────────────────┤
-│ State + Orchestration (Riverpod)                                          │
-│                                                                           │
-│  Providers (DI) + Feature Controllers (UI state machines)                 │
-│  - model download/install state                                           │
-│  - dev-mode gating for advanced controls                                  │
-│                                                                           │
-├───────────────────────────────────────────────────────────────────────────┤
-│ Domain Services + Persistence (offline-first)                             │
-│                                                                           │
-│  Services/              Drift DB (source of truth)        Local files      │
-│  - AI inference         - app_settings (flags/consent)    - photos/models  │
-│  - market sync          - scan_items/hauls/etc            - resumable dl   │
-│  - cloud sync (opt)                                                     │
-└───────────────────────────────────────────────────────────────────────────┘
-```
+This domain wants a strict direction of dependencies:
 
-This overhaul is safest when treated as a *design-system retrofit* that sits between feature screens and the existing domain/services layers. The goal is to swap visuals without rewriting data flows.
+- UI/features depend on application services (use-cases/orchestrators)
+- application services depend on domain ports (interfaces)
+- infrastructure implements ports (Drift DAOs, filesystem stores, HTTP/Supabase clients, AI backends)
+- background entrypoints reuse the same application services, but spin up their own minimal dependency graph
+
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ Presentation (features)                                                      │
+├───────────────────────────────────────────────────────────────────────────────┤
+│  ┌───────────────┐  ┌────────────────┐  ┌──────────────────┐                │
+│  │ Scanner UI     │  │ Item details   │  │ Settings/Privacy  │                │
+│  └──────┬─────────┘  └──────┬─────────┘  └──────┬───────────┘                │
+│         │                    │                    │                            │
+│         ▼                    ▼                    ▼                            │
+│  Feature controllers/state (Riverpod Notifiers/Controllers)                    │
+└─────────┬───────────────────────────────┬────────────────────────────────────┘
+          │                               │
+          ▼                               ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ Application layer (use-cases/orchestrators)                                   │
+├───────────────────────────────────────────────────────────────────────────────┤
+│  ┌────────────────────┐   ┌──────────────────┐   ┌────────────────────────┐  │
+│  │ ScanCaptureService   │→  │ AiOrchestrator    │→  │ MarketCompsRefresher    │  │
+│  └────────────────────┘   └──────────────────┘   └────────────────────────┘  │
+│            │                         │                      │                 │
+│            ▼                         ▼                      ▼                 │
+│  ┌────────────────────┐   ┌──────────────────┐   ┌────────────────────────┐  │
+│  │ SyncCoordinator      │   │ PrivacyGate      │   │ JobRunner (foreground/  │  │
+│  │ (cloud optional)     │   │ (image policy)   │   │ background)             │  │
+│  └────────────────────┘   └──────────────────┘   └────────────────────────┘  │
+└─────────┬───────────────────────────────┬────────────────────────────────────┘
+          │                               │
+          ▼                               ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ Domain ports (interfaces) + domain models                                     │
+├───────────────────────────────────────────────────────────────────────────────┤
+│  Ports: AiBackend, ImageStore, ScanRepository, CompsRepository, SyncOutbox,   │
+│         Connectivity, Clock, Logger, Metrics                                  │
+│  Models: ScanItem, PhotoAssetRef, AiEvidence, SyncState, JobRun               │
+└─────────┬───────────────────────────────┬────────────────────────────────────┘
+          │                               │
+          ▼                               ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ Infrastructure (adapters)                                                     │
+├───────────────────────────────────────────────────────────────────────────────┤
+│  Local: Drift DB/DAOs, file storage (original+thumb+redacted variants),       │
+│         long-lived isolates for CPU work (thumb gen, offline inference)       │
+│  Network: Supabase client, Edge Function clients, HTTP clients                │
+│  AI: CloudGeminiBackend (via Edge Function), OfflineYoloXBackend (opt-in)     │
+│  Observability: Sentry + local diagnostics store (DB-backed)                  │
+└─────────┬───────────────────────────────┬────────────────────────────────────┘
+          │                               │
+          ▼                               ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ External services                                                             │
+├───────────────────────────────────────────────────────────────────────────────┤
+│ Supabase (Auth/Storage/Edge Functions)   Gemini (cloud vision)   Tradera SOAP │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+Background entrypoints:
+  OS scheduler → workmanager callbackDispatcher → BackgroundRuntime → JobRunner
+```
 
 ### Component Responsibilities
 
 | Component | Responsibility | Typical Implementation |
 |-----------|----------------|------------------------|
-| `lib/core/tokens/**` | Single source of truth for visual constants | `AppColors`, `AppRadius`, `AppSpacing`, `AppShadows`, `AppMotion`, plus new blur/opacity tokens |
-| `lib/core/theme/app_theme.dart` | ThemeData defaults + global typography mapping | `ThemeData(useMaterial3: true, textTheme: AppTypography.textTheme, ...)` |
-| `lib/shared/widgets/**` | Reusable primitives that enforce visual parity + perf rules | `GlassSurface`, `GlassBoard`, `CapsuleNavBar`, `AtmosphericBackground/NatureBackground`, `EmptyState` |
-| `lib/core/navigation/app_nav_shell.dart` | 5-tab shell with persistent background + capsule nav | `Stack(background + OfflineBanner + tab content + CapsuleNavBar)` |
-| `lib/features/**` | Feature-first screens and small local widgets | Keep existing screen entrypoints; refactor UI incrementally |
-| `lib/features/*/controllers/**` | UI orchestration state machines (download, view state) | Riverpod `Notifier/StateNotifier` |
-| `lib/services/ai/model_manager.dart` | Low-level model file operations (resume, atomic moves) | Download/install/delete on local FS |
-| `lib/core/database/**` | Offline-first persistence and app settings | Drift DAOs + tables; `app_settings` as a small KV store |
+| Feature UI (Scanner/Item/Settings) | Render state and trigger intentful actions only | Widgets + Riverpod controllers |
+| Feature controller | Translate user actions into use-case calls; map results to UI state | `AsyncNotifier`/`Notifier` + typed states |
+| `ScanCaptureService` | Persist captures (image + DB rows), create thumbnails, enqueue follow-up work | Uses `ImageStore` + Drift DAOs + task queue |
+| `PrivacyGate` | Enforce consent + policy before any image leaves device; apply cropping/redaction/downscaling | Pure Dart + isolate helpers; configurable policy |
+| `AiOrchestrator` | Choose AI backend per policy (cloud default, offline optional); handle retries/backoff; persist results | Depends on `AiBackend` registry, DB, settings, connectivity |
+| `AiBackend` (port) | A pluggable identification contract | `CloudGeminiBackend`, `OfflineYoloXBackend` |
+| `CloudGeminiBackend` | Call cloud AI without shipping secrets; normalize response into `AiResult` | Supabase Edge Function client (preferred) |
+| `OfflineYoloXBackend` | Run opt-in lightweight offline detection; provide evidence (boxes/classes) | TFLite/ONNX plugin + long-lived isolate |
+| `SyncCoordinator` | Optional cloud sync: outbox drain + incremental pull + conflict resolution | Drift outbox tables + Supabase APIs |
+| `MarketCompsRefresher` | Fetch sold comps via Tradera proxy; cache results locally; degrade offline | HTTP/Supabase Edge Function proxy + Drift caches |
+| `JobRunner` | Run idempotent “jobs” in foreground or background (sync/comps/cleanup) | Shared job registry + `workmanager` entrypoint |
+| Observability (`Logger`, `Metrics`, `Diagnostics`) | Breadcrumbs, error reports, job/run traces, user-shareable debug bundle | Sentry + DB log ring buffer + diagnostics screen |
 
 ## Recommended Project Structure
 
-Use the existing feature-first layout, and make the design system the primary "churn boundary".
+Keep the existing Riverpod + Drift + `lib/features`, `lib/core`, `lib/services` shape, but make boundaries explicit by introducing “ports/adapters” seams.
 
 ```
 lib/
-├── core/
-│   ├── app/                     # Riverpod providers (DI + app signals)
-│   ├── config/                  # AppConfig + feature flags
-│   ├── database/                # Drift DB + DAOs (offline-first source of truth)
-│   ├── navigation/              # AppNavShell, route transitions
-│   ├── theme/                   # ThemeData composition
-│   └── tokens/                  # Design tokens (colors/type/radius/spacing/motion)
-├── services/                    # Domain services (AI, sync, market, cloud)
-├── shared/
-│   ├── painters/                # Background/texture painters
-│   └── widgets/                 # Design-system primitives (NO business logic)
-└── features/
-    ├── onboarding/              # Startup flow + model prompt callout
-    ├── auth/                    # Login/signup (visual parity with reference)
-    ├── dashboard/               # Home (board + hero + tiles)
-    ├── scanner/                 # Capture flows (offline preserved)
-    ├── hauls/                   # Current haul board + list
-    ├── history/                 # History empty + filters
-    ├── drafts/                  # Draft editor board
-    ├── settings/                # Profile/settings modules
-    └── model_manager/           # Model UX (controller + widgets)
-        ├── controllers/
-        └── widgets/
+├── core/                     # Cross-cutting: config, result/error types, logging, utils
+│   ├── config/
+│   ├── database/             # Drift DB + DAOs (local source of truth)
+│   ├── logging/
+│   ├── observability/
+│   └── utils/                # serial task queue, isolate helpers
+├── domain/                   # Pure domain models + ports (interfaces)
+│   ├── ai/                   # AiBackend port + AiResult/Evidence models
+│   ├── privacy/              # Image policy models (consent, redaction rules)
+│   ├── sync/                 # Outbox/sync state machine models
+│   └── market/               # comps models + repository ports
+├── services/                 # Application use-cases/orchestrators
+│   ├── ai/                   # AiOrchestrator + backends registry
+│   ├── privacy/              # PrivacyGate implementation
+│   ├── sync/                 # SyncCoordinator + job definitions
+│   ├── market/               # MarketCompsRefresher
+│   └── diagnostics/          # debug bundle creation
+├── integrations/             # Adapters to external services (no UI)
+│   ├── supabase/             # storage/auth/functions clients
+│   ├── gemini/               # edge-function request/response DTOs
+│   ├── tradera/              # proxy client
+│   └── yolo/                 # offline model runtime bindings
+├── background/               # workmanager entrypoint + background runtime composition
+│   ├── callback_dispatcher.dart
+│   └── background_runtime.dart
+├── features/                 # UI screens and feature-local controllers
+│   ├── scanner/
+│   ├── items/
+│   ├── settings/
+│   └── diagnostics/
+└── main.dart                 # Composition root: provider overrides + boot + routing
 ```
 
 ### Structure Rationale
 
-- **`lib/core/tokens/**` + `lib/shared/widgets/**`:** The fastest path to strict visual parity is centralizing all "Nature Distilled" look-and-feel in tokens + primitives, and then composing screens from those parts.
-- **`lib/features/**` stays stable:** Preserve feature routes and data flows (DAOs/services/providers). UI changes should be mostly within screens and their local widgets.
-- **Controllers live with features:** Download/install state is feature UI state, but depends on stable services (`ModelManager`) and a persisted consent flag (Drift settings).
+- **`domain/`:** defines stable seams (`AiBackend`, `ImageStore`, `SyncOutbox`) so you can swap cloud/offline AI without UI churn.
+- **`services/`:** holds the “policy brains” (consent, backend selection, retries) so integrations stay dumb and testable.
+- **`integrations/`:** concentrates all external API quirks (Supabase functions, Gemini/Tradera DTOs, offline model bindings) away from the rest of the code.
+- **`background/`:** prevents background-only init from leaking into `main.dart` and enforces “minimal runtime” rules.
 
 ## Architectural Patterns
 
-### Pattern 1: Design System as the Primary Churn Boundary
+### Pattern 1: Pluggable AI via Ports + Policy-Based Selection
 
-**What:** Express the overhaul as tokens + primitives, and keep feature screens as composition only.
+**What:** Define an `AiBackend` interface (port) and select an implementation at runtime using a single `AiOrchestrator` policy engine.
 
-**When to use:** Any time pixel parity matters and you want minimal regressions across a large feature surface.
+**When to use:** Always. Cloud vs offline is a product decision and changes over time; the app should not hardcode it into screens.
 
-**Trade-offs:** Up-front work to build primitives; pays off by reducing per-screen bespoke styling and eliminating "UI drift".
+**Trade-offs:** Slight upfront abstraction work; large long-term win: easier experimentation, safer rollouts, simpler deprecations.
 
-**Example:** enforce the blur rule via a single primitive (no raw `BackdropFilter` in feature code).
-
+**Example:**
 ```dart
-// shared/widgets/glass_surface.dart
-// - ALWAYS ClipRRect/ClipRect around BackdropFilter
-// - all blur sigmas come from AppBlur tokens
-// - all radii/spacings come from tokens
+enum AiBackendId { cloudGemini, offlineYolo }
+
+abstract interface class AiBackend {
+  AiBackendId get id;
+  Future<AiResult> identify(AiInput input);
+}
+
+final class AiOrchestrator {
+  AiOrchestrator({
+    required Map<AiBackendId, AiBackend> backends,
+    required PrivacyGate privacyGate,
+    required AiPolicy policy,
+    required Connectivity connectivity,
+  })  : _backends = backends,
+        _privacyGate = privacyGate,
+        _policy = policy,
+        _connectivity = connectivity;
+
+  final Map<AiBackendId, AiBackend> _backends;
+  final PrivacyGate _privacyGate;
+  final AiPolicy _policy;
+  final Connectivity _connectivity;
+
+  Future<AiResult> identifyFromPhoto(PhotoAssetRef photo) async {
+    final sanitized = await _privacyGate.prepareForAi(photo);
+
+    final preferCloud = _policy.cloudAiEnabled && await _connectivity.isOnline();
+    final backendId = preferCloud ? AiBackendId.cloudGemini : AiBackendId.offlineYolo;
+
+    final backend = _backends[backendId]!;
+    return backend.identify(AiInput(photo: sanitized));
+  }
+}
 ```
 
-### Pattern 2: Backwards-Compatible Primitive Upgrades
+### Pattern 2: Privacy Gate for Images (Consent + Redaction as a First-Class Boundary)
 
-**What:** Prefer upgrading existing shared widgets (same public API) over introducing new ones.
+**What:** All “image leaves device” operations must flow through a single `PrivacyGate` that enforces consent + transformation policy.
 
-**When to use:** When a primitive is already widely referenced (e.g. `CapsuleNavBar`, `AtmosphericBackground`, `BentoCard`, `GlassOverlay`).
+**When to use:** Any cloud AI call, any cloud photo sync/upload, and any diagnostics export.
 
-**Trade-offs:** Slightly more care to avoid behavior changes; dramatically less churn in feature screens.
+**Trade-offs:** Adds pipeline steps (crop/downscale/redact), but reduces compliance risk and user trust damage.
 
-**Example:** evolve `CapsuleNavBar` to match the selected-bubble behavior from the reference pack without forcing a shell rewrite.
+**Key rules (opinionated):**
 
-### Pattern 3: Controller-Owned Long-Running UI Work
+- Never upload “original” by default; upload only a derived artifact (`crop` or `redacted`) scoped to the AI task.
+- Consent is explicit and revocable; policy is configurable per feature (“cloud identify” and “cloud photo sync” are separate toggles).
+- Redaction is deterministic and auditable: store *what was sent* (hash + dimensions + policy version), not the pixels.
 
-**What:** Model download/install is a state machine owned by a Riverpod controller that survives navigation changes (keepAlive).
+**Suggested image pipeline inside `PrivacyGate` (directional, no backdoors):**
 
-**When to use:** Any work that must continue while the user navigates (onboarding -> app shell) and needs consistent UI across multiple surfaces.
+```
+Original (local-only) → normalize/rotate → strip metadata → downscale → crop → redact → upload
+```
 
-**Trade-offs:** Slight complexity in state modeling; avoids duplicated logic in Dashboard/Onboarding/Settings.
+Practical privacy defaults for 2026-2027:
 
-**Example:** a `ModelInstallController` that exposes states like `needsConsent`, `downloading(progress)`, `ready`, `failed`.
+- Strip EXIF/location metadata from any derived artifact.
+- Prefer sending a low-resolution crop (e.g., max dimension cap) rather than the full frame.
+- Maintain a clear separation between:
+  - **AI artifact** (ephemeral or short-lived, purpose-limited)
+  - **Cloud backup artifact** (explicit opt-in, long-lived)
+- Persist an “egress audit record” per request: `backendId`, `policyVersion`, `imageHash`, `byteSize`, `dimensions`, `timestamp`, `scanItemId`.
+
+### Pattern 3: Offline-First Source of Truth + Sync Outbox
+
+**What:** Drift DB remains the single source of truth. Cloud sync is a best-effort replication layer built on:
+
+- an outbox table (pending operations)
+- per-entity sync status
+- incremental pull (by `updated_at` or server cursor)
+
+**When to use:** Always. It keeps the app usable offline and prevents “dual write” bugs.
+
+**Trade-offs:** Requires careful conflict rules; pays back by removing an entire class of “stuck in sync” failures.
+
+Implementation guidance aligned to current codebase:
+
+- Keep current “dirty marking” but evolve metadata sync to be incremental (avoid full-table pulls).
+- Track “attempted” vs “succeeded” timestamps separately (prevents failed attempts from suppressing retries).
+
+### Pattern 4: Unified Job Runner (Foreground + Background)
+
+**What:** Define jobs once, run them from:
+
+- user actions (foreground “sync now”)
+- app lifecycle hooks (on resume)
+- OS scheduler (workmanager)
+
+Each job is idempotent and records a `JobRun` row for debugging.
+
+**When to use:** Sync, comps refresh, cleanup, cache pruning.
+
+**Trade-offs:** Requires discipline (idempotency, timeouts, partial progress), but fixes “background is a different app” drift.
 
 ## Data Flow
 
-### Request Flow (Model Download / Install)
+### Request Flow (Scan → Persist → Identify → Comps)
 
 ```
-User taps "Download" (Onboarding page 3)
+[User takes photo]
     ↓
-Onboarding calls ModelInstallController.ensureInstalled()
+Scanner UI → ScanCaptureService → (ImageStore + Drift)
     ↓
-Controller:
-  - persists consent flag in Drift app_settings
-  - streams progress from ModelManager.downloadFromUrl(onProgress)
-  - performs atomic move to final model path (ModelManager already does)
+AiOrchestrator → PrivacyGate → AiBackend (CloudGemini | OfflineYoloX)
     ↓
-Controller emits state → UI surfaces update:
-  - Onboarding callout (progress + learn more)
-  - Dashboard preflight card (same controller, no duplicate state)
-  - Settings AI module (status + retry)
+Persist AiResult to Drift → mark item eligible for comps/sync
     ↓
-AI inference uses modelPath; future runs succeed once the file exists
+MarketCompsRefresher (foreground or JobRunner) → Tradera proxy → Drift caches
 ```
 
-### State Management
+### State Management (Riverpod)
 
 ```
-Persistent state:
-  - installed? (filesystem: ModelManager.state())
-  - consent? (Drift: app_settings['gemma_download_consent'])
-
-Ephemeral state (in-memory, Riverpod):
-  - download progress (received/total)
-  - last error
-  - installing flag
+Drift watch streams + Providers
+    ↓ (subscribe)
+Screens/widgets ←→ Feature controllers (intent) → services/use-cases → DAOs
 ```
 
 ### Key Data Flows
 
-1. **UI visual parity:** Feature screens compose `shared/widgets` primitives; tokens are the only place where numbers/colors are tuned.
-2. **Localization correctness:** Only feature screens (and feature-level widgets) call `AppLocalizations`; shared primitives accept already-localized strings or use semantic-neutral UI.
-3. **Offline-first invariants:** All existing DAOs/services remain the source of truth; UI changes must not create new online-only dependencies.
+1. **Cloud AI identify (privacy-aware):** local photo → derived crop/redacted → Edge Function → `AiResult` → DB.
+2. **Offline AI fallback:** local photo → derived (downscaled) → offline runtime isolate → evidence boxes → DB.
+3. **Optional cloud photo sync:** local photo variants → policy gate (original vs redacted) → Supabase Storage → sync status.
+4. **Background comps refresh:** job scheduled → minimal runtime → fetch comps → persist → update “last refreshed”.
+5. **Diagnostics bundle:** DB job runs + sync statuses + recent logs + config (redacted) → export/share.
 
 ## Scaling Considerations
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| 0-1k users | Current approach is sufficient; focus on golden tests + perf (blur clipping) |
-| 1k-100k users | Reduce repaint cost (RepaintBoundary on boards/nav), avoid overdraw in background, tighten image cache sizing |
-| 100k+ users | Consider caching expensive background paints to images; formalize design system versioning and migration notes |
+| 0-1k users | Current monolith app + Edge Functions is sufficient; focus on privacy gate + correctness. |
+| 1k-100k users | Add per-user quotas/rate limits in Edge Functions; incremental metadata sync + batching; cache comps aggressively. |
+| 100k+ users | Move AI proxy from Edge Functions to a dedicated backend (Cloud Run) if needed; add queueing; stronger abuse detection. |
 
 ### Scaling Priorities
 
-1. **First bottleneck:** GPU cost from blur/overdraw; solve by clipped BackdropFilters, limiting blur regions, and using cached paints.
-2. **Second bottleneck:** UI drift/regressions; solve by goldens for primitives + key screens and by preventing hard-coded strings.
+1. **First bottleneck:** Cloud sync and comps fetch volume → incremental pulls, pagination, batch writes, backoff.
+2. **Second bottleneck:** AI cost and latency → backend policy (quotas, caching), minimize pixels sent (crop + downscale).
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Styling Per Screen (Token Bypass)
+### Anti-Pattern 1: UI Calls External Clients Directly
 
-**What people do:** Add new colors/radii/spacings inline while implementing screens to hit visuals quickly.
+**What people do:** `ScannerScreen` hits Gemini/Tradera directly.
 
-**Why it's wrong:** The app becomes impossible to tune for parity (every tweak requires chasing constants), and screens drift from each other.
+**Why it's wrong:** Breaks testability, privacy guarantees, and makes backend swaps expensive.
 
-**Do this instead:** Put every visual number in `lib/core/tokens/**` and every glass/nav/background in `lib/shared/widgets/**`.
+**Do this instead:** UI → controller → `AiOrchestrator`/`MarketCompsRefresher` with ports.
 
-### Anti-Pattern 2: Duplicated Model Download Logic in Multiple Screens
+### Anti-Pattern 2: Uploading Original Images by Default
 
-**What people do:** Each screen re-implements progress/error state with `setState` around `ModelManager.downloadFromUrl`.
+**What people do:** Reuse the same photo path for local storage, cloud sync, and cloud AI.
 
-**Why it's wrong:** Inconsistent behavior, broken "download continues while navigating", and localization bugs (hard-coded status strings).
+**Why it's wrong:** Turns a product toggle into a compliance incident; makes “consent” meaningless.
 
-**Do this instead:** One controller (Riverpod) is the integration point; all UI surfaces render the same state.
+**Do this instead:** Store variants; gate any upload through `PrivacyGate`; upload only derived artifacts unless user explicitly enables cloud photo backup.
+
+### Anti-Pattern 3: Background Tasks Swallow Errors
+
+**What people do:** Always return success from background callbacks; only log `print()`.
+
+**Why it's wrong:** Production debugging becomes impossible; jobs silently stop working.
+
+**Do this instead:** Record `JobRun` rows, return retry/failure appropriately, and report errors via Sentry when configured.
+
+### Anti-Pattern 4: One-Isolate-Per-Inference
+
+**What people do:** Spawn/kill an isolate per offline inference call.
+
+**Why it's wrong:** Latency and battery regress; cancellation races are hard.
+
+**Do this instead:** Long-lived worker isolate (or small pool) for offline CPU work; request/response over a typed channel.
 
 ## Integration Points
 
@@ -209,28 +328,63 @@ Ephemeral state (in-memory, Riverpod):
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| `flutter_gemma` | AI backend reads a local model file path | Keep inference path stable; treat model install as file provisioning |
-| Workmanager | Background periodic work | Consider a lightweight "model download retry" task only after consent (optional) |
-| Supabase (optional) | Auth + cloud sync | Must remain optional; UI should not assume network/auth |
+| Supabase Edge Functions | App calls `functions.invoke()` (preferred) or signed HTTPS with explicit auth headers | Central place for auth, rate limits, and keeping AI API keys off-device. |
+| Supabase Storage | Optional photo backup; use policies + per-user paths | Must be governed by the same `PrivacyGate` policy as AI uploads. |
+| Gemini (cloud vision) | Called from server-side proxy (Edge Function or Cloud Run) | Avoid embedding API keys; enforce quotas; log request metadata only. |
+| Tradera | Use existing SOAP proxy Edge Function | Decide public vs authenticated and enforce; add rate limiting if public. |
+| Sentry | App + Edge Functions monitoring when configured | Use breadcrumbs + job run IDs; support user-generated diagnostics bundle. |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `features/*` ↔ `shared/widgets/*` | direct widget composition | Shared widgets must stay logic-free; accept params instead |
-| `features/model_manager/*` ↔ `services/ai/model_manager.dart` | controller calls service | Service owns filesystem; controller owns UI state + consent |
-| `features/model_manager/*` ↔ `core/database/app_settings_dao.dart` | DAO access via providers | Persist consent + keep dev mode controls hidden by default |
-| `core/navigation/app_nav_shell.dart` ↔ feature screens | tab selection + IndexedStack/Stack | Keep 5 tabs; preserve deep-link providers |
+| `features/*` ↔ `services/*` | direct method calls via Riverpod-injected service | UI never touches integrations/clients directly. |
+| `services/*` ↔ `domain/*` | domain ports + domain models | Enables swapping backends and testing with fakes. |
+| `services/*` ↔ `integrations/*` | adapter implementations only | Integrations do not reach into UI or Riverpod. |
+| `background/*` ↔ `services/*` | job runner API | Background runtime initializes minimal dependencies and reuses jobs. |
+
+## Suggested Build Order (2026-2027 evolution)
+
+This ordering minimizes rewrites and supports incremental rollout.
+
+1. **PrivacyGate + image asset variants (foundation)**
+   - Define `PhotoAssetRef` + variants (`original`, `thumb`, `ai_crop`, `redacted`) and a single gate for “leaves device”.
+   - Add persistent audit metadata (hash, dimensions, policy version) to DB.
+
+2. **AI ports + AiOrchestrator (pluggable selection)**
+   - Introduce `AiBackend` port, unify result schema, and make selection purely policy-driven.
+
+3. **Cloud Gemini backend via server-side proxy (default path)**
+   - Add an Edge Function `ai-identify` (or equivalent) to call Gemini without shipping secrets.
+   - Enforce auth, quotas, and log correlation IDs.
+
+4. **Settings + consent UX + safe defaults**
+   - Ship toggles: “cloud identify” (default ON) and “cloud photo backup” (default OFF).
+   - Make revocation immediate (stop sending pixels; optionally delete cloud artifacts).
+
+5. **Remove first-run model download**
+   - Ensure the cloud path works without any offline model install.
+   - Keep offline detection disabled unless explicitly enabled.
+
+6. **Offline fallback backend (YOLOX-class) + long-lived worker isolate**
+   - Add offline runtime and evidence output; keep model small and opt-in.
+
+7. **Unify background work into JobRunner + observability**
+   - Refactor existing background sync to record `JobRun` rows + surface failures.
+   - Ensure jobs run on resume as well (iOS scheduling is best-effort).
+
+8. **Sync scalability improvements**
+   - Incremental pull (by `updated_at`/cursor), batching, and correct “attempted vs succeeded” timestamps.
 
 ## Sources
 
-- `docs/LoppisFynd_Nature_Distilled_Technical_Handoff_v2.md` (implementation order + model prompt + primitives)
-- `docs/UiUxOverHaul/Technical_Handoff_Patch_v2.md` (copy fixes + new primitives + golden guidance)
-- `docs/LoppisFynd_Nature_Distilled_Visual_Reference_Pack.pdf` (visual parity targets)
-- `.planning/codebase/ARCHITECTURE.md` (current app layering + offline-first constraints)
-- `lib/core/navigation/app_nav_shell.dart` (5-tab shell + background + capsule nav)
-- `lib/services/ai/model_manager.dart` (resumable download + atomic moves)
+- workmanager (Flutter) package overview (wraps Android WorkManager + iOS Background Tasks): https://pub.dev/packages/workmanager
+- Flutter Workmanager Quickstart (iOS BGTaskScheduler / Background Fetch notes): https://docs.page/fluttercommunity/flutter_workmanager/quickstart
+- Supabase Edge Functions overview (gateway/JWT validation, secrets, logs): https://supabase.com/docs/guides/functions
+- Supabase Storage overview (bucket types, access control concepts): https://supabase.com/docs/guides/storage
+- Existing codebase architecture map (Riverpod + Drift + services + background): `.planning/codebase/ARCHITECTURE.md`
+- Known codebase concerns (background error swallowing, sync scaling, isolate-per-inference): `.planning/codebase/CONCERNS.md`
 
 ---
-*Architecture research for: Nature Distilled UI/UX retrofit*
-*Researched: 2026-02-18*
+*Architecture research for: offline-first Flutter app with cloud-first AI*
+*Researched: 2026-02-21*
