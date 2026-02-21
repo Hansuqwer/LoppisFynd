@@ -1,123 +1,123 @@
-# Requirements: LoppisFynd — Nature Distilled UI/UX Overhaul
+# Requirements: FyndLoppis
 
-**Defined:** 2026-02-18
-**Core Value:** Users can reliably scan and manage finds offline, with on-device AI enabling fast identification without network.
+**Defined:** 2026-02-21
+**Core Value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
 
 ## v1 Requirements
 
-### Design System & Shared Primitives
+Requirements for the next major delivery cycle (2026): remove first-run blockers, shift to cloud-first AI with clear user controls, keep an offline fallback path, modernize dependencies, and adopt token-driven theming (including dark mode).
 
-- [ ] **DS-01**: App uses a stable token system for colors, spacing, radius (incl. board), shadows, motion, typography, and blur; screens derive styles from tokens (no ad-hoc constants).
-- [ ] **DS-02**: Every blur is clipped (no full-screen `BackdropFilter`); shared glass primitives enforce this constraint.
-- [ ] **DS-03**: App provides reusable primitives matching the reference pack: `NatureBackground`, `LogoMotifOverlay`, `GlassSurface`, `GlassBoard`, `StackedBackplates`, `CapsuleNavBar`.
+### AI Modes + First-Run
 
-### Navigation Contract (5 Tabs)
+- [ ] **AI-01**: App launches and core flows are usable on first run without downloading any on-device AI model
+- [ ] **AI-02**: Cloud AI identification (Gemini) is the default identification path when online and allowed by user settings
+- [ ] **AI-03**: Cloud AI requests are proxied server-side (no cloud AI API keys shipped in the mobile app)
+- [ ] **AI-04**: User can disable cloud identification; when disabled, the app does not upload item images for AI identification
+- [ ] **AI-05**: An offline identification mode exists as an opt-in path (no mandatory downloads); behavior is explicit in settings
 
-- [ ] **NAV-01**: Tabs remain exactly: Home, Scan, Haul, History, Profile (no navigation regression).
-- [ ] **NAV-02**: App shell uses persistent Nature Distilled background + capsule nav and keeps tab state alive (e.g., `IndexedStack`).
-- [ ] **NAV-03**: Capsule nav shows an explicit selected “bubble” state consistent with the Visual Reference Pack.
+### Offline Fallback (Lightweight)
 
-### Startup Flow (Screens 1–5)
+- [ ] **OFF-01**: Offline fallback identification works without network connectivity
+- [ ] **OFF-02**: Offline model size is under 10MB (excluding app bundle)
+- [ ] **OFF-03**: Offline results include evidence fields (e.g., bounding boxes + confidence) suitable for UI display
+- [ ] **OFF-04**: Offline ML stack and weights are commercially safe to distribute (no AGPL licensing chain)
 
-- [ ] **ONB-01**: Onboarding screens 1–3 match the handoff/startup screenshots and use localized Swedish copy with correct diacritics.
-- [ ] **ONB-02**: Onboarding screen #3 asks the user to download the on-device Gemma model and includes a clickable info link ("Varför?").
-- [ ] **ONB-03**: If the user accepts, model download starts immediately and continues in the background while the user proceeds.
+### Pricing Comps (Tradera)
 
-### Model Download & Install UX (Real State)
+- [ ] **MKT-01**: Sold-price comps can be fetched on demand and in background when enabled
+- [ ] **MKT-02**: User can disable sold-price comps; when disabled, the app performs no comps network calls
+- [ ] **MKT-03**: Tradera proxy is protected against abuse (auth and/or rate limiting) and has clear error handling
 
-- [ ] **MDL-01**: Model download is gated behind persisted user consent (no silent auto-download on app start).
-- [ ] **MDL-02**: Model download UI reflects real state (downloading/installing/ready/failed) and shows progress when available (no fake progress).
-- [ ] **MDL-03**: On successful install, app shows a completion popup using the reference red color and explains what the model enables (offline AI scan/faster identify/better results).
-- [ ] **MDL-04**: Failures are recoverable (retry) and do not block onboarding completion.
+### Controls + Privacy
 
-### Auth (Signup-First + Trouble Link)
+- [ ] **PRIV-01**: First-use disclosure explains cloud identification and what image data is uploaded, with a reversible control
+- [ ] **PRIV-02**: Settings include "Send crops for cloud identification" (default ON) and "Fetch sold-price comps" (default ON)
+- [ ] **PRIV-03**: When cloud identification is enabled, only the minimum required image data is sent (e.g., crops), and metadata is stripped
 
-- [ ] **AUTH-01**: Login experience is signup-first (primary/default mode is "Skapa konto") and matches the reference glass/motif layout.
-- [ ] **AUTH-02**: Login includes an explicit "Lost password / Trouble signing in" affordance with OTP-friendly wording.
+### Dependency Modernization
 
-### Screen Visual Parity (Reference Pack Pages 4–8)
+- [ ] **DEP-01**: Update Riverpod to the targeted current stable range and keep the app functional
+- [ ] **DEP-02**: Update Drift to the targeted current stable range and keep migrations/queries working
+- [ ] **DEP-03**: Update camera and workmanager packages without regressions
+- [ ] **DEP-04**: Build passes on latest Flutter stable; no deprecated APIs in use
+- [ ] **DEP-05**: Full test suite passes after dependency updates
 
-- [ ] **SCR-01**: Home screen matches reference layout (hero CTA + bento tiles + capsule nav), with placeholder copy replaced by real Swedish.
-- [ ] **SCR-02**: Current Haul screen matches reference layout (summary with "Totalt värde:" and list rows; camera action styled per reference).
-- [ ] **SCR-03**: History empty state matches reference (search bar + pebble filters + coffee-cup empty state + Swedish copy).
-- [ ] **SCR-04**: Draft editor matches reference (stacked glass, preview, AI tags, fields incl. "Pris (SEK)", save/delete actions styled per reference).
-- [ ] **SCR-05**: Profile/Settings matches reference (bento modules: "Molnsynk & Data", "AI & Modell", "Integritet"), clean by default.
+### UI Tokens + Dark Mode (UI System v2 Adoption)
 
-### Localization & Copy Quality
-
-- [ ] **L10N-01**: No new user-facing strings are hardcoded in widgets; all UI strings come from `AppLocalizations`.
-- [ ] **L10N-02**: Swedish copy ships with correct spelling and diacritics (å, ä, ö), and known reference-pack typos/placeholders are fixed.
-- [ ] **L10N-03**: Handwritten font is used only for accent typography (never for buttons, forms, or long paragraphs).
-
-### Regression Safety (Goldens)
-
-- [ ] **QA-01**: Golden tests exist/are updated for the most important Nature Distilled screens to prevent UI drift (at minimum: Login, Home, History empty, Draft editor).
-
-### Offline-First Promise
-
-- [ ] **OFF-01**: Offline flows remain functional for core product use; UI changes do not introduce online-only blockers (except existing price fetch behavior).
+- [ ] **UI-01**: Light and dark themes are wired to semantic + ramp tokens (no hardcoded UI colors/assets in migrated UI)
+- [ ] **UI-02**: System/manual dark mode toggle exists and persists user preference
+- [ ] **UI-03**: Shared primitives fully respect tokens (e.g., GlassSurface/Overlay/Board, NatureBackground, LogoMotifOverlay, BentoCard)
+- [ ] **UI-04**: Dedicated dark hero background token is used (no hardcoded dark images in hero contexts)
+- [ ] **UI-05**: Golden tests cover key primitives/screens for light/dark parity and pass in CI
 
 ## v2 Requirements
 
-### Additional Reskins
+Deferred (later 2026-2027): responsive layouts at scale, token governance tooling, and future-proofing exploration.
 
-- **SCR-06**: Reskin remaining non-referenced screens (scanner overlay/details/drafts list/full history) to the same tokens/primitives without changing IA.
+### Responsive Layout
 
-### Extra Polish
+- **RESP-01**: Define breakpoints and update key layout containers to adapt to tablets/foldables without overflow
+- **RESP-02**: Add tablet/foldable layouts for top flows and validate on real devices/emulators
 
-- **POL-01**: Add additional motion polish beyond the handoff only after v1 is visually locked and covered by goldens.
+### Token Governance
+
+- **GOV-01**: Export tokens to W3C Design Tokens JSON and version them
+- **GOV-02**: Add generator (JSON -> Dart) and CI drift checks
+- **GOV-03**: Enforce no new hardcoded colors/assets in UI layer (lint/CI)
+- **GOV-04**: Responsive typography audit across breakpoints
+
+### Future-Proofing (Low Priority)
+
+- **FUT-01**: Evaluate Material 3 Expressive adoption
+- **FUT-02**: Add variable font support (where beneficial)
+- **FUT-03**: Micro-interaction audit and performance optimization pass
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Changing the information architecture (routes/tabs) | Navigation must not regress; reference pack assumes 5-tab structure |
-| Auto-downloading Gemma without consent | Explicitly disallowed by handoff v2 (user must be asked on onboarding #3) |
-| Hardcoded strings in UI | Must be localized via `AppLocalizations` |
-| Using handwritten font for body/forms/buttons | Explicitly prohibited (accent-only) |
+| Native Android/iOS rewrite | Stay on Flutter; focus on incremental evolution |
+| Major architecture rewrite | Keep Riverpod + Drift; avoid destabilizing the offline-first core |
+| New platforms (web/desktop) | Maintain iOS/Android support first |
+| Revenue model changes (subscriptions, etc.) | Not part of this technical roadmap |
 
 ## Traceability
 
-Which phases cover which requirements. Populated/updated during roadmap creation.
+Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DS-01 | Phase 1 | Verified |
-| DS-02 | Phase 1 | Verified |
-| DS-03 | Phase 1 | Verified |
-| NAV-01 | Phase 2 | Verified |
-| NAV-02 | Phase 2 | Verified |
-| NAV-03 | Phase 2 | Verified |
-| ONB-01 | Phase 3 | Pending |
-| ONB-02 | Phase 3 | Pending |
-| ONB-03 | Phase 3 | Pending |
-| MDL-01 | Phase 3 | Pending |
-| MDL-02 | Phase 3 | Pending |
-| MDL-03 | Phase 3 | Pending |
-| MDL-04 | Phase 3 | Pending |
-| AUTH-01 | Phase 3 | Pending |
-| AUTH-02 | Phase 3 | Pending |
-| SCR-01 | Phase 4 | Pending |
-| SCR-02 | Phase 4 | Pending |
-| SCR-03 | Phase 4 | Pending |
-| SCR-04 | Phase 4 | Pending |
-| SCR-05 | Phase 4 | Pending |
-| L10N-01 | Phase 1 | Verified |
-| L10N-02 | Phase 1 | Verified |
-| L10N-03 | Phase 1 | Verified |
-| QA-01 | Phase 4 | Pending |
-| OFF-01 | Phase 4 | Pending |
+| AI-01 | TBD | Pending |
+| AI-02 | TBD | Pending |
+| AI-03 | TBD | Pending |
+| AI-04 | TBD | Pending |
+| AI-05 | TBD | Pending |
+| OFF-01 | TBD | Pending |
+| OFF-02 | TBD | Pending |
+| OFF-03 | TBD | Pending |
+| OFF-04 | TBD | Pending |
+| MKT-01 | TBD | Pending |
+| MKT-02 | TBD | Pending |
+| MKT-03 | TBD | Pending |
+| PRIV-01 | TBD | Pending |
+| PRIV-02 | TBD | Pending |
+| PRIV-03 | TBD | Pending |
+| DEP-01 | TBD | Pending |
+| DEP-02 | TBD | Pending |
+| DEP-03 | TBD | Pending |
+| DEP-04 | TBD | Pending |
+| DEP-05 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+| UI-04 | TBD | Pending |
+| UI-05 | TBD | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 25
-- Unmapped: 0
-
-## Spec References (Implementation Contract)
-
-- `docs/LoppisFynd_Nature_Distilled_Visual_Reference_Pack.pdf` (visual source of truth)
-- `docs/LoppisFynd_Nature_Distilled_Technical_Handoff_v2.md` (full technical contract; key areas include startup flow, model download, login, shared primitives, copy/l10n, QA)
-- `docs/UiUxOverHaul/Technical_Handoff_Patch_v2.md` (copy fixes + required primitives deltas)
+- Mapped to phases: 0
+- Unmapped: 25 (expected until ROADMAP.md is created)
 
 ---
-*Requirements defined: 2026-02-18*
+*Requirements defined: 2026-02-21*
+*Last updated: 2026-02-21 after initial definition*
