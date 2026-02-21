@@ -98,6 +98,9 @@ flutter:
 
   assets:
     - Assets/unnamed.jpg
+    - Assets/backgrounds/
+    - Assets/textures/
+    - Assets/logos/
 
   fonts:
     - family: Outfit
