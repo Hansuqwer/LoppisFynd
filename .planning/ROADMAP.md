@@ -27,11 +27,11 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
   2. Core capture + catalog flows work (camera scan, item create/edit, local persistence) without runtime errors.
   3. Existing local database migrations/queries continue to work with real user data.
   4. Full test suite passes (including CI) after dependency updates.
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Update Flutter + core packages and fix breakages
-- [ ] 01-02: Validate iOS/Android runtime + migrations + tests
+- [ ] 01-01-PLAN.md — Update core deps + platform baselines and fix breakages
+- [ ] 01-02-PLAN.md — Validate builds (Android flavors + iOS), goldens, and smoke tests
 
 ### Phase 2: Cloud AI + Privacy Controls
 **Goal**: Users can identify items via cloud AI by default (when online and allowed) with clear, reversible privacy controls and no first-run model download.
