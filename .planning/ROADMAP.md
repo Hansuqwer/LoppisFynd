@@ -1,8 +1,8 @@
-# Roadmap: LoppisFynd - Nature Distilled UI/UX Overhaul
+# Roadmap: FyndLoppis
 
 ## Overview
 
-Implement the Nature Distilled overhaul as a contract-driven retrofit: first lock in tokens/primitives and localization rules, then swap the shell to the capsule 5-tab navigation contract, deliver the full startup flow (onboarding + signup-first auth + consent-gated Gemma download with real state), and finally reskin the five core tabs with golden tests and offline-first regression safety.
+This delivery cycle removes the first-run AI download blocker by making cloud-first identification the default (with explicit privacy controls), keeps a lightweight opt-in offline fallback, hardens sold-price comps behavior, modernizes core dependencies to current stable, and finishes UI System v2 token adoption with dark mode parity.
 
 ## Phases
 
@@ -10,88 +10,100 @@ Implement the Nature Distilled overhaul as a contract-driven retrofit: first loc
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 1: Design System + Guardrails** - Tokens, clipped-blur glass primitives, and localization/copy rules. (completed 2026-02-18)
-- [x] **Phase 2: Capsule Navigation Shell** - Persistent Nature background + capsule nav with the 5-tab contract and state retention. (completed 2026-02-18)
-- [ ] **Phase 3: Startup + Auth + Model Download** - Onboarding 1-3 + signup-first login + consent-gated, real-state Gemma download.
-- [x] **Phase 4: Core Screens + Goldens** - Visual parity for core tabs/settings, offline-first safety, and golden regression coverage. (completed 2026-02-19)
+- [ ] **Phase 1: Dependency Modernization Baseline** - Update core packages and Flutter toolchain with tests passing.
+- [ ] **Phase 2: Cloud AI + Privacy Controls** - Default Gemini identification via server proxy with no first-run blocker.
+- [ ] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection.
+- [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification with evidence and safe licensing.
+- [ ] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across primitives plus golden coverage.
 
 ## Phase Details
 
-### Phase 1: Design System + Guardrails
-**Goal**: Users experience a consistent Nature Distilled visual language driven by tokens and reusable, performance-safe primitives (clipped blur), with localized copy conventions enforced.
+### Phase 1: Dependency Modernization Baseline
+**Goal**: The app runs on latest Flutter stable with updated Riverpod/Drift/camera/workmanager and no regressions.
 **Depends on**: Nothing (first phase)
-**Requirements**: DS-01, DS-02, DS-03, L10N-01, L10N-02, L10N-03
+**Requirements**: DEP-01, DEP-02, DEP-03, DEP-04, DEP-05
 **Success Criteria** (what must be TRUE):
-  1. Nature Distilled surfaces share consistent spacing/radius/typography/blur because screens derive styling from tokens (not ad-hoc widget constants).
-  2. Any glass/blur surface is clipped to its bounds (no full-screen backdrop blur), and it looks correct in motion on-device.
-  3. Swedish UI copy in the updated surfaces ships with correct spelling and diacritics (å, ä, ö), and known reference-pack placeholders/typos are not shipped.
-  4. Handwritten accent typography is used only for brand accents (never for buttons, forms, or long paragraphs).
-**Plans**: 5 plans
+  1. App builds, installs, and launches on iOS and Android using latest Flutter stable.
+  2. Core capture + catalog flows work (camera scan, item create/edit, local persistence) without runtime errors.
+  3. Existing local database migrations/queries continue to work with real user data.
+  4. Full test suite passes (including CI) after dependency updates.
+**Plans**: TBD
 
 Plans:
-- [x] 01-01: Tokens + theme wiring (colors/spacing/radius/blur/motion/typography)
-- [x] 01-02: Shared primitives (NatureBackground, LogoMotifOverlay, GlassSurface, GlassBoard, StackedBackplates, CapsuleNavBar)
-- [x] 01-03: Localization/copy guardrails (AppLocalizations-only + copy fix pass)
-- [x] 01-04: Gap closure — tokenize LogoMotifOverlay shadows + clean custom_lint
-- [x] 01-05: Gap closure — on-device glass blur motion/perf verification
+- [ ] 01-01: Update Flutter + core packages and fix breakages
+- [ ] 01-02: Validate iOS/Android runtime + migrations + tests
 
-### Phase 2: Capsule Navigation Shell
-**Goal**: Users can navigate via the Nature Distilled capsule nav while keeping the 5-tab contract and preserving each tab's state.
+### Phase 2: Cloud AI + Privacy Controls
+**Goal**: Users can identify items via cloud AI by default (when online and allowed) with clear, reversible privacy controls and no first-run model download.
 **Depends on**: Phase 1
-**Requirements**: NAV-01, NAV-02, NAV-03
+**Requirements**: AI-01, AI-02, AI-03, AI-04, PRIV-01, PRIV-02, PRIV-03
 **Success Criteria** (what must be TRUE):
-  1. User can switch between exactly five tabs (Home, Scan, Haul, History, Profile) with no route/name regression.
-  2. Capsule nav shows an explicit selected "bubble" state consistent with the Visual Reference Pack.
-  3. Switching tabs preserves in-tab state (e.g., scroll positions/inputs) rather than rebuilding from scratch.
-  4. Nature background persists behind all tabs and content is not obscured by the capsule (safe insets).
-**Plans**: 2 plans
+  1. On a fresh install, the user can complete core flows (scan/capture, save items, browse/edit) without downloading any on-device AI model.
+  2. Before any cloud identification upload occurs, the user sees a first-use disclosure explaining what data is uploaded, and they can change this choice later.
+  3. When online and cloud identification is enabled, the user can run identification and receive results; the mobile app ships no cloud AI API keys.
+  4. When cloud identification is disabled, the app performs no cloud identification image uploads and the UI reflects that identification is disabled.
+  5. The disclosure/settings make it explicit that only minimal image data is uploaded (e.g., crops) and metadata is stripped.
+**Plans**: TBD
 
 Plans:
-- [x] 02-01: Replace app shell with persistent Nature background + IndexedStack state retention
-- [x] 02-02: Capsule nav selected-bubble behavior + tab contract assertions
+- [ ] 02-01: Add server-proxied Gemini identification as default
+- [ ] 02-02: Add first-use disclosure + privacy gate + settings controls
 
-### Phase 3: Startup + Auth + Model Download
-**Goal**: Users complete onboarding and access the app via a signup-first login, while optionally consenting to a real-state Gemma model download that continues in the background.
+### Phase 3: Sold-Price Comps Hardening
+**Goal**: Sold-price comps work reliably on demand and in background when enabled, with a true off switch and robust proxy protection.
 **Depends on**: Phase 2
-**Requirements**: ONB-01, ONB-02, ONB-03, MDL-01, MDL-02, MDL-03, MDL-04, AUTH-01, AUTH-02
+**Requirements**: MKT-01, MKT-02, MKT-03
 **Success Criteria** (what must be TRUE):
-  1. User can swipe through onboarding screens 1-3 and see localized Swedish copy with correct diacritics.
-  2. On onboarding screen #3, user is asked to download the on-device Gemma model and can tap a clickable info link ("Varför?") to learn more.
-  3. Model download never starts without explicit user consent; if consent is given, download starts immediately and continues in the background while the user proceeds.
-  4. Model download UI reflects real state (downloading/installing/ready/failed), shows progress when available (no fake progress), failures are recoverable via retry without blocking onboarding completion, and success triggers a completion popup using the reference red color.
-  5. Login experience is signup-first (default "Skapa konto"), matches the glass/motif reference, and includes a "Lost password / Trouble signing in" affordance with OTP-friendly wording.
-**Plans**: 4 plans
+  1. The user can fetch sold-price comps on demand for an item and see that results are associated with a last-updated time.
+  2. When background comps are enabled, comps refresh attempts happen automatically (best-effort) and update items when successful.
+  3. When the user disables sold-price comps, the app performs no comps network calls and the UI clearly indicates comps are disabled.
+  4. When the proxy rate-limits/blocks/errors, the user sees a clear, actionable error state and core app flows still work.
+**Plans**: TBD
 
 Plans:
-- [ ] 03-01: Onboarding screens 1-3 with Gemma callout + "Varför?" explainer sheet
-- [x] 03-02: Signup-first login UI + trouble-sign-in affordance
-- [ ] 03-03: Consent-gated model download/install controller + refactor download entrypoints (no auto-download)
-- [ ] 03-04: Model status chip + one-time red completion popup + Settings opt-in later (localized)
+- [ ] 03-01: Wire comps enable/disable and background refresh behavior
+- [ ] 03-02: Add proxy abuse protection and user-facing error handling
 
-### Phase 4: Core Screens + Goldens
-**Goal**: Users see the five core tabs/settings match the reference layouts and can use the app offline as before, with golden tests preventing future UI drift.
+### Phase 4: Opt-In Offline Fallback
+**Goal**: Users can optionally enable a lightweight offline identification mode that works without network connectivity and shows evidence.
 **Depends on**: Phase 3
-**Requirements**: SCR-01, SCR-02, SCR-03, SCR-04, SCR-05, QA-01, OFF-01
+**Requirements**: AI-05, OFF-01, OFF-02, OFF-03, OFF-04
 **Success Criteria** (what must be TRUE):
-  1. Home, Current Haul, History empty state, Draft editor, and Profile/Settings match the Visual Reference Pack layouts and show real Swedish copy (no placeholders).
-  2. Profile/Settings is clean by default and presents the referenced bento modules ("Molnsynk & Data", "AI & Modell", "Integritet").
-  3. Core offline workflows remain functional (save/manage finds) and UI changes do not introduce new online-only blockers.
-  4. Golden tests exist/are updated for the minimum key screens (Login, Home, History empty, Draft editor) and pass in CI to prevent UI drift.
-**Plans**: 3 plans
+  1. The user can opt into offline identification mode in settings (and turn it back off) without any mandatory downloads.
+  2. With no connectivity, the user can run offline fallback identification and receive results.
+  3. Any offline model download is clearly presented as optional, shows its size up front, and stays under 10MB (excluding the app bundle).
+  4. Offline results present evidence suitable for UI display (e.g., bounding boxes and confidence).
+  5. The user can view offline model attribution/license information in-app.
+**Plans**: TBD
 
 Plans:
-- [x] 04-01-PLAN.md — Reskin core screens to parity (Home, Haul, History empty, Draft editor)
-- [x] 04-02-PLAN.md — Reskin Profile/Settings modules to parity (clean default)
-- [x] 04-03-PLAN.md — Golden coverage + offline-first regression sanity
+- [ ] 04-01: Implement opt-in offline backend and evidence UI
+- [ ] 04-02: Validate size budget + licensing + packaging
+
+### Phase 5: UI Tokens + Dark Mode Parity
+**Goal**: UI System v2 tokens drive light/dark theming across shared primitives with regression protection.
+**Depends on**: Phase 4
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05
+**Success Criteria** (what must be TRUE):
+  1. The user can choose system/default or manual light/dark mode, and the preference persists.
+  2. Shared primitives render with token-driven colors/assets in both light and dark modes (no new hardcoded UI colors in migrated components).
+  3. Hero contexts in dark mode use the dedicated dark hero background token (not hardcoded images).
+  4. Golden tests cover key primitives/screens for light/dark parity and pass in CI.
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: Finish token adoption in primitives and wire dark mode toggle
+- [ ] 05-02: Add/maintain goldens + CI enforcement to prevent regressions
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design System + Guardrails | 5/5 | Complete    | 2026-02-18 |
-| 2. Capsule Navigation Shell | 2/2 | Complete    | 2026-02-18 |
-| 3. Startup + Auth + Model Download | 1/4 | In Progress | - |
-| 4. Core Screens + Goldens | 3/3 | Complete    | 2026-02-19 |
+| 1. Dependency Modernization Baseline | 0/TBD | Not started | - |
+| 2. Cloud AI + Privacy Controls | 0/TBD | Not started | - |
+| 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
+| 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
+| 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
