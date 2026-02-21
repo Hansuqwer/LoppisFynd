@@ -1,102 +1,111 @@
 # External Integrations
 
-**Analysis Date:** 2026-02-17
+**Analysis Date:** 2026-02-21
 
 ## APIs & External Services
 
-**Market data:**
-- Tradera Search API (SOAP)
-  - Used for: fetching ended-auction comps for price stats
-  - Called by: Supabase Edge Function `supabase/functions/tradera-proxy/index.ts`
-  - Upstream endpoint: `https://api.tradera.com/v3/searchservice.asmx` (SOAP action `SearchAdvanced`)
-  - Mobile entrypoint: `TRADERA_PROXY_URL` (`--dart-define`) consumed in `lib/core/config/app_config.dart` and used by `lib/services/market/tradera_client.dart`
-  - Edge secrets/env:
-    - `TRADERA_APP_ID`, `TRADERA_APP_KEY` (required)
-    - `TRADERA_SANDBOX`, `TRADERA_MAX_RESULT_AGE` (optional)
+**Market pricing (Tradera):**
+- Tradera SearchService SOAP API - used via a server-side proxy
+  - Server proxy implementation: `supabase/functions/tradera-proxy/index.ts`
+  - Upstream endpoint: `https://api.tradera.com/v3/searchservice.asmx` (hardcoded in `supabase/functions/tradera-proxy/index.ts`)
+  - Mobile client calls the proxy: `lib/services/market/tradera_client.dart` (posts JSON to `TRADERA_PROXY_URL`)
+  - Mobile wiring: `lib/main.dart` (constructs `TraderaClient(functionUrl: Uri.parse(config.traderaProxyUrl))`)
+  - Background sync depends on proxy presence: `lib/services/sync/background/background_sync.dart`
 
-**Error tracking / analytics:**
-- Sentry
-  - Used for: crash reporting + breadcrumb events (`lib/main.dart`, `lib/services/analytics/analytics_service.dart`)
-  - Auth/config: `SENTRY_DSN` via `--dart-define` read in `lib/core/config/app_config.dart`
-  - Environment tagging: `APP_ENV` via `--dart-define` (`lib/core/config/app_config.dart`)
+**Error tracking / analytics (Sentry):**
+- Sentry - crash/error reporting and breadcrumb-based analytics
+  - SDK: `sentry_flutter` in `pubspec.yaml`
+  - Init and release/env wiring: `lib/main.dart`
+  - Breadcrumb events/measurements: `lib/services/analytics/analytics_service.dart`
 
-**On-device model distribution:**
-- Remote model file host (not vendor-specific; configured by URL)
-  - Used for: downloading Gemma model artifact into app support dir (`lib/services/ai/model_manager.dart`)
-  - Config: `GEMMA_MODEL_URL` via `--dart-define` (`lib/core/config/app_config.dart`, `lib/main.dart`)
+**Model hosting (on-device AI downloads):**
+- HTTPS model file hosting for `GEMMA_MODEL_URL` (provider not hardcoded)
+  - Download client: `lib/services/ai/model_manager.dart`
+  - Config source: `lib/core/config/app_config.dart` (`GEMMA_MODEL_URL`)
+  - Wrangler/Cloudflare R2 upload workflow documented in `.sisyphus/notepads/cloudflare-r2-model-upload.md` and tooling declared in `package.json`
 
 ## Data Storage
 
 **Databases:**
 - Local: SQLite via Drift
-  - Location: `getApplicationDocumentsDirectory()/loppisfynd.sqlite` (`lib/core/database/app_database.dart`)
-  - Client/ORM: `drift` (`lib/core/database/**`)
+  - DB open/migrations: `lib/core/database/app_database.dart`
+  - File path: `getApplicationDocumentsDirectory()` + `loppisfynd.sqlite` (`lib/core/database/app_database.dart`)
+
 - Cloud: Supabase Postgres
-  - Schema + RLS policies: `supabase/migrations/20260214230000_hauls_scan_items.sql`, `supabase/migrations/20260215051000_scan_items_condition_multiplier.sql`
-  - Tables synced from mobile: `hauls`, `scan_items` (`lib/services/sync/cloud_metadata_sync_service.dart`)
-  - Connection: `SUPABASE_URL` (`--dart-define`), client initialized in `lib/main.dart`
+  - Client use (queries/upserts): `lib/services/sync/cloud_metadata_sync_service.dart`
+  - Tables/migrations + RLS policies:
+    - `supabase/migrations/20260214230000_hauls_scan_items.sql`
+    - `supabase/migrations/20260215051000_scan_items_condition_multiplier.sql`
 
 **File Storage:**
-- Local filesystem
-  - Used for: scan images + thumbnails (`lib/core/storage/scan_image_storage.dart`)
-- Supabase Storage
-  - Bucket: `scan-photos` (`supabase/migrations/20260215043000_storage_scan_photos.sql`)
-  - Upload/download/remove flows: `lib/services/sync/cloud_photo_sync_service.dart`
+- Supabase Storage bucket: `scan-photos`
+  - Bucket + policies: `supabase/migrations/20260215043000_storage_scan_photos.sql`
+  - Upload/download usage: `lib/services/sync/cloud_photo_sync_service.dart`
+  - Deletion usage: `lib/services/privacy/cloud_data_deletion_service.dart`
 
 **Caching:**
-- Local SQLite caching for market stats
-  - DAO: `lib/core/database/daos/market_stats_cache_dao.dart`
-  - Used by: `lib/services/market/market_bridge.dart`
+- Local persistence is the primary cache (Drift SQLite) - `lib/core/database/app_database.dart`
+- No dedicated external cache detected (e.g. Redis)
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Supabase Auth (Email OTP)
-  - Implementation: `SupabaseClient.auth.signInWithOtp` + `verifyOTP` in `lib/features/auth/email_otp_auth.dart`
-  - Client bootstrap: `Supabase.initialize(url: ..., anonKey: ...)` in `lib/main.dart`
-  - Config: `SUPABASE_URL`, `SUPABASE_ANON_KEY` via `--dart-define` (`lib/core/config/app_config.dart`)
+- Supabase Auth
+  - Mobile init: `lib/main.dart` (`Supabase.initialize(...)` gated by `AppConfig.hasSupabase`)
+  - Email OTP flow: `lib/features/auth/email_otp_auth.dart` (`signInWithOtp`, `verifyOTP`)
+  - Session/current user use: `lib/services/sync/cloud/cloud_sync_coordinator.dart`, `lib/services/sync/cloud_metadata_sync_service.dart`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- Sentry (`sentry_flutter`) gated by `SENTRY_DSN` (`lib/main.dart`, `lib/core/config/app_config.dart`)
+- Sentry (`sentry_flutter`) - `lib/main.dart`
 
 **Logs:**
-- No dedicated logging backend detected; app uses Sentry breadcrumbs for lightweight event trails (`lib/services/analytics/analytics_service.dart`)
+- No structured logging backend detected; Sentry breadcrumbs used when enabled - `lib/services/analytics/analytics_service.dart`
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Mobile distribution targets: Android (AAB) and iOS (Xcode project under `ios/`)
+- Mobile apps (Android/iOS). Android build flavors configured in `android/app/build.gradle.kts`.
+- Supabase (hosted DB/auth/storage + edge functions) config in `supabase/config.toml`.
+- Optional model hosting via Cloudflare R2/Workers described in `.sisyphus/notepads/cloudflare-r2-model-upload.md`.
 
 **CI Pipeline:**
-- GitHub Actions workflow `/.github/workflows/ci.yml`
-  - Runs: `dart format`, `flutter analyze`, `flutter test`
-  - Builds: `flutter build appbundle` for `staging` and `prod` flavors
-  - Optional Android signing secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`
+- GitHub Actions - `.github/workflows/ci.yml`
+  - Runs: `flutter analyze`, `flutter pub run custom_lint`, `flutter test`
+  - Builds Android App Bundles for `staging` and `prod` flavors
 
 ## Environment Configuration
 
-**Required env vars:**
-- App (compile-time `--dart-define`): `APP_ENV`, `TRADERA_PROXY_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GEMMA_MODEL_URL`, `SENTRY_DSN`
-- Feature flags (compile-time `--dart-define`): `FF_DISABLE_SYNC`, `FF_DISABLE_MARKET`, `FF_DISABLE_AI`, `FF_DISABLE_ANALYTICS`
-- Supabase Edge Functions secrets/env (server-side):
-  - `TRADERA_APP_ID`, `TRADERA_APP_KEY`, `TRADERA_SANDBOX`, `TRADERA_MAX_RESULT_AGE` (`supabase/functions/tradera-proxy/index.ts`)
-  - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (`supabase/functions/account-delete/index.ts`)
+**Required env vars (compile-time `--dart-define`):**
+- `APP_ENV` - read in `lib/core/config/app_config.dart` and used in `lib/main.dart` (Sentry environment)
+- `TRADERA_PROXY_URL` - read in `lib/core/config/app_config.dart`, used by `lib/services/market/tradera_client.dart` and `lib/services/sync/background/background_sync.dart`
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY` - read in `lib/core/config/app_config.dart`, used for `Supabase.initialize` in `lib/main.dart`
+- `GEMMA_MODEL_URL` - read in `lib/core/config/app_config.dart`, downloaded by `lib/services/ai/model_manager.dart`
+- `SENTRY_DSN` - read in `lib/core/config/app_config.dart`, used in `lib/main.dart`
+- `FF_DISABLE_SYNC`, `FF_DISABLE_MARKET`, `FF_DISABLE_AI`, `FF_DISABLE_ANALYTICS` - read in `lib/core/config/feature_flags.dart`
+
+**Required env vars (Supabase Edge Function secrets):**
+- Tradera proxy: `TRADERA_APP_ID`, `TRADERA_APP_KEY` (required), `TRADERA_SANDBOX`, `TRADERA_MAX_RESULT_AGE` (optional) - `supabase/functions/tradera-proxy/index.ts`
+- Account deletion: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` - `supabase/functions/account-delete/index.ts`
 
 **Secrets location:**
-- Mobile: passed at build time via `--dart-define` (`lib/core/config/app_config.dart`)
-- Supabase: configured as Supabase Edge Function secrets (referenced via `Deno.env.get(...)` in `supabase/functions/**`)
-- Repo includes `.env.example` (present) for environment configuration examples; contents not analyzed
+- Mobile app runtime config uses `--dart-define` (documented in `docs/release_playstore.md`); treat values as non-secret once shipped.
+- Server-side secrets are stored in Supabase secrets for Edge Functions - `supabase/functions/**`
+- Android signing secrets are provided via GitHub Actions secrets or local `android/key.properties` - `.github/workflows/ci.yml`, `android/app/build.gradle.kts`, `docs/release_playstore.md`
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- Not detected
+- Supabase Edge Function endpoints:
+  - `tradera-proxy` - `supabase/functions/tradera-proxy/index.ts`
+  - `account-delete` - `supabase/functions/account-delete/index.ts` (invoked by `lib/features/settings/account_deletion_screen.dart`)
 
 **Outgoing:**
-- Not detected
+- Tradera SOAP request from edge function: `supabase/functions/tradera-proxy/index.ts`
+- Model download via HTTPS from `GEMMA_MODEL_URL`: `lib/services/ai/model_manager.dart`
+- Supabase REST/storage operations from mobile client: `lib/services/sync/cloud_metadata_sync_service.dart`, `lib/services/sync/cloud_photo_sync_service.dart`
 
 ---
 
-*Integration audit: 2026-02-17*
+*Integration audit: 2026-02-21*

@@ -1,92 +1,108 @@
 # Technology Stack
 
-**Analysis Date:** 2026-02-17
+**Analysis Date:** 2026-02-21
 
 ## Languages
 
 **Primary:**
-- Dart (SDK constraint `^3.10.8`) - Flutter app code in `lib/**.dart`, tests in `test/**.dart`
+- Dart (Flutter) - application code in `lib/` and tests in `test/`
 
 **Secondary:**
-- Kotlin - Android entrypoint in `android/app/src/main/kotlin/se/fyndloppis/fynd_loppis/MainActivity.kt`
-- Swift - iOS entrypoint in `ios/Runner/AppDelegate.swift`
-- TypeScript (Deno runtime) - Supabase Edge Functions in `supabase/functions/**.ts`
-- SQL - Supabase Postgres schema migrations in `supabase/migrations/*.sql`
-- YAML/TOML - Tooling + backend config in `pubspec.yaml`, `analysis_options.yaml`, `.github/workflows/ci.yml`, `supabase/config.toml`
+- Kotlin/Gradle (Android build) - `android/app/build.gradle.kts`, `android/settings.gradle.kts`
+- Swift/Objective-C (iOS project scaffolding) - `ios/Runner/` (e.g. `ios/Runner/Info.plist`)
+- TypeScript (Supabase Edge Functions) - `supabase/functions/**/index.ts`
+- SQL (Supabase schema/migrations) - `supabase/migrations/*.sql`
+- YAML (tooling/config) - `.github/workflows/ci.yml`, `analysis_options.yaml`, `l10n.yaml`
+- JavaScript/JSON (Node tooling) - `package.json`, `package-lock.json`
 
 ## Runtime
 
 **Environment:**
-- Flutter (stable channel) pinned by revision in `.metadata` (revision `67323de285b00232883f53b84095eb72be97d35c`)
-- Android: Gradle Kotlin DSL + Java 17 (`android/app/build.gradle.kts`), `minSdk = 24`, `compileSdk = 36`
-- iOS: native host config in `ios/Runner/Info.plist` (camera + location usage strings; background fetch mode)
+- Flutter (stable channel, pinned by revision) - `.metadata`
+- Dart SDK constraint: `^3.10.8` - `pubspec.yaml`
+- Supabase Edge Functions runtime: Deno - `supabase/functions/**` and `supabase/config.toml` (`[edge_runtime] deno_version = 2`)
 
 **Package Manager:**
-- Flutter/Dart Pub
-- Lockfile: `pubspec.lock` (present)
+- Flutter Pub - `pubspec.yaml`, lockfile `pubspec.lock`
+- npm - `package.json`, lockfile `package-lock.json`
 
 ## Frameworks
 
 **Core:**
-- Flutter SDK - UI + platform integration
-- `flutter_riverpod` - DI/state management (`lib/core/app/providers.dart`)
-- Drift + SQLite (`drift`, `drift_flutter`, `sqlite3_flutter_libs`) - local offline-first database (`lib/core/database/app_database.dart`)
+- Flutter - mobile app framework, entrypoint `lib/main.dart`
+- flutter_riverpod `^2.6.1` - state management/providers in `lib/core/app/providers.dart`
 
-**Testing:**
-- `flutter_test` - unit/widget tests (`test/**`)
+**Local Data:**
+- drift `^2.31.0` + sqlite - local DB in `lib/core/database/app_database.dart` (SQLite file `loppisfynd.sqlite`)
 
-**Build/Dev:**
-- `build_runner` + `drift_dev` - code generation for Drift (`lib/core/database/app_database.g.dart`)
-- GitHub Actions CI - format/analyze/test + AAB builds (`.github/workflows/ci.yml`)
+**Cloud:**
+- supabase_flutter `^2.12.0` - auth/storage/database client init in `lib/main.dart`
+- Supabase Edge Functions - Deno handlers in `supabase/functions/tradera-proxy/index.ts` and `supabase/functions/account-delete/index.ts`
+
+**AI / On-device ML:**
+- flutter_gemma `^0.12.4` - inference backend in `lib/services/ai/inference/flutter_gemma_backend.dart`
+- google_mlkit_barcode_scanning `^0.14.2` - barcode scanning in `lib/features/scanner/scanner_screen.dart`
+
+**Background & Notifications:**
+- workmanager `^0.9.0+3` - periodic background sync in `lib/services/sync/background/background_sync.dart`
+- flutter_local_notifications `^20.1.0` - local notifications in `lib/services/notifications/app_notifications.dart`
+
+**Observability:**
+- sentry_flutter `^9.13.0` - initialization in `lib/main.dart`, breadcrumb analytics in `lib/services/analytics/analytics_service.dart`
+
+**UI / UX:**
+- google_fonts `^6.3.3` - bundled fonts (runtime fetching disabled) in `lib/main.dart`
+- flutter_animate `^4.5.2` - UI animation usage across `lib/`
+- fl_chart `^1.1.1` - charts usage across `lib/`
 
 ## Key Dependencies
 
 **Critical:**
-- `drift` / `drift_flutter` - local persistence + migrations (`lib/core/database/app_database.dart`)
-- `supabase_flutter` - optional cloud sync + auth (`lib/main.dart`, `lib/services/sync/**`)
-- `flutter_gemma` - on-device model inference backend (`lib/services/ai/inference/flutter_gemma_backend.dart`)
-- `workmanager` - background periodic market sync (`lib/services/sync/background/background_sync.dart`)
-- `sentry_flutter` - crash reporting + breadcrumb-style analytics (`lib/main.dart`, `lib/services/analytics/analytics_service.dart`)
+- `supabase_flutter` - user auth + cloud sync + edge function invocation (e.g. `lib/services/sync/cloud_metadata_sync_service.dart`, `lib/features/settings/account_deletion_screen.dart`)
+- `drift` / `sqlite3_flutter_libs` - offline-first persistence (`lib/core/database/app_database.dart`)
+- `http` - outbound HTTP for Tradera proxy calls and model downloads (`lib/services/market/tradera_client.dart`, `lib/services/ai/model_manager.dart`)
 
-**Infrastructure:**
-- `http` - model download + proxy calls (`lib/services/ai/model_manager.dart`, `lib/services/market/tradera_client.dart`)
-- `camera` - capture flow (`lib/features/scanner/**`)
-- `google_mlkit_barcode_scanning` - on-device barcode fallback scanning (`lib/features/scanner/scanner_screen.dart`)
-- `connectivity_plus` - online/offline gating (used by sync flows in `lib/services/sync/**`)
-- `flutter_local_notifications` - local notifications (`lib/services/notifications/app_notifications.dart`)
-- `geolocator` / `geocoding` - location + reverse geocode (haul pinning features in `lib/features/history/**`)
-- `permission_handler` - runtime permissions
+**Infrastructure / Device Capabilities:**
+- `camera` - camera capture (`android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`)
+- `geolocator` + `geocoding` - location + geocoding (`android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`)
+- `connectivity_plus` - online/offline detection in sync flows (referenced by sync orchestration under `lib/services/sync/`)
+- `permission_handler` - runtime permissions management (used across features under `lib/`)
 
 ## Configuration
 
 **Environment:**
-- Runtime configuration uses compile-time `--dart-define` values read in `lib/core/config/app_config.dart`:
+- Compile-time configuration via `--dart-define` parsed in `lib/core/config/app_config.dart`:
   - `APP_ENV`
   - `TRADERA_PROXY_URL`
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
   - `GEMMA_MODEL_URL`
   - `SENTRY_DSN`
-- Feature flags use compile-time booleans in `lib/core/config/feature_flags.dart`:
+- Feature flags via `--dart-define` in `lib/core/config/feature_flags.dart`:
   - `FF_DISABLE_SYNC`, `FF_DISABLE_MARKET`, `FF_DISABLE_AI`, `FF_DISABLE_ANALYTICS`
-- Android build flavors: `dev`, `staging`, `prod` (`android/app/build.gradle.kts`)
+- Example build/run invocation (placeholders) documented in `docs/release_playstore.md`
+- `.env.example` present for environment configuration (do not commit secrets)
 
 **Build:**
-- Analyzer/lints: `analysis_options.yaml` (includes `package:flutter_lints/flutter.yaml`)
-- Localization generation: `l10n.yaml` and generated files under `lib/gen/**`
-- CI builds AABs for `staging` and `prod` with `--dart-define=APP_ENV=...` (`.github/workflows/ci.yml`)
+- Android flavors: `dev`, `staging`, `prod` - `android/app/build.gradle.kts`
+- Android toolchain:
+  - Java 17 target/compile - `android/app/build.gradle.kts`, `.github/workflows/ci.yml`
+  - Android Gradle Plugin `8.11.1` + Kotlin `2.2.20` - `android/settings.gradle.kts`
+  - Gradle `8.14` - `android/gradle/wrapper/gradle-wrapper.properties`
+- GitHub Actions CI (format/analyze/test/build) - `.github/workflows/ci.yml`
+- Localization generation config - `l10n.yaml` (outputs to `lib/gen/`)
 
 ## Platform Requirements
 
 **Development:**
-- Flutter SDK (stable) at the revision pinned in `.metadata`
-- Android toolchain capable of Java 17 (`.github/workflows/ci.yml`, `android/app/build.gradle.kts`)
-- Supabase local tooling (Supabase CLI) for backend work in `supabase/` (config in `supabase/config.toml`)
+- Flutter (stable) pinned by revision in `.metadata` (CI installs the exact revision in `.github/workflows/ci.yml`)
+- Java 17 for Android builds - `.github/workflows/ci.yml`, `android/app/build.gradle.kts`
+- npm (for Cloudflare Wrangler tooling) - `package.json`
 
 **Production:**
-- Android App Bundle builds per flavor (`flutter build appbundle --flavor ...`) in `.github/workflows/ci.yml`
-- iOS configuration in `ios/**` (native permissions in `ios/Runner/Info.plist`)
+- Android app bundle builds for `staging` and `prod` flavors - `.github/workflows/ci.yml`, `docs/release_playstore.md`
+- Supabase project (database/auth/storage + edge functions) - `supabase/config.toml`, `supabase/migrations/*.sql`, `supabase/functions/**`
 
 ---
 
-*Stack analysis: 2026-02-17*
+*Stack analysis: 2026-02-21*
