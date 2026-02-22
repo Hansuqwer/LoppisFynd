@@ -95,3 +95,50 @@ jobs:
 
       - name: Build AAB (prod)
         run: flutter build appbundle --flavor prod --release --dart-define=APP_ENV=prod
+
+  ios-build:
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+
+      - name: Install Flutter (pinned to .metadata)
+        shell: bash
+        run: |
+          set -euo pipefail
+          REVISION=$(python3 - <<'PY'
+          import re
+          text = open('.metadata', 'r', encoding='utf-8').read()
+          m = re.search(r'revision:\s*"([0-9a-f]+)"', text)
+          if not m:
+              raise SystemExit('Could not find Flutter revision in .metadata')
+          print(m.group(1))
+          PY
+          )
+          echo "Using Flutter revision: ${REVISION}"
+
+          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git "$HOME/flutter"
+          cd "$HOME/flutter"
+          git fetch --depth 1 origin "${REVISION}"
+          git checkout "${REVISION}"
+
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          flutter --version
+
+      - name: CocoaPods version
+        run: pod --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --no-codesign
