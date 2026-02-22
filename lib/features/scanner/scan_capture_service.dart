@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/storage/scan_image_storage.dart';
 import '../../core/utils/serial_task_queue.dart';
 import '../../services/ai/inference/ai_types.dart';
@@ -20,21 +23,26 @@ class CapturedScan {
 
 class ScanCaptureService {
   ScanCaptureService({
+    required this.config,
     required AppDatabase db,
     required ScanImageStorage imageStorage,
     required AiInferenceIsolateService aiInference,
     required AnalyticsService analytics,
+    Future<bool> Function()? isOnline,
     Uuid? uuid,
   }) : _db = db,
        _imageStorage = imageStorage,
        _aiInference = aiInference,
        _analytics = analytics,
+       _isOnline = isOnline ?? _defaultIsOnline,
        _uuid = uuid ?? const Uuid();
 
+  final AppConfig config;
   final AppDatabase _db;
   final ScanImageStorage _imageStorage;
   final AiInferenceIsolateService _aiInference;
   final AnalyticsService _analytics;
+  final Future<bool> Function() _isOnline;
   final Uuid _uuid;
 
   // Guardrail: if users capture rapidly, serialize follow-up work
@@ -90,6 +98,39 @@ class ScanCaptureService {
 
       // Best-effort: thumbnail generation is critical; AI can be installed later.
       try {
+        int? privacyEnabled;
+        int? disclosureChoice;
+        try {
+          privacyEnabled = await _db.appSettingsDao.getInt(
+            kPrivacyCloudIdentificationEnabledKeyV1,
+          );
+          disclosureChoice = await _db.appSettingsDao.getInt(
+            kCloudIdentificationDisclosureChoiceKeyV1,
+          );
+        } catch (_) {
+          return;
+        }
+
+        final cloudEnabled = (privacyEnabled ?? 1) == 1;
+        final disclosureAccepted = disclosureChoice == 1;
+        if (!cloudEnabled || !disclosureAccepted) {
+          return;
+        }
+
+        if (!config.hasCloudAiProxy) {
+          return;
+        }
+
+        var online = false;
+        try {
+          online = await _isOnline();
+        } catch (_) {
+          online = false;
+        }
+        if (!online) {
+          return;
+        }
+
         final modeKey = userId == null
             ? 'ai_accuracy_mode_guest'
             : 'ai_accuracy_mode_$userId';
@@ -138,5 +179,20 @@ class ScanCaptureService {
     unawaited(backgroundWork);
 
     return CapturedScan(id: id, backgroundWork: backgroundWork);
+  }
+
+  static Future<bool> _defaultIsOnline() async {
+    final connectivity = Connectivity();
+    try {
+      final results = await connectivity.checkConnectivity();
+      return !_isOfflineConnectivity(results);
+    } catch (_) {
+      // Fail closed for background inference.
+      return false;
+    }
+  }
+
+  static bool _isOfflineConnectivity(List<ConnectivityResult> results) {
+    return results.length == 1 && results.single == ConnectivityResult.none;
   }
 }
