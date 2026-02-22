@@ -18,6 +18,7 @@ import '../../shared/widgets/glass_overlay.dart';
 import '../../core/navigation/spring_route.dart';
 import '../analyzer/item_detail_screen.dart';
 import '../../gen/app_localizations.dart';
+import '../../services/sync/cloud/entity_keys.dart';
 import 'barcode/mlkit_input_image.dart';
 import 'scan_capture_service.dart';
 import 'widgets/barcode_ar_overlay.dart';
@@ -571,6 +572,49 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
+  Future<void> _deleteScanItem(String scanItemId) async {
+    final db = ref.read(appDatabaseProvider);
+    final userId = ref.read(activeUserIdProvider);
+
+    final item = await db.scanItemsDao.getById(scanItemId, userId: userId);
+    if (item == null) return;
+
+    final photos = await db.scanItemPhotosDao.listByScanItemId(scanItemId);
+
+    final paths = <String>{};
+    final imagePath = item.imagePath;
+    final thumbPath = item.thumbPath;
+    if (imagePath != null && imagePath.isNotEmpty) paths.add(imagePath);
+    if (thumbPath != null && thumbPath.isNotEmpty) paths.add(thumbPath);
+    for (final p in photos) {
+      if (p.localPath.isNotEmpty) paths.add(p.localPath);
+      final tp = p.thumbPath;
+      if (tp != null && tp.isNotEmpty) paths.add(tp);
+    }
+
+    final keys = [
+      scanItemEntityKey(scanItemId),
+      scanPhotoEntityKey(scanItemId),
+    ];
+
+    await db.transaction(() async {
+      await db.pendingCloudSyncEntitiesDao.deleteByKeys(keys);
+      await db.entitySyncStatusesDao.deleteByKeys(keys);
+      await db.scanItemsDao.deleteById(id: scanItemId, userId: userId);
+    });
+
+    for (final path in paths) {
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // Best-effort cleanup.
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
@@ -701,6 +745,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               final items = snapshot.data ?? const [];
               return BatchTray(
                 items: items,
+                onItemDelete: _deleteScanItem,
                 onItemTap: (id) {
                   Navigator.of(context).push(
                     SpringRoute(

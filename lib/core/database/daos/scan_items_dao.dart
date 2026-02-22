@@ -398,4 +398,10 @@ class ScanItemsDao extends DatabaseAccessor<AppDatabase>
   Future<int> deleteAllForUser({required String? userId}) {
     return (delete(scanItems)..where((t) => _userScope(t, userId))).go();
   }
+
+  Future<int> deleteById({required String id, String? userId}) {
+    final stmt = delete(scanItems)..where((t) => t.id.equals(id));
+    stmt.where((t) => _userScope(t, userId));
+    return stmt.go();
+  }
 }

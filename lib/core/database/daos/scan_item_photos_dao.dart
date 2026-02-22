@@ -49,6 +49,16 @@ class ScanItemPhotosDao extends DatabaseAccessor<AppDatabase>
     return select(scanItemPhotos).get();
   }
 
+  Future<List<ScanItemPhoto>> listByScanItemId(String scanItemId) {
+    return (select(scanItemPhotos)
+          ..where((t) => t.scanItemId.equals(scanItemId))
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
+          ]))
+        .get();
+  }
+
   Future<List<ScanItemPhoto>> listByScanItemIds(Iterable<String> scanItemIds) {
     final ids = scanItemIds.toList(growable: false);
     if (ids.isEmpty) return Future.value(const []);

@@ -8,28 +8,48 @@ import '../../../core/tokens/app_tokens.dart';
 import '../../../shared/widgets/bento_card.dart';
 import '../../../gen/app_localizations.dart';
 
-class BatchTray extends StatelessWidget {
+class BatchTray extends StatefulWidget {
   const BatchTray({
     super.key,
     required this.items,
     this.maxItems = 12,
     this.onItemTap,
+    this.onItemDelete,
   });
 
   final List<ScanItem> items;
   final int maxItems;
   final ValueChanged<String>? onItemTap;
+  final ValueChanged<String>? onItemDelete;
+
+  @override
+  State<BatchTray> createState() => _BatchTrayState();
+}
+
+class _BatchTrayState extends State<BatchTray> {
+  var _dragging = false;
+  var _trashHover = false;
+
+  void _setDragging(bool value) {
+    if (_dragging == value) return;
+    setState(() {
+      _dragging = value;
+      if (!_dragging) _trashHover = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return BentoCard(child: Text(l10n.scannerNoScansYet));
     }
 
-    final shown = items.length > maxItems
-        ? items.take(maxItems).toList()
-        : items;
+    final shown = widget.items.length > widget.maxItems
+        ? widget.items.take(widget.maxItems).toList()
+        : widget.items;
+
+    final deleteEnabled = widget.onItemDelete != null;
 
     return BentoCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -47,13 +67,31 @@ class BatchTray extends StatelessWidget {
                 ),
               ),
               Text(
-                items.length.toString(),
+                widget.items.length.toString(),
                 style: AppTypography.metricsFrom(
                   Theme.of(
                     context,
                   ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
+              if (deleteEnabled) ...[
+                const SizedBox(width: AppSpacing.sm),
+                AnimatedOpacity(
+                  opacity: _dragging ? 1 : 0.18,
+                  duration: const Duration(milliseconds: 150),
+                  child: _TrashTarget(
+                    hovered: _trashHover,
+                    onHoverChanged: (value) {
+                      if (_trashHover == value) return;
+                      setState(() => _trashHover = value);
+                    },
+                    onAccept: (id) {
+                      widget.onItemDelete?.call(id);
+                      _setDragging(false);
+                    },
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -65,14 +103,109 @@ class BatchTray extends StatelessWidget {
               separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
               itemBuilder: (context, index) {
                 final item = shown[index];
-                return _TrayItem(
+                final tile = _TrayItem(
                   item: item,
-                  onTap: onItemTap == null ? null : () => onItemTap!(item.id),
+                  onTap: widget.onItemTap == null
+                      ? null
+                      : () => widget.onItemTap!(item.id),
+                );
+
+                if (!deleteEnabled) return tile;
+
+                return LongPressDraggable<String>(
+                  data: item.id,
+                  onDragStarted: () => _setDragging(true),
+                  onDragEnd: (_) => _setDragging(false),
+                  onDraggableCanceled: (_, _) => _setDragging(false),
+                  feedback: _TrayItemFeedback(item: item),
+                  childWhenDragging: Opacity(opacity: 0.35, child: tile),
+                  child: tile,
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TrashTarget extends StatelessWidget {
+  const _TrashTarget({
+    required this.hovered,
+    required this.onHoverChanged,
+    required this.onAccept,
+  });
+
+  final bool hovered;
+  final ValueChanged<bool> onHoverChanged;
+  final ValueChanged<String> onAccept;
+
+  @override
+  Widget build(BuildContext context) {
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (details) {
+        onHoverChanged(true);
+        return true;
+      },
+      onLeave: (_) => onHoverChanged(false),
+      onAcceptWithDetails: (details) {
+        onHoverChanged(false);
+        onAccept(details.data);
+      },
+      builder: (context, candidates, rejected) {
+        return Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: hovered
+                ? AppColors.dopamineRed.withValues(alpha: 0.26)
+                : AppColors.surface.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: hovered
+                  ? AppColors.dopamineRed.withValues(alpha: 0.6)
+                  : AppColors.borderSubtle,
+            ),
+          ),
+          child: Icon(
+            Icons.delete_rounded,
+            color: hovered ? AppColors.dopamineRed : AppColors.textSecondary,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TrayItemFeedback extends StatelessWidget {
+  const _TrayItemFeedback({required this.item});
+
+  final ScanItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final thumbPath = item.thumbPath;
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: 76,
+        height: 76,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: thumbPath == null
+              ? Container(
+                  color: AppColors.surface,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image_rounded),
+                )
+              : Image.file(
+                  File(thumbPath),
+                  fit: BoxFit.cover,
+                  cacheWidth: 152,
+                  cacheHeight: 152,
+                ),
+        ),
       ),
     );
   }
@@ -164,7 +297,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       ScanItemStatus.failed => (
         Icons.error_outline_rounded,
-        AppColors.primaryAction,
+        AppColors.dopamineRed,
         AppColors.textOnPrimary,
       ),
     };

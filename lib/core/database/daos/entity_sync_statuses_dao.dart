@@ -53,4 +53,12 @@ class EntitySyncStatusesDao extends DatabaseAccessor<AppDatabase>
       ]);
     return q.watch();
   }
+
+  Future<int> deleteByKeys(Iterable<String> keys) {
+    final list = keys.toList(growable: false);
+    if (list.isEmpty) return Future.value(0);
+    return (delete(
+      entitySyncStatuses,
+    )..where((t) => t.entityKey.isIn(list))).go();
+  }
 }

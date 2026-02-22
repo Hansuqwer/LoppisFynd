@@ -46,4 +46,10 @@ class ScanItemCompsDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> clear(String scanItemId) async {
+    await (delete(
+      scanItemComps,
+    )..where((t) => t.scanItemId.equals(scanItemId))).go();
+  }
 }
