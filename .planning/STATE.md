@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 **Phase:** 1 of 5 (Dependency Modernization Baseline)
 **Current Plan:** 2
 **Total Plans in Phase:** 2
-**Status:** Ready to execute
+**Status:** Blocked on checkpoint (awaiting human verification)
 **Last Activity:** 2026-02-22
 **Progress:** [█████░░░░░] 50%
 
@@ -35,14 +35,18 @@ None yet.
 
 ### Pending Todos
 
-None yet.
+- Manual smoke test on Android device (staging/prod release) for core flows.
+- Review updated goldens under `test/goldens/` (if changed) and confirm diffs are intentional.
+- iOS minimal smoke test is deferred/skipped due to no macOS access (risk: iOS build/runtime regressions may be undetected).
 
 ### Blockers/Concerns
 
-None.
+- **Blocked:** Manual verification for Phase 01 Plan 02 checkpoint (Android smoke test + golden review).
+- **Skipped/Deferred:** iOS minimal smoke test (no macOS environment available).
+- **Risk:** Potential iOS build/runtime issues could slip through until macOS/iOS validation is available.
 
 ## Session Continuity
 
-**Last session:** 2026-02-22T00:12:11.504Z
-**Stopped At:** Completed 01-dependency-modernization-baseline-01-01-PLAN.md
-**Resume File:** None
+**Last session:** 2026-02-22T09:08:00Z
+**Stopped At:** Blocked on checkpoint: Android smoke test + golden review (iOS deferred) (01-dependency-modernization-baseline-01-02-PLAN.md)
+**Resume File:** .planning/phases/01-dependency-modernization-baseline/01-02-PLAN.md
