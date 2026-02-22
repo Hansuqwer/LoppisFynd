@@ -43,11 +43,12 @@ Plans:
   3. When online and cloud identification is enabled, the user can run identification and receive results; the mobile app ships no cloud AI API keys.
   4. When cloud identification is disabled, the app performs no cloud identification image uploads and the UI reflects that identification is disabled.
   5. The disclosure/settings make it explicit that only minimal image data is uploaded (e.g., crops) and metadata is stripped.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Add server-proxied Gemini identification as default
-- [ ] 02-02: Add first-use disclosure + privacy gate + settings controls
+- [ ] 02-01-PLAN.md — Add server-proxied Gemini identification endpoint
+- [ ] 02-02-PLAN.md — Add first-use disclosure + Privacy & Data toggles + gating
+- [ ] 02-03-PLAN.md — Wire cloudGemini default backend + remove Gemma first-run prompts
 
 ### Phase 3: Sold-Price Comps Hardening
 **Goal**: Sold-price comps work reliably on demand and in background when enabled, with a true off switch and robust proxy protection.
@@ -103,7 +104,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
-| 2. Cloud AI + Privacy Controls | 0/TBD | Not started | - |
+| 2. Cloud AI + Privacy Controls | 0/3 | Not started | - |
 | 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |

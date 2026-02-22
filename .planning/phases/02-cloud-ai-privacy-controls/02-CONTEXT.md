@@ -8,7 +8,9 @@
 
 Deliver cloud AI item identification as the default online identification path, gated behind a first-use disclosure and backed by clear, reversible privacy controls. This phase must avoid any first-run on-device model download and must make the user-facing behavior explicit when cloud identification is disabled or unavailable.
 
-Out of scope for this phase: opt-in offline identification fallback (planned Phase 4), and sold-price comps reliability/proxy hardening beyond adding the user-facing enable/disable control.
+Out of scope for this phase: lightweight offline object detection (planned Phase 4), and sold-price comps reliability/proxy hardening beyond adding the user-facing enable/disable control.
+
+This phase explicitly removes Gemma from the first-run flow and from the default identification path.
 
 </domain>
 
@@ -25,8 +27,8 @@ Out of scope for this phase: opt-in offline identification fallback (planned Pha
 ### Privacy controls in Settings
 - Settings includes a new top-level section named "Privacy & Data".
 - Controls are visible to all users by default.
-- Cloud control is a single toggle labeled "Cloud identification".
-- The cloud toggle has subtext that explicitly mentions the upload is minimal/crops-only.
+- Cloud control is a single toggle labeled "Send crops for cloud identification" (default ON).
+- The cloud toggle subtext explicitly mentions the upload is minimal (crops only).
 - "Fetch sold-price comps" is a toggle in the same "Privacy & Data" section.
 
 ### What gets uploaded (user-facing transparency)
@@ -36,9 +38,13 @@ Out of scope for this phase: opt-in offline identification fallback (planned Pha
 - Retention statement: uploaded image data is not stored on our server (processed transiently).
 
 ### Disabled/offline behavior
-- If "Cloud identification" is OFF in Settings, Identify appears disabled with a short hint to enable it in Settings.
+- If "Send crops for cloud identification" is OFF in Settings, Identify appears disabled with a short hint to enable it in Settings.
 - If the user is offline while cloud identification is ON, tapping Identify fails fast with an "You're offline" message and a Retry action (no queuing).
 - Blocked states include an "Open Settings" shortcut (both disabled and offline cases).
+
+### Removing Gemma from first-run
+- No onboarding or dashboard flow should prompt a Gemma download.
+- Any on-device identification remains opt-in only (not prompted by default).
 
 ### Claude's Discretion
 None specified.
