@@ -420,6 +420,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String get scannerBatchTrayTitle => 'Skanningsbricka';
 
   @override
+  String get scannerDeleteDropHint => 'Dra hit för att ta bort';
+
+  @override
+  String get scannerDeletedScan => 'Skanning borttagen.';
+
+  @override
+  String scannerDeleteFailed(Object error) {
+    return 'Kunde inte ta bort: $error';
+  }
+
+  @override
   String get haulTitle => 'Pågående fynd';
 
   @override

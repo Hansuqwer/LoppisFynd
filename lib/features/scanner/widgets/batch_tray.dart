@@ -80,6 +80,7 @@ class _BatchTrayState extends State<BatchTray> {
                   opacity: _dragging ? 1 : 0.18,
                   duration: const Duration(milliseconds: 150),
                   child: _TrashTarget(
+                    tooltip: l10n.scannerDeleteDropHint,
                     hovered: _trashHover,
                     onHoverChanged: (value) {
                       if (_trashHover == value) return;
@@ -132,11 +133,13 @@ class _BatchTrayState extends State<BatchTray> {
 
 class _TrashTarget extends StatelessWidget {
   const _TrashTarget({
+    required this.tooltip,
     required this.hovered,
     required this.onHoverChanged,
     required this.onAccept,
   });
 
+  final String tooltip;
   final bool hovered;
   final ValueChanged<bool> onHoverChanged;
   final ValueChanged<String> onAccept;
@@ -154,23 +157,26 @@ class _TrashTarget extends StatelessWidget {
         onAccept(details.data);
       },
       builder: (context, candidates, rejected) {
-        return Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: hovered
-                ? AppColors.dopamineRed.withValues(alpha: 0.26)
-                : AppColors.surface.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
+        return Tooltip(
+          message: tooltip,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
               color: hovered
-                  ? AppColors.dopamineRed.withValues(alpha: 0.6)
-                  : AppColors.borderSubtle,
+                  ? AppColors.dopamineRed.withValues(alpha: 0.26)
+                  : AppColors.surface.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(
+                color: hovered
+                    ? AppColors.dopamineRed.withValues(alpha: 0.6)
+                    : AppColors.borderSubtle,
+              ),
             ),
-          ),
-          child: Icon(
-            Icons.delete_rounded,
-            color: hovered ? AppColors.dopamineRed : AppColors.textSecondary,
+            child: Icon(
+              Icons.delete_rounded,
+              color: hovered ? AppColors.dopamineRed : AppColors.textSecondary,
+            ),
           ),
         );
       },

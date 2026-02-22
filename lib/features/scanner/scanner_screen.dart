@@ -573,45 +573,59 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Future<void> _deleteScanItem(String scanItemId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final db = ref.read(appDatabaseProvider);
     final userId = ref.read(activeUserIdProvider);
 
-    final item = await db.scanItemsDao.getById(scanItemId, userId: userId);
-    if (item == null) return;
+    try {
+      final item = await db.scanItemsDao.getById(scanItemId, userId: userId);
+      if (item == null) return;
 
-    final photos = await db.scanItemPhotosDao.listByScanItemId(scanItemId);
+      final photos = await db.scanItemPhotosDao.listByScanItemId(scanItemId);
 
-    final paths = <String>{};
-    final imagePath = item.imagePath;
-    final thumbPath = item.thumbPath;
-    if (imagePath != null && imagePath.isNotEmpty) paths.add(imagePath);
-    if (thumbPath != null && thumbPath.isNotEmpty) paths.add(thumbPath);
-    for (final p in photos) {
-      if (p.localPath.isNotEmpty) paths.add(p.localPath);
-      final tp = p.thumbPath;
-      if (tp != null && tp.isNotEmpty) paths.add(tp);
-    }
-
-    final keys = [
-      scanItemEntityKey(scanItemId),
-      scanPhotoEntityKey(scanItemId),
-    ];
-
-    await db.transaction(() async {
-      await db.pendingCloudSyncEntitiesDao.deleteByKeys(keys);
-      await db.entitySyncStatusesDao.deleteByKeys(keys);
-      await db.scanItemsDao.deleteById(id: scanItemId, userId: userId);
-    });
-
-    for (final path in paths) {
-      try {
-        final file = File(path);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      } catch (_) {
-        // Best-effort cleanup.
+      final paths = <String>{};
+      final imagePath = item.imagePath;
+      final thumbPath = item.thumbPath;
+      if (imagePath != null && imagePath.isNotEmpty) paths.add(imagePath);
+      if (thumbPath != null && thumbPath.isNotEmpty) paths.add(thumbPath);
+      for (final p in photos) {
+        if (p.localPath.isNotEmpty) paths.add(p.localPath);
+        final tp = p.thumbPath;
+        if (tp != null && tp.isNotEmpty) paths.add(tp);
       }
+
+      final keys = [
+        scanItemEntityKey(scanItemId),
+        scanPhotoEntityKey(scanItemId),
+      ];
+
+      await db.transaction(() async {
+        await db.pendingCloudSyncEntitiesDao.deleteByKeys(keys);
+        await db.entitySyncStatusesDao.deleteByKeys(keys);
+        await db.scanItemsDao.deleteById(id: scanItemId, userId: userId);
+      });
+
+      for (final path in paths) {
+        try {
+          final file = File(path);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {
+          // Best-effort cleanup.
+        }
+      }
+
+      await HapticFeedback.lightImpact();
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.scannerDeletedScan)));
+    } catch (e) {
+      await HapticFeedback.mediumImpact();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.scannerDeleteFailed('$e'))),
+      );
     }
   }
 

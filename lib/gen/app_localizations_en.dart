@@ -417,6 +417,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerBatchTrayTitle => 'Batch tray';
 
   @override
+  String get scannerDeleteDropHint => 'Drag here to delete';
+
+  @override
+  String get scannerDeletedScan => 'Removed scan.';
+
+  @override
+  String scannerDeleteFailed(Object error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
   String get haulTitle => 'Current haul';
 
   @override

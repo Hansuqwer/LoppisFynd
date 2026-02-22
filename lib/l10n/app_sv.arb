@@ -141,6 +141,10 @@
   "scannerBarcodeAimHint": "Rikta mot en streckkod för att upptäcka direkt.",
   "scannerNoScansYet": "Inga skanningar ännu.",
   "scannerBatchTrayTitle": "Skanningsbricka",
+  "scannerDeleteDropHint": "Dra hit för att ta bort",
+  "scannerDeletedScan": "Skanning borttagen.",
+  "scannerDeleteFailed": "Kunde inte ta bort: {error}",
+  "@scannerDeleteFailed": {"placeholders": {"error": {}}},
 
   "haulTitle": "Pågående fynd",
   "haulSubtitle": "Offline först. Lägg till medan du skannar, synka comps när du är online.",

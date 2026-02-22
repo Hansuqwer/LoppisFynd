@@ -836,6 +836,24 @@ abstract class AppLocalizations {
   /// **'Batch tray'**
   String get scannerBatchTrayTitle;
 
+  /// No description provided for @scannerDeleteDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag here to delete'**
+  String get scannerDeleteDropHint;
+
+  /// No description provided for @scannerDeletedScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed scan.'**
+  String get scannerDeletedScan;
+
+  /// No description provided for @scannerDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed: {error}'**
+  String scannerDeleteFailed(Object error);
+
   /// No description provided for @haulTitle.
   ///
   /// In en, this message translates to:

@@ -140,6 +140,10 @@
   "scannerBarcodeAimHint": "Aim at a barcode to detect instantly.",
   "scannerNoScansYet": "No scans yet.",
   "scannerBatchTrayTitle": "Batch tray",
+  "scannerDeleteDropHint": "Drag here to delete",
+  "scannerDeletedScan": "Removed scan.",
+  "scannerDeleteFailed": "Delete failed: {error}",
+  "@scannerDeleteFailed": {"placeholders": {"error": {}}},
 
   "haulTitle": "Current haul",
   "haulSubtitle": "Offline-first. Add items while scanning, then sync comps when online.",
