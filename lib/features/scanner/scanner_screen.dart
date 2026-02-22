@@ -323,6 +323,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   Future<void> _capture() async {
     final db = ref.read(appDatabaseProvider);
+    final config = ref.read(appConfigProvider);
     final imageStorage = ref.read(scanImageStorageProvider);
     final haulId = ref.read(defaultHaulIdProvider);
     final userId = ref.read(activeUserIdProvider);
@@ -340,6 +341,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final service =
         captureService ??
         ScanCaptureService(
+          config: config,
           db: db,
           imageStorage: imageStorage,
           aiInference: aiInference,
