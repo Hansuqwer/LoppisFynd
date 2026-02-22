@@ -140,5 +140,52 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
-      - name: Build iOS (no codesign)
-        run: flutter build ios --no-codesign
+      - name: Build iOS simulator app
+        run: flutter build ios --simulator
+
+      - name: Boot simulator, install, and launch
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(python3 - <<'PY'
+          import json, subprocess, re
+
+          data = json.loads(subprocess.check_output([
+              'xcrun', 'simctl', 'list', 'devices', 'available', '-j'
+          ]).decode('utf-8'))
+
+          devices = []
+          for runtime, ds in data.get('devices', {}).items():
+              for d in ds:
+                  if not d.get('isAvailable', False):
+                      continue
+                  if not d.get('deviceTypeIdentifier', '').startswith('com.apple.CoreSimulator.SimDeviceType.iPhone'):
+                      continue
+                  devices.append((runtime, d.get('name', ''), d.get('udid', '')))
+
+          if not devices:
+              raise SystemExit('No available iPhone simulators found')
+
+          def score(item):
+              runtime, name, _ = item
+              m = re.search(r'iOS-(\d+)-(\d+)', runtime)
+              major = int(m.group(1)) if m else 0
+              minor = int(m.group(2)) if m else 0
+              pref = 1 if 'iPhone 15' in name else 0
+              return (major, minor, pref)
+
+          runtime, name, udid = max(devices, key=score)
+          if not udid:
+              raise SystemExit('Selected simulator has no UDID')
+          print(udid)
+          PY
+          )
+          echo "Using simulator UDID: ${UDID}"
+
+          xcrun simctl boot "${UDID}" || true
+          xcrun simctl bootstatus "${UDID}" -b
+
+          APP_PATH="build/ios/iphonesimulator/Runner.app"
+          test -d "${APP_PATH}"
+          xcrun simctl install "${UDID}" "${APP_PATH}"
+          xcrun simctl launch "${UDID}" "se.fyndloppis.fyndLoppis"
