@@ -10,6 +10,8 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - roadmapv2/**
   plugins:
     - custom_lint
 

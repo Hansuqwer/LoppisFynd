@@ -239,8 +239,8 @@ class _LoppisfyndAppState extends ConsumerState<LoppisfyndApp> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<int>>(gemmaConsentProvider, (previous, next) {
-      final prev = previous?.valueOrNull ?? 0;
-      final current = next.valueOrNull ?? 0;
+      final prev = previous?.asData?.value ?? 0;
+      final current = next.asData?.value ?? 0;
       if (current == 1 && prev != 1) {
         unawaited(
           ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),

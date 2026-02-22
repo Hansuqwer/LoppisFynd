@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/database/daos/app_settings_dao.dart';

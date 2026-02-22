@@ -406,11 +406,12 @@ class _GemmaConsentModule extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text.rich(
               TextSpan(
-                text: '$body ',
+                text: body,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
                 children: [
+                  const WidgetSpan(child: SizedBox(width: 4)),
                   TextSpan(
                     text: whyLink,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(

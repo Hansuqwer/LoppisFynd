@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' as legacy;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -53,9 +54,10 @@ final gemmaConsentProvider = StreamProvider<int>((ref) {
 });
 
 final modelInstallControllerProvider =
-    StateNotifierProvider<ModelInstallController, ModelInstallControllerState>((
-      ref,
-    ) {
+    legacy.StateNotifierProvider<
+      ModelInstallController,
+      ModelInstallControllerState
+    >((ref) {
       final db = ref.watch(appDatabaseProvider);
       final config = ref.watch(appConfigProvider);
       final modelManager = ref.watch(modelManagerProvider);
@@ -116,7 +118,9 @@ final analyticsProvider = Provider<AnalyticsService>((ref) {
 
 final appStartAtProvider = Provider<DateTime>((ref) => DateTime.now());
 
-final startupMetricsReportedProvider = StateProvider<bool>((ref) => false);
+final startupMetricsReportedProvider = legacy.StateProvider<bool>(
+  (ref) => false,
+);
 
 final authSessionProvider = StreamProvider<Session?>((ref) async* {
   final config = ref.watch(appConfigProvider);
@@ -147,8 +151,8 @@ final isOnlineProvider = StreamProvider<bool>((ref) async* {
 });
 
 // Deep-link skeleton: routes can set these before landing in the app shell.
-final deepLinkTabIndexProvider = StateProvider<int?>((ref) => null);
-final deepLinkScanItemIdProvider = StateProvider<String?>((ref) => null);
+final deepLinkTabIndexProvider = legacy.StateProvider<int?>((ref) => null);
+final deepLinkScanItemIdProvider = legacy.StateProvider<String?>((ref) => null);
 
 bool _isOfflineConnectivity(List<ConnectivityResult> results) {
   return results.length == 1 && results.single == ConnectivityResult.none;

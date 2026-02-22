@@ -101,8 +101,8 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
       prev,
       next,
     ) {
-      final wasOnline = prev?.valueOrNull ?? true;
-      final isOnline = next.valueOrNull ?? true;
+      final wasOnline = prev?.asData?.value ?? true;
+      final isOnline = next.asData?.value ?? true;
       if (wasOnline || !isOnline) return;
       ref.read(cloudSyncCoordinatorProvider).syncIfNeeded(isOnline: true);
     });
@@ -111,11 +111,11 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
       prev,
       next,
     ) {
-      final hadSession = prev?.valueOrNull != null;
-      final hasSession = next.valueOrNull != null;
+      final hadSession = prev?.asData?.value != null;
+      final hasSession = next.asData?.value != null;
       if (hadSession || !hasSession) return;
 
-      final online = ref.read(isOnlineProvider).valueOrNull ?? true;
+      final online = ref.read(isOnlineProvider).asData?.value ?? true;
       ref
           .read(cloudSyncCoordinatorProvider)
           .syncIfNeeded(isOnline: online, force: true);
