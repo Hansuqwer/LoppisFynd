@@ -107,6 +107,75 @@ class AppLocalizationsSv extends AppLocalizations {
   String get onboardingNotNow => 'Inte nu';
 
   @override
+  String get cloudDisclosureTitle => 'Molnidentifiering';
+
+  @override
+  String get cloudDisclosureBullet1 =>
+      'Använder moln-AI för att föreslå nyckelord för ditt fynd.';
+
+  @override
+  String get cloudDisclosureBullet2 =>
+      'Laddar bara upp beskärningar (aldrig hela fotot).';
+
+  @override
+  String get cloudDisclosureBullet3 =>
+      'Du kan stänga av detta när som helst i Inställningar.';
+
+  @override
+  String get cloudDisclosureLearnMoreCta => 'Läs mer';
+
+  @override
+  String get cloudDisclosureEnable => 'Aktivera molnidentifiering';
+
+  @override
+  String get cloudDisclosureNotNow => 'Inte nu';
+
+  @override
+  String get cloudDisclosureLearnMoreTitle => 'Läs mer';
+
+  @override
+  String get cloudDisclosureLearnMoreIntro =>
+      'Molnidentifiering använder moln-AI. Så här fungerar det:';
+
+  @override
+  String get cloudDisclosurePreviewLabel => 'Förhandsvisning';
+
+  @override
+  String get cloudDisclosurePreviewPlaceholder =>
+      'En förhandsvisning av en beskärning visas här när en bild finns.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet1 =>
+      'Leverantören beskrivs som moln-AI (vi namnger inte leverantören här).';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet2 =>
+      'Vi laddar bara upp beskärningar, aldrig hela fotot.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet3 =>
+      'Metadata tas bort innan uppladdning.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet4 =>
+      'Bilddata behandlas tillfälligt och lagras inte på vår server.';
+
+  @override
+  String get cloudIdentifyDisabledHint =>
+      'Molnidentifiering är avstängt. Aktivera i Inställningar för att använda Identifiera.';
+
+  @override
+  String get cloudIdentifyOfflineTitle => 'Du är offline';
+
+  @override
+  String get cloudIdentifyOfflineBody =>
+      'Molnidentifiering kräver internet. Försök igen när du är online.';
+
+  @override
+  String get cloudIdentifyNotAvailableYet =>
+      'Molnidentifiering är inte inkopplat än.';
+
+  @override
   String get bannerOffline => 'Offline-läge: prishämtning är pausad.';
 
   @override
@@ -120,6 +189,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get commonDelete => 'Ta bort';
+
+  @override
+  String get commonOpenSettings => 'Öppna inställningar';
 
   @override
   String get commonInstall => 'Installera';

@@ -106,6 +106,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingNotNow => 'Not now';
 
   @override
+  String get cloudDisclosureTitle => 'Cloud identification';
+
+  @override
+  String get cloudDisclosureBullet1 =>
+      'Uses cloud AI to suggest keywords for your item.';
+
+  @override
+  String get cloudDisclosureBullet2 =>
+      'Uploads crops only (never the full photo).';
+
+  @override
+  String get cloudDisclosureBullet3 =>
+      'You can turn this off anytime in Settings.';
+
+  @override
+  String get cloudDisclosureLearnMoreCta => 'Learn more';
+
+  @override
+  String get cloudDisclosureEnable => 'Enable cloud identification';
+
+  @override
+  String get cloudDisclosureNotNow => 'Not now';
+
+  @override
+  String get cloudDisclosureLearnMoreTitle => 'Learn more';
+
+  @override
+  String get cloudDisclosureLearnMoreIntro =>
+      'Cloud identification uses cloud AI. Here’s what that means:';
+
+  @override
+  String get cloudDisclosurePreviewLabel => 'Preview';
+
+  @override
+  String get cloudDisclosurePreviewPlaceholder =>
+      'A crop preview will appear here when an image is available.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet1 =>
+      'Provider is described as cloud AI (we don’t name the vendor here).';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet2 =>
+      'We upload crops only, never the full photo.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet3 =>
+      'Metadata is stripped before upload.';
+
+  @override
+  String get cloudDisclosureLearnMoreBullet4 =>
+      'Image data is processed transiently and not stored on our server.';
+
+  @override
+  String get cloudIdentifyDisabledHint =>
+      'Cloud identification is turned off. Enable it in Settings to use Identify.';
+
+  @override
+  String get cloudIdentifyOfflineTitle => 'You’re offline';
+
+  @override
+  String get cloudIdentifyOfflineBody =>
+      'Cloud identification needs an internet connection. Try again when you’re online.';
+
+  @override
+  String get cloudIdentifyNotAvailableYet =>
+      'Cloud identification isn’t wired up yet.';
+
+  @override
   String get bannerOffline => 'Offline mode: price fetch is paused.';
 
   @override
@@ -119,6 +188,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonDelete => 'Delete';
+
+  @override
+  String get commonOpenSettings => 'Open Settings';
 
   @override
   String get commonInstall => 'Install';

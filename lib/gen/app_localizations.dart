@@ -272,6 +272,120 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get onboardingNotNow;
 
+  /// No description provided for @cloudDisclosureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud identification'**
+  String get cloudDisclosureTitle;
+
+  /// No description provided for @cloudDisclosureBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses cloud AI to suggest keywords for your item.'**
+  String get cloudDisclosureBullet1;
+
+  /// No description provided for @cloudDisclosureBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads crops only (never the full photo).'**
+  String get cloudDisclosureBullet2;
+
+  /// No description provided for @cloudDisclosureBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn this off anytime in Settings.'**
+  String get cloudDisclosureBullet3;
+
+  /// No description provided for @cloudDisclosureLearnMoreCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get cloudDisclosureLearnMoreCta;
+
+  /// No description provided for @cloudDisclosureEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable cloud identification'**
+  String get cloudDisclosureEnable;
+
+  /// No description provided for @cloudDisclosureNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get cloudDisclosureNotNow;
+
+  /// No description provided for @cloudDisclosureLearnMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get cloudDisclosureLearnMoreTitle;
+
+  /// No description provided for @cloudDisclosureLearnMoreIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud identification uses cloud AI. Here’s what that means:'**
+  String get cloudDisclosureLearnMoreIntro;
+
+  /// No description provided for @cloudDisclosurePreviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get cloudDisclosurePreviewLabel;
+
+  /// No description provided for @cloudDisclosurePreviewPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'A crop preview will appear here when an image is available.'**
+  String get cloudDisclosurePreviewPlaceholder;
+
+  /// No description provided for @cloudDisclosureLearnMoreBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider is described as cloud AI (we don’t name the vendor here).'**
+  String get cloudDisclosureLearnMoreBullet1;
+
+  /// No description provided for @cloudDisclosureLearnMoreBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'We upload crops only, never the full photo.'**
+  String get cloudDisclosureLearnMoreBullet2;
+
+  /// No description provided for @cloudDisclosureLearnMoreBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata is stripped before upload.'**
+  String get cloudDisclosureLearnMoreBullet3;
+
+  /// No description provided for @cloudDisclosureLearnMoreBullet4.
+  ///
+  /// In en, this message translates to:
+  /// **'Image data is processed transiently and not stored on our server.'**
+  String get cloudDisclosureLearnMoreBullet4;
+
+  /// No description provided for @cloudIdentifyDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud identification is turned off. Enable it in Settings to use Identify.'**
+  String get cloudIdentifyDisabledHint;
+
+  /// No description provided for @cloudIdentifyOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re offline'**
+  String get cloudIdentifyOfflineTitle;
+
+  /// No description provided for @cloudIdentifyOfflineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud identification needs an internet connection. Try again when you’re online.'**
+  String get cloudIdentifyOfflineBody;
+
+  /// No description provided for @cloudIdentifyNotAvailableYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud identification isn’t wired up yet.'**
+  String get cloudIdentifyNotAvailableYet;
+
   /// No description provided for @bannerOffline.
   ///
   /// In en, this message translates to:
@@ -301,6 +415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get commonDelete;
+
+  /// No description provided for @commonOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get commonOpenSettings;
 
   /// No description provided for @commonInstall.
   ///

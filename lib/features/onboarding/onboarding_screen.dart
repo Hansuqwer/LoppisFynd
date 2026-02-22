@@ -1,13 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app/providers.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
 import '../../shared/widgets/bento_card.dart';
+import '../../shared/widgets/cloud_identification_disclosure.dart';
 import '../../shared/widgets/glass_button.dart';
 import '../../shared/widgets/nature_background.dart';
 
@@ -23,45 +24,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   var _index = 0;
   var _ready = false;
 
-  /// 0/absent = unknown, 1 = accepted, 2 = declined.
-  var _gemmaConsent = 0;
-
-  late final TapGestureRecognizer _whyRecognizer;
-
   static const _onboardingPageIndexKey = 'onboarding_page_index_v1';
-  static const _gemmaConsentKey = 'gemma_consent_v1';
 
   @override
   void initState() {
     super.initState();
-    _whyRecognizer = TapGestureRecognizer()..onTap = () => _showWhySheet();
 
     scheduleMicrotask(() async {
       final db = ref.read(appDatabaseProvider);
       final savedIndex = await db.appSettingsDao.getInt(
         _onboardingPageIndexKey,
       );
-      final savedConsent = await db.appSettingsDao.getInt(_gemmaConsentKey);
 
       var initialIndex = savedIndex ?? 0;
       if (initialIndex < 0) initialIndex = 0;
       if (initialIndex > 2) initialIndex = 2;
 
-      final consent = savedConsent ?? 0;
-
       if (!mounted) return;
       setState(() {
         _index = initialIndex;
-        _gemmaConsent = consent;
         _controller = PageController(initialPage: initialIndex);
         _ready = true;
       });
+
+      if (!mounted) return;
+      unawaited(_maybeShowCloudDisclosure());
     });
   }
 
   @override
   void dispose() {
-    _whyRecognizer.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -77,17 +69,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await db.appSettingsDao.setInt(_onboardingPageIndexKey, index);
   }
 
-  Future<void> _setConsent(int consent) async {
-    setState(() => _gemmaConsent = consent);
+  Future<void> _maybeShowCloudDisclosure() async {
     final db = ref.read(appDatabaseProvider);
-    await db.appSettingsDao.setInt(_gemmaConsentKey, consent);
-  }
+    final existing =
+        (await db.appSettingsDao.getInt(
+          kCloudIdentificationDisclosureChoiceKeyV1,
+        )) ??
+        0;
+    if (existing != 0) return;
+    if (!mounted) return;
 
-  Future<void> _acceptConsentAndStartModelInstall() async {
-    await _setConsent(1);
-    unawaited(
-      ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+
+      final choice = await showCloudIdentificationDisclosure(
+        context,
+        l10n: l10n,
+      );
+      if (!mounted || choice == null) return;
+
+      await db.appSettingsDao.setInt(
+        kCloudIdentificationDisclosureChoiceKeyV1,
+        choice,
+      );
+      if (choice == 1) {
+        await db.appSettingsDao.setInt(
+          kPrivacyCloudIdentificationEnabledKeyV1,
+          1,
+        );
+      }
+    });
   }
 
   void _next() {
@@ -98,40 +110,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _controller?.previousPage(
       duration: AppMotion.normal,
       curve: AppMotion.curve,
-    );
-  }
-
-  void _showWhySheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.modelWhyTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.modelWhyBody,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -154,12 +132,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         title: l10n.onboardingOfflineTitle,
         body: l10n.onboardingOfflineBody,
         icon: Icons.offline_bolt_rounded,
-        showGemmaConsent: true,
       ),
     ];
 
     final isLast = _index == pages.length - 1;
-    final canComplete = !isLast || _gemmaConsent == 1 || _gemmaConsent == 2;
+    final canComplete = true;
 
     return Scaffold(
       body: Stack(
@@ -230,25 +207,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         context,
                                       ).textTheme.bodyLarge,
                                     ),
-                                    if (p.showGemmaConsent)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          top: AppSpacing.lg,
-                                        ),
-                                        child: _GemmaConsentModule(
-                                          title: l10n.modelCalloutTitle,
-                                          body: l10n.modelCalloutBody,
-                                          whyLink: l10n.modelWhyLink,
-                                          downloadNowLabel:
-                                              l10n.onboardingDownloadNow,
-                                          notNowLabel: l10n.onboardingNotNow,
-                                          consent: _gemmaConsent,
-                                          onDownloadNow:
-                                              _acceptConsentAndStartModelInstall,
-                                          onNotNow: () => _setConsent(2),
-                                          whyRecognizer: _whyRecognizer,
-                                        ),
-                                      ),
                                   ],
                                 ),
                               );
@@ -319,13 +277,11 @@ class _OnboardingPageData {
     required this.title,
     required this.body,
     required this.icon,
-    this.showGemmaConsent = false,
   });
 
   final String title;
   final String body;
   final IconData icon;
-  final bool showGemmaConsent;
 }
 
 class _ProgressDots extends StatelessWidget {
@@ -354,104 +310,6 @@ class _ProgressDots extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _GemmaConsentModule extends StatelessWidget {
-  const _GemmaConsentModule({
-    required this.title,
-    required this.body,
-    required this.whyLink,
-    required this.downloadNowLabel,
-    required this.notNowLabel,
-    required this.consent,
-    required this.onDownloadNow,
-    required this.onNotNow,
-    required this.whyRecognizer,
-  });
-
-  final String title;
-  final String body;
-  final String whyLink;
-  final String downloadNowLabel;
-  final String notNowLabel;
-  final int consent;
-  final VoidCallback onDownloadNow;
-  final VoidCallback onNotNow;
-  final TapGestureRecognizer whyRecognizer;
-
-  @override
-  Widget build(BuildContext context) {
-    final isAccepted = consent == 1;
-    final isDeclined = consent == 2;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.62),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text.rich(
-              TextSpan(
-                text: body,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                children: [
-                  const WidgetSpan(child: SizedBox(width: 4)),
-                  TextSpan(
-                    text: whyLink,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.deepSapphire,
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    recognizer: whyRecognizer,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: GlassButton(
-                    label: downloadNowLabel,
-                    onPressed: onDownloadNow,
-                    icon: Icon(
-                      isAccepted ? Icons.check_rounded : Icons.download_rounded,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: GlassButton(
-                    label: notNowLabel,
-                    tone: GlassButtonTone.neutral,
-                    onPressed: onNotNow,
-                    icon: Icon(
-                      isDeclined ? Icons.check_rounded : Icons.schedule_rounded,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

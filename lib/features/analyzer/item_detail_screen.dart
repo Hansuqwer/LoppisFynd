@@ -8,12 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
+import '../../shared/widgets/cloud_identification_disclosure.dart';
 import '../../services/ai/inference/ai_types.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../drafts/draft_editor_screen.dart';
+import '../settings/settings_screen.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../gen/app_localizations.dart';
 import 'flip_factor.dart';
@@ -95,6 +98,124 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       id: widget.scanItemId,
       to: ScanItemStatus.pendingSync,
     );
+  }
+
+  void _openSettings() {
+    Navigator.of(
+      context,
+    ).push(SpringRoute(builder: (_) => const SettingsScreen()));
+  }
+
+  Future<void> _showOfflineCloudIdentifySheet() {
+    final l10n = AppLocalizations.of(context)!;
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.cloudIdentifyOfflineTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.cloudIdentifyOfflineBody,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GlassButton(
+                        label: l10n.buttonRetry,
+                        icon: const Icon(Icons.refresh_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: GlassButton(
+                        label: l10n.commonOpenSettings,
+                        tone: GlassButtonTone.neutral,
+                        icon: const Icon(Icons.settings_rounded),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _openSettings();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleCloudIdentifyTap(
+    ScanItem item, {
+    required bool isOnline,
+  }) async {
+    final db = ref.read(appDatabaseProvider);
+    final enabled =
+        (await db.appSettingsDao.getInt(
+          kPrivacyCloudIdentificationEnabledKeyV1,
+        )) ??
+        1;
+    if (enabled != 1) return;
+
+    if (!isOnline) {
+      await _showOfflineCloudIdentifySheet();
+      return;
+    }
+
+    final choice =
+        (await db.appSettingsDao.getInt(
+          kCloudIdentificationDisclosureChoiceKeyV1,
+        )) ??
+        0;
+    if (choice != 1) {
+      File? preview;
+      final path = item.imagePath;
+      if (path != null && path.trim().isNotEmpty) {
+        preview = File(path);
+      }
+
+      final l10n = AppLocalizations.of(context)!;
+      final next = await showCloudIdentificationDisclosure(
+        context,
+        l10n: l10n,
+        previewImage: preview,
+      );
+      if (!mounted || next == null) return;
+      await db.appSettingsDao.setInt(
+        kCloudIdentificationDisclosureChoiceKeyV1,
+        next,
+      );
+      if (next != 1) return;
+
+      await db.appSettingsDao.setInt(
+        kPrivacyCloudIdentificationEnabledKeyV1,
+        1,
+      );
+    }
+
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)));
   }
 
   Future<String?> _identifyNow({
@@ -226,6 +347,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final db = ref.watch(appDatabaseProvider);
     final syncScheduler = ref.watch(syncSchedulerProvider);
     final userId = ref.watch(activeUserIdProvider);
+    final cloudIdentificationEnabled = ref
+        .watch(cloudIdentificationEnabledProvider)
+        .maybeWhen(data: (v) => v, orElse: () => true);
+    final isOnline = ref
+        .watch(isOnlineProvider)
+        .maybeWhen(data: (v) => v, orElse: () => true);
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -425,45 +552,34 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         children: [
                           Expanded(
                             child: GlassButton(
-                              label: _identifying
-                                  ? l10n.itemDetailIdentifying
-                                  : l10n.itemDetailIdentifyNow,
+                              label: l10n.itemDetailIdentifyNow,
                               icon: const Icon(Icons.psychology_alt_rounded),
-                              onPressed: _identifying
+                              onPressed: !cloudIdentificationEnabled
                                   ? null
                                   : () async {
-                                      final messenger = ScaffoldMessenger.of(
-                                        context,
+                                      await _handleCloudIdentifyTap(
+                                        item,
+                                        isOnline: isOnline,
                                       );
-                                      final msg = await _identifyNow(
-                                        db: db,
-                                        ai: ref.read(aiInferenceProvider),
-                                        scanItemId: item.id,
-                                        userId: userId,
-                                        imagePath: item.imagePath,
-                                      );
-                                      if (!mounted) return;
-                                      if (msg != null) {
-                                        messenger.showSnackBar(
-                                          SnackBar(content: Text(msg)),
-                                        );
-                                      }
                                     },
                             ),
                           ),
-                          if (_identifying) ...[
-                            const SizedBox(width: AppSpacing.sm),
-                            GlassButton(
-                              label: l10n.commonCancel,
-                              tone: GlassButtonTone.neutral,
-                              icon: const Icon(Icons.stop_rounded),
-                              onPressed: () {
-                                _identifyCancel?.cancel();
-                              },
-                            ),
-                          ],
                         ],
                       ),
+                      if (!cloudIdentificationEnabled) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          l10n.cloudIdentifyDisabledHint,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        GlassButton(
+                          label: l10n.commonOpenSettings,
+                          tone: GlassButtonTone.neutral,
+                          icon: const Icon(Icons.settings_rounded),
+                          onPressed: _openSettings,
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.sm),
                       GlassButton(
                         label: l10n.itemDetailDraftListing,
