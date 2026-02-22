@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ### Pending Todos
 
-- Push latest commits and confirm GitHub Actions job `ios-build` passes (`flutter build ios --no-codesign`).
+- Push latest commits and confirm GitHub Actions job `ios-build` passes (build iOS simulator app + install + launch).
 
 ### Blockers/Concerns
 
