@@ -1038,38 +1038,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get syncStatusProblemsTitle => 'Problem';
 
   @override
-  String get settingsOnDeviceModelTitle => 'Modell på enheten';
-
-  @override
-  String get settingsModelChecking => 'Kontrollerar…';
-
-  @override
-  String settingsModelInstalled(Object bytes) {
-    return 'Installerad ($bytes byte)';
-  }
-
-  @override
-  String get settingsModelNotInstalled => 'Inte installerad';
-
-  @override
-  String settingsModelExpectedPath(Object path) {
-    return 'Förväntad sökväg: $path';
-  }
-
-  @override
-  String get settingsDownloading => 'Laddar ner…';
-
-  @override
-  String get settingsDownloadModel => 'Ladda ner modell';
-
-  @override
-  String get settingsInstallFromFilePathLabel => 'Installera från filsökväg';
-
-  @override
-  String get settingsInstallFromFilePathHint =>
-      '/path/to/gemma_vision.litertlm';
-
-  @override
   String get loginAppName => 'Loppisfynd';
 
   @override
@@ -1235,79 +1203,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get itemDetailKeywordsTitle => 'Nyckelord';
-
-  @override
-  String get modelCalloutTitle => 'Ladda ned AI-modellen (Gemma)';
-
-  @override
-  String get modelCalloutBody =>
-      'Gör identifiering snabbare offline. Du kan ladda ned nu eller senare i Inställningar.';
-
-  @override
-  String get modelDownloadCta => 'Ladda ned';
-
-  @override
-  String get modelRetry => 'Försök igen';
-
-  @override
-  String get modelNotInstalled => 'Inte installerad';
-
-  @override
-  String get modelDownloading => 'Hämtar…';
-
-  @override
-  String modelDownloadingPercent(int percent) {
-    return 'Hämtar $percent%';
-  }
-
-  @override
-  String get modelInstalling => 'Installerar…';
-
-  @override
-  String get modelInstalled => 'Installerad ✓';
-
-  @override
-  String modelFailed(String message) {
-    return 'Misslyckades: $message';
-  }
-
-  @override
-  String get modelWhyLink => 'Varför?';
-
-  @override
-  String get modelWhyTitle => 'Varför behöver jag ladda ned en modell?';
-
-  @override
-  String get modelWhyBody =>
-      'För att kunna använda AI-funktioner offline. Modellen laddas ner till din enhet (ca 1 GB) och skickas inte till en server. På wifi tar det ofta ca 2–10 minuter.';
-
-  @override
-  String get modelInstall_chipLabelDownloading => 'Laddar ner';
-
-  @override
-  String get modelInstall_chipLabelInstalling => 'Installerar';
-
-  @override
-  String get modelInstall_chipLabelReady => 'Klar';
-
-  @override
-  String get modelInstall_chipLabelFailed => 'Misslyckades';
-
-  @override
-  String get modelInstall_chipRetryCta => 'Försök igen';
-
-  @override
-  String get modelInstall_popupTitle => 'AI är redo';
-
-  @override
-  String get modelInstall_popupBody =>
-      'AI-modellen är nu installerad. Du kan skanna och identifiera snabbare, även offline, med bättre träffar.';
-
-  @override
-  String get modelInstall_popupPrimaryCta => 'Toppen';
-
-  @override
-  String get modelInstall_popupSecondaryCta => 'Stäng';
 
   @override
   String get authTitleWelcome => 'Välkommen';

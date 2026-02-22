@@ -14,7 +14,6 @@ import 'core/storage/scan_image_storage.dart';
 import 'core/tokens/app_tokens.dart';
 import 'core/theme/app_theme.dart';
 import 'shared/widgets/bento_card.dart';
-import 'services/ai/model_manager.dart';
 import 'services/ai/inference/inference_isolate_service.dart';
 import 'services/market/market_bridge.dart';
 import 'services/market/market_data_source.dart';
@@ -138,28 +137,15 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
     },
   );
 
-  final modelManager = ModelManager(
-    spec: const ModelSpec(
-      id: 'gemma_vision',
-      fileName: 'gemma_vision.litertlm',
-    ),
-  );
-
-  final AiBackendKind backendKind;
-  String? modelPath;
-  Uri? cloudAiProxyUrl;
-  if (config.hasCloudAiProxy) {
-    backendKind = AiBackendKind.cloudGemini;
-    cloudAiProxyUrl = Uri.parse(config.cloudAiProxyUrl);
-  } else {
-    backendKind = AiBackendKind.flutterGemma;
-    final modelFile = await modelManager.modelFile();
-    modelPath = modelFile.path;
-  }
+  final backendKind = config.hasCloudAiProxy
+      ? AiBackendKind.cloudGemini
+      : AiBackendKind.notImplemented;
+  final cloudAiProxyUrl = config.hasCloudAiProxy
+      ? Uri.parse(config.cloudAiProxyUrl)
+      : null;
 
   final aiInference = AiInferenceIsolateService(
     backendKind: backendKind,
-    modelPath: modelPath,
     cloudAiProxyUrl: cloudAiProxyUrl,
   );
 
@@ -167,7 +153,6 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
     _AppRoot(
       db: db,
       imageStorage: ScanImageStorage(rootDir: docsDir),
-      modelManager: modelManager,
       config: config,
       syncScheduler: syncScheduler,
       aiInference: aiInference,
@@ -179,7 +164,6 @@ class _AppRoot extends StatefulWidget {
   const _AppRoot({
     required this.db,
     required this.imageStorage,
-    required this.modelManager,
     required this.config,
     required this.syncScheduler,
     required this.aiInference,
@@ -187,7 +171,6 @@ class _AppRoot extends StatefulWidget {
 
   final AppDatabase db;
   final ScanImageStorage imageStorage;
-  final ModelManager modelManager;
   final AppConfig config;
   final SyncScheduler syncScheduler;
   final AiInferenceIsolateService aiInference;
@@ -209,7 +192,6 @@ class _AppRootState extends State<_AppRoot> {
       overrides: [
         appDatabaseProvider.overrideWithValue(widget.db),
         scanImageStorageProvider.overrideWithValue(widget.imageStorage),
-        modelManagerProvider.overrideWithValue(widget.modelManager),
         appConfigProvider.overrideWithValue(widget.config),
         syncSchedulerProvider.overrideWithValue(widget.syncScheduler),
         aiInferenceProvider.overrideWithValue(widget.aiInference),
@@ -230,36 +212,10 @@ class _LoppisfyndAppState extends ConsumerState<LoppisfyndApp> {
   @override
   void initState() {
     super.initState();
-
-    unawaited(_kickoffModelInstallIfConsented());
-  }
-
-  Future<void> _kickoffModelInstallIfConsented() async {
-    try {
-      final consent = await ref.read(gemmaConsentProvider.future);
-      if (!mounted) return;
-      if (consent == 1) {
-        unawaited(
-          ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
-        );
-      }
-    } catch (_) {
-      // Best-effort; model download/install must never block app startup.
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<int>>(gemmaConsentProvider, (previous, next) {
-      final prev = previous?.asData?.value ?? 0;
-      final current = next.asData?.value ?? 0;
-      if (current == 1 && prev != 1) {
-        unawaited(
-          ref.read(modelInstallControllerProvider.notifier).startIfNeeded(),
-        );
-      }
-    });
-
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);

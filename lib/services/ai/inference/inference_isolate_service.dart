@@ -11,7 +11,6 @@ import '../../../core/utils/serial_task_queue.dart';
 import 'ai_prompts.dart';
 import 'ai_types.dart';
 import 'ai_pipeline.dart';
-import 'flutter_gemma_backend.dart';
 
 sealed class AiInferenceResult {
   const AiInferenceResult();
@@ -27,7 +26,7 @@ class BatchShelfInferenceResult extends AiInferenceResult {
   final AiBatchShelfResult value;
 }
 
-enum AiBackendKind { notImplemented, cloudGemini, flutterGemma }
+enum AiBackendKind { notImplemented, cloudGemini }
 
 class AiInferenceIsolateService {
   AiInferenceIsolateService({
@@ -300,14 +299,6 @@ Future<String> _infer({
     case AiBackendKind.cloudGemini:
       throw const ModelNotInstalledException(
         'Cloud AI cannot run in isolate. Use cloudGemini via run() path.',
-      );
-    case AiBackendKind.flutterGemma:
-      return inferJsonWithFlutterGemma(
-        rootIsolateToken: rootIsolateToken,
-        modelPath: modelPath,
-        prompt: prompt,
-        imagePath: imagePath,
-        maxTokens: maxTokens,
       );
   }
 }

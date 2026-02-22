@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +11,6 @@ import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_board.dart';
 import '../../shared/widgets/glass_button.dart';
-import '../../services/ai/model_manager.dart';
-import '../../services/ai/model_install_controller.dart';
 import '../../services/sync/cloud_photo_sync_service.dart';
 import '../../services/sync/cloud_metadata_sync_service.dart';
 import '../../services/sync/background/background_sync.dart';
@@ -25,13 +22,6 @@ import 'sync_status_screen.dart';
 
 import '../../gen/app_localizations.dart';
 
-class _ModelInfo {
-  const _ModelInfo({required this.state, required this.file});
-
-  final ModelInstallState state;
-  final File file;
-}
-
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -40,13 +30,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _sourcePathController = TextEditingController();
   final _displayNameController = TextEditingController();
-  String? _installError;
   bool _syncing = false;
   bool _cloudSyncing = false;
   bool _cloudPhotoSyncing = false;
-  bool _modelDownloading = false;
   bool _signingOut = false;
   String? _lastDisplayName;
 
@@ -83,16 +70,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }();
   }
 
-  Future<_ModelInfo> _loadModelInfo(ModelManager modelManager) async {
-    final state = await modelManager.state();
-    final file = await modelManager.modelFile();
-    return _ModelInfo(state: state, file: file);
-  }
-
   @override
   void dispose() {
     _devModeTapTimer?.cancel();
-    _sourcePathController.dispose();
     _displayNameController.dispose();
     super.dispose();
   }
@@ -122,48 +102,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _displayNameKey(String userId) => 'profile_display_name_$userId';
-
-  Future<void> _installFromPath() async {
-    final modelManager = ref.read(modelManagerProvider);
-    final sourcePath = _sourcePathController.text.trim();
-    if (sourcePath.isEmpty) return;
-
-    try {
-      setState(() => _installError = null);
-      await modelManager.installFromFile(source: File(sourcePath));
-      if (!mounted) return;
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _installError = '$e');
-    }
-  }
-
-  Future<void> _downloadModel() async {
-    if (_modelDownloading) return;
-    final config = ref.read(appConfigProvider);
-    if (!config.hasGemmaModelUrl) return;
-
-    setState(() => _modelDownloading = true);
-    try {
-      setState(() => _installError = null);
-      final db = ref.read(appDatabaseProvider);
-      await db.appSettingsDao.setInt(kGemmaConsentKeyV1, 1);
-
-      await ref
-          .read(modelInstallControllerProvider.notifier)
-          .startIfNeeded(force: true);
-
-      final controllerState = ref.read(modelInstallControllerProvider);
-      if (controllerState is ModelInstallControllerStateFailed) {
-        setState(() => _installError = controllerState.error);
-      } else {
-        setState(() {});
-      }
-    } finally {
-      if (mounted) setState(() => _modelDownloading = false);
-    }
-  }
 
   Future<void> _syncNow() async {
     if (_syncing) return;
@@ -264,10 +202,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
     final config = ref.watch(appConfigProvider);
-    final modelManager = ref.watch(modelManagerProvider);
-    final consent = ref
-        .watch(gemmaConsentProvider)
-        .maybeWhen(data: (v) => v, orElse: () => 0);
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
@@ -321,15 +255,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _SettingsModuleCard(
                   icon: Icons.psychology_alt_rounded,
                   title: l10n.settingsModuleAiModelTitle,
-                  child: _buildAiModelModule(
-                    context,
-                    l10n,
-                    db,
-                    config,
-                    modelManager,
-                    consent,
-                    userId,
-                  ),
+                  child: _buildAiModelModule(context, l10n, db, userId),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _SettingsModuleCard(
@@ -520,9 +446,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     BuildContext context,
     AppLocalizations l10n,
     dynamic db,
-    dynamic config,
-    ModelManager modelManager,
-    int consent,
     String? userId,
   ) {
     return Column(
@@ -564,105 +487,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     );
                   },
                 ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.md),
-        FutureBuilder<_ModelInfo>(
-          future: _loadModelInfo(modelManager),
-          builder: (context, snapshot) {
-            final info = snapshot.data;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.settingsOnDeviceModelTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  info == null
-                      ? l10n.settingsModelChecking
-                      : info.state.installed
-                      ? l10n.settingsModelInstalled(info.state.bytes ?? 0)
-                      : l10n.settingsModelNotInstalled,
-                ),
-                if (!_devModeEnabled && config.hasGemmaModelUrl && consent != 1)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                    child: GlassButton(
-                      label: l10n.settingsDownloadModel,
-                      icon: const Icon(Icons.cloud_download_rounded),
-                      onPressed: () async {
-                        await db.appSettingsDao.setInt(kGemmaConsentKeyV1, 1);
-                      },
-                    ),
-                  ),
-                if (_devModeEnabled) ...[
-                  if (info != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      l10n.settingsModelExpectedPath(info.file.path),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  if (config.hasGemmaModelUrl) ...[
-                    GlassButton(
-                      label: _modelDownloading
-                          ? l10n.settingsDownloading
-                          : l10n.settingsDownloadModel,
-                      onPressed: _modelDownloading ? null : _downloadModel,
-                      icon: const Icon(Icons.cloud_download_rounded),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  TextField(
-                    controller: _sourcePathController,
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsInstallFromFilePathLabel,
-                      hintText: l10n.settingsInstallFromFilePathHint,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GlassButton(
-                          label: l10n.commonInstall,
-                          onPressed: _installFromPath,
-                          icon: const Icon(Icons.download_rounded),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: GlassButton(
-                          label: l10n.commonDelete,
-                          tone: GlassButtonTone.neutral,
-                          onPressed: () async {
-                            await modelManager.deleteInstalled();
-                            if (!mounted) return;
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.delete_outline_rounded),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_installError != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      _installError!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.primaryAction,
-                      ),
-                    ),
-                  ],
-                ],
               ],
             );
           },

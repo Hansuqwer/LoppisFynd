@@ -15,7 +15,6 @@ import 'package:fynd_loppis/features/drafts/draft_editor_screen.dart';
 import 'package:fynd_loppis/gen/app_localizations.dart';
 import 'package:fynd_loppis/main.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
-import 'package:fynd_loppis/services/ai/model_manager.dart';
 import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
 
@@ -57,18 +56,10 @@ void main() {
       cloudAiProxyUrl: '',
       supabaseUrl: '',
       supabaseAnonKey: '',
-      gemmaModelUrl: '',
       sentryDsn: '',
     );
 
     final storage = ScanImageStorage(rootDir: root);
-    final modelManager = ModelManager(
-      spec: const ModelSpec(
-        id: 'gemma_vision',
-        fileName: 'gemma_vision.litertlm',
-      ),
-      baseDirProvider: () async => root,
-    );
     final aiInference = AiInferenceIsolateService();
     final syncScheduler = SyncScheduler(
       db: db,
@@ -80,7 +71,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           scanImageStorageProvider.overrideWithValue(storage),
-          modelManagerProvider.overrideWithValue(modelManager),
           appConfigProvider.overrideWithValue(config),
           syncSchedulerProvider.overrideWithValue(syncScheduler),
           aiInferenceProvider.overrideWithValue(aiInference),
@@ -115,7 +105,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           scanImageStorageProvider.overrideWithValue(storage),
-          modelManagerProvider.overrideWithValue(modelManager),
           appConfigProvider.overrideWithValue(config),
           syncSchedulerProvider.overrideWithValue(syncScheduler),
           aiInferenceProvider.overrideWithValue(aiInference),

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -18,9 +16,7 @@ import '../../features/analyzer/item_detail_screen.dart';
 import 'spring_route.dart';
 import '../../shared/widgets/capsule_nav_bar.dart';
 import '../../shared/widgets/nature_background.dart';
-import '../../shared/widgets/model_download_status_chip.dart';
 import '../../core/tokens/app_tokens.dart';
-import '../../services/ai/model_install_controller.dart';
 
 enum AppTab { dashboard, scanner, haul, history, profile }
 
@@ -34,8 +30,6 @@ class AppNavShell extends ConsumerStatefulWidget {
 class _AppNavShellState extends ConsumerState<AppNavShell> {
   var _tab = AppTab.dashboard;
 
-  static const _kGemmaReadyPopupShown = 'gemma_ready_popup_shown_v1';
-
   final _builtTabs = <int>{};
   final _tabCache = <int, Widget>{};
   late final ValueNotifier<AppTab> _activeTab;
@@ -44,7 +38,6 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
   late final ProviderSubscription<String?> _deepLinkItemSub;
   late final ProviderSubscription<AsyncValue<bool>> _onlineSub;
   late final ProviderSubscription<AsyncValue<Session?>> _authSub;
-  late final ProviderSubscription<ModelInstallControllerState> _modelInstallSub;
 
   int get _index => AppTab.values.indexOf(_tab);
 
@@ -120,66 +113,6 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
           .read(cloudSyncCoordinatorProvider)
           .syncIfNeeded(isOnline: online, force: true);
     });
-
-    _modelInstallSub = ref.listenManual<ModelInstallControllerState>(
-      modelInstallControllerProvider,
-      (prev, next) {
-        final wasReady = prev is ModelInstallControllerStateReady;
-        final isReady = next is ModelInstallControllerStateReady;
-        if (wasReady || !isReady) return;
-        unawaited(_maybeShowGemmaReadyPopup());
-      },
-    );
-  }
-
-  Future<void> _maybeShowGemmaReadyPopup() async {
-    if (!mounted) return;
-    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
-      return;
-    }
-
-    final db = ref.read(appDatabaseProvider);
-    final shown = (await db.appSettingsDao.getInt(_kGemmaReadyPopupShown)) ?? 0;
-    if (shown == 1) return;
-
-    await db.appSettingsDao.setInt(_kGemmaReadyPopupShown, 1);
-    if (!mounted) return;
-
-    final l10n = AppLocalizations.of(context)!;
-    // Defer to the next frame so we don't show a dialog mid-build.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(
-        showDialog<void>(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.bolt_rounded, color: AppColors.dopamineRed),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(child: Text(l10n.modelInstall_popupTitle)),
-                ],
-              ),
-              content: Text(l10n.modelInstall_popupBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.modelInstall_popupSecondaryCta),
-                ),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.dopamineRed,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.modelInstall_popupPrimaryCta),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-    });
   }
 
   @override
@@ -188,7 +121,6 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     _deepLinkItemSub.close();
     _onlineSub.close();
     _authSub.close();
-    _modelInstallSub.close();
     _activeTab.dispose();
     super.dispose();
   }
@@ -232,18 +164,6 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
                 OfflineBanner(
                   message: AppLocalizations.of(context)!.bannerOffline,
                 ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  0,
-                ),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: ModelDownloadStatusChip(),
-                ),
-              ),
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(

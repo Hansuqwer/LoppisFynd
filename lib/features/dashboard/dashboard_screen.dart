@@ -8,7 +8,6 @@ import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_board.dart';
-import '../../features/model_manager/widgets/model_download_card.dart';
 import '../../gen/app_localizations.dart';
 import '../summary/haul_summary_screen.dart';
 import '../drafts/drafts_screen.dart';
@@ -130,8 +129,6 @@ class DashboardScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                const SizedBox(height: AppSpacing.md),
-                const _ModelPreflightCard(),
                 const SizedBox(height: AppSpacing.lg),
               ],
             ),
@@ -396,23 +393,5 @@ class _HomeTile extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _ModelPreflightCard extends ConsumerWidget {
-  const _ModelPreflightCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(appConfigProvider);
-
-    if (!config.hasGemmaModelUrl) return const SizedBox.shrink();
-
-    final consent = ref
-        .watch(gemmaConsentProvider)
-        .maybeWhen(data: (v) => v, orElse: () => 0);
-    if (consent != 1) return const SizedBox.shrink();
-
-    return const ModelInstallDownloadCard();
   }
 }

@@ -1037,38 +1037,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncStatusProblemsTitle => 'Problems';
 
   @override
-  String get settingsOnDeviceModelTitle => 'On-device model';
-
-  @override
-  String get settingsModelChecking => 'Checking…';
-
-  @override
-  String settingsModelInstalled(Object bytes) {
-    return 'Installed ($bytes bytes)';
-  }
-
-  @override
-  String get settingsModelNotInstalled => 'Not installed';
-
-  @override
-  String settingsModelExpectedPath(Object path) {
-    return 'Expected path: $path';
-  }
-
-  @override
-  String get settingsDownloading => 'Downloading…';
-
-  @override
-  String get settingsDownloadModel => 'Download model';
-
-  @override
-  String get settingsInstallFromFilePathLabel => 'Install from file path';
-
-  @override
-  String get settingsInstallFromFilePathHint =>
-      '/path/to/gemma_vision.litertlm';
-
-  @override
   String get loginAppName => 'Loppisfynd';
 
   @override
@@ -1234,79 +1202,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemDetailKeywordsTitle => 'Keywords';
-
-  @override
-  String get modelCalloutTitle => 'Download the AI model (Gemma)';
-
-  @override
-  String get modelCalloutBody =>
-      'Make identification faster offline. You can download now or later in Settings.';
-
-  @override
-  String get modelDownloadCta => 'Download';
-
-  @override
-  String get modelRetry => 'Try again';
-
-  @override
-  String get modelNotInstalled => 'Not installed';
-
-  @override
-  String get modelDownloading => 'Downloading…';
-
-  @override
-  String modelDownloadingPercent(int percent) {
-    return 'Downloading $percent%';
-  }
-
-  @override
-  String get modelInstalling => 'Installing…';
-
-  @override
-  String get modelInstalled => 'Installed ✓';
-
-  @override
-  String modelFailed(String message) {
-    return 'Failed: $message';
-  }
-
-  @override
-  String get modelWhyLink => 'Why?';
-
-  @override
-  String get modelWhyTitle => 'Why do I need to download a model?';
-
-  @override
-  String get modelWhyBody =>
-      'To use AI features offline. The model is downloaded to your device (~1 GB) and is not sent to a server. On Wi-Fi it often takes ~2–10 minutes.';
-
-  @override
-  String get modelInstall_chipLabelDownloading => 'Downloading';
-
-  @override
-  String get modelInstall_chipLabelInstalling => 'Installing';
-
-  @override
-  String get modelInstall_chipLabelReady => 'Ready';
-
-  @override
-  String get modelInstall_chipLabelFailed => 'Failed';
-
-  @override
-  String get modelInstall_chipRetryCta => 'Try again';
-
-  @override
-  String get modelInstall_popupTitle => 'AI is ready';
-
-  @override
-  String get modelInstall_popupBody =>
-      'The AI model is installed. You can scan and identify faster, even offline, with better results.';
-
-  @override
-  String get modelInstall_popupPrimaryCta => 'Nice';
-
-  @override
-  String get modelInstall_popupSecondaryCta => 'Close';
 
   @override
   String get authTitleWelcome => 'Welcome';
