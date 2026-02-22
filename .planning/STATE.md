@@ -10,8 +10,8 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 **Phase:** 2 of 5 (Cloud AI + Privacy Controls)
-**Current Plan:** 4
-**Total Plans in Phase:** 4
+**Current Plan:** 5
+**Total Plans in Phase:** 5
 **Status:** Phase complete — ready for verification
 **Last Activity:** 2026-02-22
 **Progress:** [██████████] 100%
@@ -19,9 +19,9 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Performance Metrics
 
 **Velocity:**
-- **Total plans completed:** 2
-- **Average duration:** 62 min
-- **Total execution time:** 2.1 hours
+- **Total plans completed:** 7
+- **Average duration:** 28 min
+- **Total execution time:** 3.2 hours
 
 | Phase | Duration | Tasks | Files |
 |-------|----------|-------|-------|
@@ -31,6 +31,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 02 P02 | 19 min | 2 tasks | 12 files |
 | Phase 02 P03 | 24 min | 2 tasks | 31 files |
 | Phase 02-cloud-ai-privacy-controls P04 | 7 min | 3 tasks | 3 files |
+| Phase 02-cloud-ai-privacy-controls P05 | 14 min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -44,6 +45,8 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 02]: Default privacy toggles to ON when unset to preserve existing behavior until user opts out
 - [Phase 02]: Cloud Identify defaults to cloudGemini when CLOUD_AI_PROXY_URL is configured; remove Gemma from first-run UX
 - [Phase 02]: Enforce PRIV-03 with crops-only JPEG re-encode and strict upload byte budget
+- [Phase 02-cloud-ai-privacy-controls]: [Phase 02]: Scanner auto-capture uses debounce + per-barcode cooldown
+- [Phase 02-cloud-ai-privacy-controls]: [Phase 02]: Batch tray drag-to-delete is local-only (clears sync metadata + best-effort file cleanup)
 
 ### Pending Todos
 
@@ -56,6 +59,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-22T15:34:06.142Z
-**Stopped At:** Completed 02-cloud-ai-privacy-controls-04-PLAN.md
+**Last session:** 2026-02-22T19:25:58.653Z
+**Stopped At:** Completed 02-cloud-ai-privacy-controls-05-PLAN.md
 **Resume File:** None
