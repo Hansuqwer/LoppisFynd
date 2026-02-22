@@ -2,6 +2,7 @@ class AppConfig {
   const AppConfig({
     required this.appEnv,
     required this.traderaProxyUrl,
+    required this.cloudAiProxyUrl,
     required this.supabaseUrl,
     required this.supabaseAnonKey,
     required this.gemmaModelUrl,
@@ -10,6 +11,7 @@ class AppConfig {
 
   final String appEnv;
   final String traderaProxyUrl;
+  final String cloudAiProxyUrl;
   final String supabaseUrl;
   final String supabaseAnonKey;
   final String gemmaModelUrl;
@@ -20,6 +22,10 @@ class AppConfig {
       appEnv: String.fromEnvironment('APP_ENV', defaultValue: 'dev'),
       traderaProxyUrl: String.fromEnvironment(
         'TRADERA_PROXY_URL',
+        defaultValue: '',
+      ),
+      cloudAiProxyUrl: String.fromEnvironment(
+        'CLOUD_AI_PROXY_URL',
         defaultValue: '',
       ),
       supabaseUrl: String.fromEnvironment('SUPABASE_URL', defaultValue: ''),
@@ -36,6 +42,8 @@ class AppConfig {
   }
 
   bool get hasTraderaProxy => traderaProxyUrl.trim().isNotEmpty;
+
+  bool get hasCloudAiProxy => cloudAiProxyUrl.trim().isNotEmpty;
 
   bool get hasSupabase =>
       supabaseUrl.trim().isNotEmpty && supabaseAnonKey.trim().isNotEmpty;

@@ -145,10 +145,22 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
     ),
   );
 
-  final modelFile = await modelManager.modelFile();
+  final AiBackendKind backendKind;
+  String? modelPath;
+  Uri? cloudAiProxyUrl;
+  if (config.hasCloudAiProxy) {
+    backendKind = AiBackendKind.cloudGemini;
+    cloudAiProxyUrl = Uri.parse(config.cloudAiProxyUrl);
+  } else {
+    backendKind = AiBackendKind.flutterGemma;
+    final modelFile = await modelManager.modelFile();
+    modelPath = modelFile.path;
+  }
+
   final aiInference = AiInferenceIsolateService(
-    backendKind: AiBackendKind.flutterGemma,
-    modelPath: modelFile.path,
+    backendKind: backendKind,
+    modelPath: modelPath,
+    cloudAiProxyUrl: cloudAiProxyUrl,
   );
 
   runApp(

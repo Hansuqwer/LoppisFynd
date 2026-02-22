@@ -4,6 +4,9 @@ import 'dart:ui';
 
 import 'package:flutter/services.dart';
 
+import '../cloud_ai_proxy_client.dart';
+import '../image_cropper.dart';
+
 import '../../../core/utils/serial_task_queue.dart';
 import 'ai_prompts.dart';
 import 'ai_types.dart';
@@ -24,17 +27,23 @@ class BatchShelfInferenceResult extends AiInferenceResult {
   final AiBatchShelfResult value;
 }
 
-enum AiBackendKind { notImplemented, flutterGemma }
+enum AiBackendKind { notImplemented, cloudGemini, flutterGemma }
 
 class AiInferenceIsolateService {
   AiInferenceIsolateService({
     AiBackendKind backendKind = AiBackendKind.notImplemented,
     AiPipeline pipeline = const AiPipeline(),
     String? modelPath,
+    Uri? cloudAiProxyUrl,
+    CloudAiProxyClient? cloudClient,
+    ImageCropper? imageCropper,
     RootIsolateToken? rootIsolateToken,
   }) : _backendKind = backendKind,
        _pipeline = pipeline,
        _modelPath = modelPath,
+       _cloudClient = cloudClient,
+       _cloudAiProxyUrl = cloudAiProxyUrl,
+       _imageCropper = imageCropper ?? const ImageCropper(),
        _rootIsolateToken = rootIsolateToken ?? ServicesBinding.rootIsolateToken;
 
   final String? _modelPath;
@@ -42,6 +51,10 @@ class AiInferenceIsolateService {
 
   final AiBackendKind _backendKind;
   final AiPipeline _pipeline;
+
+  final Uri? _cloudAiProxyUrl;
+  final CloudAiProxyClient? _cloudClient;
+  final ImageCropper _imageCropper;
 
   final _queue = SerialTaskQueue();
 
@@ -54,6 +67,51 @@ class AiInferenceIsolateService {
         SingleItemTask() => AiPrompts.singleItemJsonPrompt(),
         BatchShelfTask() => AiPrompts.batchShelfJsonPrompt(),
       };
+
+      if (_backendKind == AiBackendKind.cloudGemini) {
+        final token = cancelToken;
+        if (token?.isCancelled ?? false) {
+          throw const AiCancelledException();
+        }
+
+        final url = _cloudAiProxyUrl;
+        if (url == null || url.toString().trim().isEmpty) {
+          throw const ModelNotInstalledException(
+            'Cloud AI proxy not configured. Provide CLOUD_AI_PROXY_URL.',
+          );
+        }
+
+        final client = _cloudClient ?? CloudAiProxyClient(functionUrl: url);
+
+        final cropBytes = await _imageCropper.centerSquareJpegFromFile(
+          request.imageFile,
+        );
+
+        if (token?.isCancelled ?? false) {
+          throw const AiCancelledException();
+        }
+
+        String rawText;
+        try {
+          rawText = await client.generate(
+            prompt: prompt,
+            imageJpegBytes: cropBytes,
+            maxTokens: request.maxTokens,
+            cancel: token?.cancelled,
+          );
+        } catch (_) {
+          if (token?.isCancelled ?? false) {
+            throw const AiCancelledException();
+          }
+          rethrow;
+        }
+
+        if (token?.isCancelled ?? false) {
+          throw const AiCancelledException();
+        }
+
+        return _pipeline.process(task: request.task, modelOutput: rawText);
+      }
 
       final resultRaw = await _runInIsolate(
         _backendKind,
@@ -238,6 +296,10 @@ Future<String> _infer({
     case AiBackendKind.notImplemented:
       throw const ModelNotInstalledException(
         'AI backend not wired yet. Install model + add runtime in FL-031.',
+      );
+    case AiBackendKind.cloudGemini:
+      throw const ModelNotInstalledException(
+        'Cloud AI cannot run in isolate. Use cloudGemini via run() path.',
       );
     case AiBackendKind.flutterGemma:
       return inferJsonWithFlutterGemma(

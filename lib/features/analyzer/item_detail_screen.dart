@@ -212,10 +212,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     }
 
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)));
+
+    final ai = ref.read(aiInferenceProvider);
+    final msg = await _identifyNow(
+      db: db,
+      ai: ai,
+      scanItemId: item.id,
+      userId: ref.read(activeUserIdProvider),
+      imagePath: item.imagePath,
+    );
+
+    if (!mounted) return;
+    if (msg == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Future<String?> _identifyNow({

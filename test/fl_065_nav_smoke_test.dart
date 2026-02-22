@@ -29,6 +29,7 @@ void main() {
     const config = AppConfig(
       appEnv: 'test',
       traderaProxyUrl: '',
+      cloudAiProxyUrl: '',
       supabaseUrl: '',
       supabaseAnonKey: '',
       gemmaModelUrl: '',
