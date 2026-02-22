@@ -19,6 +19,12 @@
   "settingsHighContrast": "Hög kontrast",
   "settingsContrastUpdated": "Uppdaterade kontrastinställning.",
 
+  "settingsPrivacyDataSectionTitle": "Integritet & data",
+  "settingsCloudIdentificationToggleTitle": "Skicka beskärningar för molnidentifiering",
+  "settingsCloudIdentificationToggleSubtitle": "Laddar bara upp beskärningar (aldrig hela fotot).",
+  "settingsFetchSoldPriceCompsToggleTitle": "Hämta såldprisjämförelser",
+  "settingsFetchSoldPriceCompsToggleSubtitle": "Används för marknadsgrafer och estimeringar.",
+
   "onboardingWelcomeTitle": "Välkommen",
   "onboardingWelcomeBody": "Skanna i butik, spara offline och hämta sålddata när du är online.",
   "onboardingPermissionsTitle": "Behörigheter",

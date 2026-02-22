@@ -19,6 +19,12 @@
   "settingsHighContrast": "High contrast",
   "settingsContrastUpdated": "Updated contrast setting.",
 
+  "settingsPrivacyDataSectionTitle": "Privacy & Data",
+  "settingsCloudIdentificationToggleTitle": "Send crops for cloud identification",
+  "settingsCloudIdentificationToggleSubtitle": "Uploads crops only (never the full photo).",
+  "settingsFetchSoldPriceCompsToggleTitle": "Fetch sold-price comps",
+  "settingsFetchSoldPriceCompsToggleSubtitle": "Used for market charts and estimates.",
+
   "onboardingWelcomeTitle": "Welcome",
   "onboardingWelcomeBody": "Scan items in-store, save offline, and fetch sold-price comps when you’re online.",
   "onboardingPermissionsTitle": "Permissions",

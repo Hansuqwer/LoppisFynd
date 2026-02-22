@@ -170,6 +170,36 @@ abstract class AppLocalizations {
   /// **'Updated contrast setting.'**
   String get settingsContrastUpdated;
 
+  /// No description provided for @settingsPrivacyDataSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Data'**
+  String get settingsPrivacyDataSectionTitle;
+
+  /// No description provided for @settingsCloudIdentificationToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send crops for cloud identification'**
+  String get settingsCloudIdentificationToggleTitle;
+
+  /// No description provided for @settingsCloudIdentificationToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads crops only (never the full photo).'**
+  String get settingsCloudIdentificationToggleSubtitle;
+
+  /// No description provided for @settingsFetchSoldPriceCompsToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch sold-price comps'**
+  String get settingsFetchSoldPriceCompsToggleTitle;
+
+  /// No description provided for @settingsFetchSoldPriceCompsToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for market charts and estimates.'**
+  String get settingsFetchSoldPriceCompsToggleSubtitle;
+
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:

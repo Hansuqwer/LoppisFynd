@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/app/providers.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_board.dart';
@@ -270,6 +271,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
+    final cloudIdentificationEnabled = ref
+        .watch(cloudIdentificationEnabledProvider)
+        .maybeWhen(data: (v) => v, orElse: () => true);
+    final fetchSoldPriceCompsEnabled = ref
+        .watch(fetchSoldPriceCompsEnabledProvider)
+        .maybeWhen(data: (v) => v, orElse: () => true);
     final l10n = AppLocalizations.of(context)!;
     final session = ref
         .watch(authSessionProvider)
@@ -334,6 +341,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     db,
                     config,
                     highContrast,
+                    cloudIdentificationEnabled,
+                    fetchSoldPriceCompsEnabled,
                     email,
                     userId,
                   ),
@@ -668,6 +677,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     dynamic db,
     dynamic config,
     bool highContrast,
+    bool cloudIdentificationEnabled,
+    bool fetchSoldPriceCompsEnabled,
     String? email,
     String? userId,
   ) {
@@ -691,6 +702,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (!mounted) return;
             messenger.showSnackBar(
               SnackBar(content: Text(l10n.settingsContrastUpdated)),
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          l10n.settingsPrivacyDataSectionTitle,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.settingsCloudIdentificationToggleTitle),
+          subtitle: Text(l10n.settingsCloudIdentificationToggleSubtitle),
+          value: cloudIdentificationEnabled,
+          onChanged: (v) async {
+            await db.appSettingsDao.setInt(
+              kPrivacyCloudIdentificationEnabledKeyV1,
+              v ? 1 : 0,
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.settingsFetchSoldPriceCompsToggleTitle),
+          subtitle: Text(l10n.settingsFetchSoldPriceCompsToggleSubtitle),
+          value: fetchSoldPriceCompsEnabled,
+          onChanged: (v) async {
+            await db.appSettingsDao.setInt(
+              kPrivacyFetchSoldPriceCompsEnabledKeyV1,
+              v ? 1 : 0,
             );
           },
         ),

@@ -4,6 +4,7 @@ import 'market_models.dart';
 import 'tradera_client.dart';
 
 import '../../core/database/app_database.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/time/clock.dart';
 
 class MarketBridge implements MarketDataSource {
@@ -54,6 +55,13 @@ class MarketBridge implements MarketDataSource {
       // Cache only stores stats; return empty comps payload.
       return MarketComps(sales: const [], stats: stats);
     }
+
+    final enabled =
+        (await _db.appSettingsDao.getInt(
+          kPrivacyFetchSoldPriceCompsEnabledKeyV1,
+        )) ??
+        1;
+    if (enabled != 1) return null;
 
     final resp = await _tradera.searchEnded(searchWords: query);
     final sales = <MarketSale>[];

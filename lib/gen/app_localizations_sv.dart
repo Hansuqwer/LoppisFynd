@@ -49,6 +49,25 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsContrastUpdated => 'Uppdaterade kontrastinställning.';
 
   @override
+  String get settingsPrivacyDataSectionTitle => 'Integritet & data';
+
+  @override
+  String get settingsCloudIdentificationToggleTitle =>
+      'Skicka beskärningar för molnidentifiering';
+
+  @override
+  String get settingsCloudIdentificationToggleSubtitle =>
+      'Laddar bara upp beskärningar (aldrig hela fotot).';
+
+  @override
+  String get settingsFetchSoldPriceCompsToggleTitle =>
+      'Hämta såldprisjämförelser';
+
+  @override
+  String get settingsFetchSoldPriceCompsToggleSubtitle =>
+      'Används för marknadsgrafer och estimeringar.';
+
+  @override
   String get onboardingWelcomeTitle => 'Välkommen';
 
   @override

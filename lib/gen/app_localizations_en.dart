@@ -49,6 +49,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsContrastUpdated => 'Updated contrast setting.';
 
   @override
+  String get settingsPrivacyDataSectionTitle => 'Privacy & Data';
+
+  @override
+  String get settingsCloudIdentificationToggleTitle =>
+      'Send crops for cloud identification';
+
+  @override
+  String get settingsCloudIdentificationToggleSubtitle =>
+      'Uploads crops only (never the full photo).';
+
+  @override
+  String get settingsFetchSoldPriceCompsToggleTitle => 'Fetch sold-price comps';
+
+  @override
+  String get settingsFetchSoldPriceCompsToggleSubtitle =>
+      'Used for market charts and estimates.';
+
+  @override
   String get onboardingWelcomeTitle => 'Welcome';
 
   @override

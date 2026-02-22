@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../config/feature_flags.dart';
 import '../database/app_database.dart';
+import '../settings/app_settings_keys.dart';
 import '../storage/scan_image_storage.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../../services/ai/model_manager.dart';
@@ -101,6 +102,20 @@ final onboardingCompleteProvider = StreamProvider<bool>((ref) {
   return db.appSettingsDao
       .watchInt('onboarding_complete')
       .map((v) => (v ?? 0) == 1);
+});
+
+final cloudIdentificationEnabledProvider = StreamProvider<bool>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao
+      .watchInt(kPrivacyCloudIdentificationEnabledKeyV1)
+      .map((v) => (v ?? 1) == 1);
+});
+
+final fetchSoldPriceCompsEnabledProvider = StreamProvider<bool>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao
+      .watchInt(kPrivacyFetchSoldPriceCompsEnabledKeyV1)
+      .map((v) => (v ?? 1) == 1);
 });
 
 final featureFlagsProvider = Provider<FeatureFlags>((ref) {
