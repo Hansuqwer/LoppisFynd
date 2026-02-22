@@ -44,6 +44,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     with WidgetsBindingObserver {
   static const _overlayUpdateInterval = Duration(milliseconds: 80);
   static const _barcodeMinInterval = Duration(milliseconds: 250);
+  static const _autoCaptureDebounce = Duration(milliseconds: 550);
+  static const _autoCaptureCooldown = Duration(seconds: 3);
+  static const _autoCaptureFreshnessWindow = Duration(milliseconds: 450);
 
   CameraController? _controller;
   String? _error;
@@ -64,6 +67,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   DateTime _lastBarcodeScanAt = DateTime.fromMillisecondsSinceEpoch(0);
   var _barcodeBusy = false;
   var _barcodeRevision = 0;
+
+  Timer? _autoCaptureTimer;
+  String? _autoCaptureCandidate;
+  DateTime? _autoCaptureCandidateSince;
+  DateTime? _autoCaptureCandidateLastSeen;
+  final Map<String, DateTime> _autoCaptureRecent = {};
+  var _autoCaptureFiring = false;
 
   @override
   void initState() {
@@ -108,6 +118,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _overlayListenable?.removeListener(_handleOverlayInput);
     _overlayTimer?.cancel();
+    _autoCaptureTimer?.cancel();
     _controller?.dispose();
     _internalOverlay.dispose();
     _barcodeScanner?.close();
@@ -188,6 +199,93 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _pendingOverlayFrame = null;
       });
     }
+
+    _autoCaptureTimer?.cancel();
+    _autoCaptureTimer = null;
+    _autoCaptureCandidate = null;
+    _autoCaptureCandidateSince = null;
+    _autoCaptureCandidateLastSeen = null;
+    _autoCaptureFiring = false;
+  }
+
+  void _handleBarcodeDetectionsForAutoCapture(
+    List<BarcodeDetection> detections,
+  ) {
+    if (!widget.active) return;
+    if (_capturing) return;
+
+    if (detections.isEmpty) {
+      _autoCaptureTimer?.cancel();
+      _autoCaptureTimer = null;
+      _autoCaptureCandidate = null;
+      _autoCaptureCandidateSince = null;
+      _autoCaptureCandidateLastSeen = null;
+      return;
+    }
+
+    final now = DateTime.now();
+    final value = detections.first.value;
+
+    // Prune stale cooldown entries.
+    _autoCaptureRecent.removeWhere(
+      (_, t) => now.difference(t) >= _autoCaptureCooldown,
+    );
+
+    if (_autoCaptureCandidate != value) {
+      _autoCaptureCandidate = value;
+      _autoCaptureCandidateSince = now;
+      _autoCaptureCandidateLastSeen = now;
+      _autoCaptureTimer?.cancel();
+      _autoCaptureTimer = Timer(_autoCaptureDebounce, _maybeFireAutoCapture);
+      return;
+    }
+
+    _autoCaptureCandidateLastSeen = now;
+    _autoCaptureTimer ??= Timer(_autoCaptureDebounce, _maybeFireAutoCapture);
+  }
+
+  void _maybeFireAutoCapture() {
+    _autoCaptureTimer = null;
+
+    if (!mounted) return;
+    if (!widget.active) return;
+    if (_capturing) return;
+    if (_autoCaptureFiring) return;
+
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final now = DateTime.now();
+    final value = _autoCaptureCandidate;
+    if (value == null || value.isEmpty) return;
+
+    final lastSeen = _autoCaptureCandidateLastSeen;
+    if (lastSeen == null) return;
+    if (now.difference(lastSeen) > _autoCaptureFreshnessWindow) return;
+
+    final since = _autoCaptureCandidateSince;
+    if (since == null || now.difference(since) < _autoCaptureDebounce) {
+      _autoCaptureTimer = Timer(_autoCaptureDebounce, _maybeFireAutoCapture);
+      return;
+    }
+
+    final recentAt = _autoCaptureRecent[value];
+    if (recentAt != null && now.difference(recentAt) < _autoCaptureCooldown) {
+      return;
+    }
+
+    _autoCaptureFiring = true;
+    _autoCaptureRecent[value] = now;
+    _autoCaptureCandidate = null;
+    _autoCaptureCandidateSince = null;
+    _autoCaptureCandidateLastSeen = null;
+
+    // Avoid stopping the image stream from within the image-stream callback.
+    unawaited(
+      Future<void>.delayed(
+        Duration.zero,
+      ).then((_) => _capture()).whenComplete(() => _autoCaptureFiring = false),
+    );
   }
 
   Future<void> _initCameraIfNeeded() async {
@@ -423,6 +521,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             );
           }
 
+          _handleBarcodeDetectionsForAutoCapture(detections);
           _internalOverlay.value = BarcodeDetectionFrame(
             imageSize: Size(image.width.toDouble(), image.height.toDouble()),
             detections: detections,
