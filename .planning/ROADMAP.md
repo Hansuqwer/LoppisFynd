@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
-| 2. Cloud AI + Privacy Controls | 0/3 | Not started | - |
+| 2. Cloud AI + Privacy Controls | 1/3 | In Progress | - |
 | 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
