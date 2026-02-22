@@ -11,7 +11,7 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Dependency Modernization Baseline** - Update core packages and Flutter toolchain with tests passing. (completed 2026-02-22)
-- [ ] **Phase 2: Cloud AI + Privacy Controls** - Default Gemini identification via server proxy with no first-run blocker.
+- [x] **Phase 2: Cloud AI + Privacy Controls** - Default Gemini identification via server proxy with no first-run blocker. (completed 2026-02-22)
 - [ ] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection.
 - [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification with evidence and safe licensing.
 - [ ] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across primitives plus golden coverage.
@@ -43,12 +43,14 @@ Plans:
   3. When online and cloud identification is enabled, the user can run identification and receive results; the mobile app ships no cloud AI API keys.
   4. When cloud identification is disabled, the app performs no cloud identification image uploads and the UI reflects that identification is disabled.
   5. The disclosure/settings make it explicit that only minimal image data is uploaded (e.g., crops) and metadata is stripped.
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Add server-proxied Gemini identification endpoint
-- [ ] 02-02-PLAN.md — Add first-use disclosure + Privacy & Data toggles + gating
-- [ ] 02-03-PLAN.md — Wire cloudGemini default backend + remove Gemma first-run prompts
+- [x] 02-01-PLAN.md — Add server-proxied Gemini identification endpoint
+- [x] 02-02-PLAN.md — Add first-use disclosure + Privacy & Data toggles + gating
+- [x] 02-03-PLAN.md — Wire cloudGemini default backend + remove Gemma first-run prompts
+- [x] 02-04-PLAN.md — Gap closure: Enforce scan-capture cloud upload gating (consent + toggle + online)
+- [x] 02-05-PLAN.md — Gap closure: Restore scanner auto-capture + batch tray drag-to-delete
 
 ### Phase 3: Sold-Price Comps Hardening
 **Goal**: Sold-price comps work reliably on demand and in background when enabled, with a true off switch and robust proxy protection.
@@ -90,10 +92,12 @@ Plans:
   2. Shared primitives render with token-driven colors/assets in both light and dark modes (no new hardcoded UI colors in migrated components).
   3. Hero contexts in dark mode use the dedicated dark hero background token (not hardcoded images).
   4. Golden tests cover key primitives/screens for light/dark parity and pass in CI.
+  5. Cards use a single clean layer (no stacked/overlapping card effect) to reduce visual clutter.
+  6. Typography is legible on atmospheric backgrounds: default weights are regular/medium (not thin) and small labels have improved contrast.
 **Plans**: TBD
 
 Plans:
-- [ ] 05-01: Finish token adoption in primitives and wire dark mode toggle
+- [ ] 05-01: Finish token adoption in primitives; simplify card layering; improve typography weights/label contrast; wire dark mode toggle
 - [ ] 05-02: Add/maintain goldens + CI enforcement to prevent regressions
 
 ## Progress
@@ -104,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
-| 2. Cloud AI + Privacy Controls | 3/3 | In Progress | - |
+| 2. Cloud AI + Privacy Controls | 5/5 | Complete    | 2026-02-22 |
 | 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
