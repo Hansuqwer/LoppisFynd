@@ -13,9 +13,9 @@ human_verification:
   - test: "Android device smoke test: scanner + create/edit + persistence"
     expected: "Camera preview works; capture/scan works; create/edit item works; close+reopen retains data; no runtime exceptions"
     why_human: "Runtime device behavior (camera, permissions, lifecycle) can't be verified via static checks"
-  - test: "iOS minimal build + launch smoke test (on macOS)"
-    expected: "pod install succeeds; flutter build ios --no-codesign succeeds; app launches and key screens open"
-    why_human: "iOS toolchain is not available in this environment"
+  - test: "iOS build validation via CI (macOS runner)"
+    expected: "GitHub Actions job `ios-build` passes: `flutter build ios --no-codesign`"
+    why_human: "Requires macOS/Xcode toolchain; verified via CI once pushed"
   - test: "Golden review (only if goldens changed)"
     expected: "Diffs in test/goldens/*.png are visually acceptable and intended"
     why_human: "Visual correctness is subjective and requires human review"
@@ -34,7 +34,7 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | App builds, installs, and launches on iOS and Android using latest Flutter stable. | ? UNCERTAIN | `.metadata` pins stable channel revision; CI workflow installs Flutter from `.metadata`, but build/run not executed here. |
+| 1 | App builds, installs, and launches on iOS and Android using latest Flutter stable. | ? UNCERTAIN | Android build/smoke test approved in Phase 1 Plan 02 summary; iOS build still pending CI `ios-build` green run. |
 | 2 | Core capture + catalog flows work (camera scan, item create/edit, local persistence) without runtime errors. | ? UNCERTAIN | Camera + DB + Riverpod wiring exists in code, but runtime flows not exercised here. |
 | 3 | Existing local database migrations/queries continue to work with real user data. | ? UNCERTAIN | Drift migrations are present and appear additive (`lib/core/database/app_database.dart`), but real-data upgrade not exercised here. |
 | 4 | Full test suite passes (including CI) after dependency updates. | ? UNCERTAIN | CI definition exists in `.github/workflows/ci.yml` and includes format/analyze/custom_lint/test + AAB builds, but CI run not inspected/executed here. |
