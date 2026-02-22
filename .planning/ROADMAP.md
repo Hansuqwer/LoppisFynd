@@ -10,7 +10,7 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Dependency Modernization Baseline** - Update core packages and Flutter toolchain with tests passing.
+- [x] **Phase 1: Dependency Modernization Baseline** - Update core packages and Flutter toolchain with tests passing.
 - [ ] **Phase 2: Cloud AI + Privacy Controls** - Default Gemini identification via server proxy with no first-run blocker.
 - [ ] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection.
 - [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification with evidence and safe licensing.
@@ -30,8 +30,8 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Update core deps + platform baselines and fix breakages
-- [ ] 01-02-PLAN.md — Validate builds (Android flavors + iOS), goldens, and smoke tests
+- [x] 01-01-PLAN.md — Update core deps + platform baselines and fix breakages
+- [x] 01-02-PLAN.md — Validate builds (Android flavors + iOS), goldens, and smoke tests
 
 ### Phase 2: Cloud AI + Privacy Controls
 **Goal**: Users can identify items via cloud AI by default (when online and allowed) with clear, reversible privacy controls and no first-run model download.
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Dependency Modernization Baseline | 0/TBD | Not started | - |
+| 1. Dependency Modernization Baseline | 2/2 | Complete | 2026-02-22 |
 | 2. Cloud AI + Privacy Controls | 0/TBD | Not started | - |
 | 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
