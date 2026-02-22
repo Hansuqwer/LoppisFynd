@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
-**Current focus:** Phase 1 verification (human needed) — iOS build/smoke test deferred
+**Current focus:** Phase 1 verification (human needed) — iOS build validated via CI
 
 ## Current Position
 
@@ -36,13 +36,12 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ### Pending Todos
 
-- iOS minimal smoke test is deferred/skipped due to no macOS access (risk: iOS build/runtime regressions may be undetected).
+- Push latest commits and confirm GitHub Actions job `ios-build` passes (`flutter build ios --no-codesign`).
 
 ### Blockers/Concerns
 
-- **Blocked:** Phase 1 verification status is `human_needed` until iOS build/launch is validated.
-- **Skipped/Deferred:** iOS minimal smoke test (no macOS environment available).
-- **Risk:** Potential iOS build/runtime issues could slip through until macOS/iOS validation is available.
+- **Blocked:** Phase 1 verification status is `human_needed` until iOS build is validated (CI `ios-build`).
+- **Risk:** iOS runtime smoke test is still unvalidated; CI only proves buildability, not on-device behavior.
 
 ## Session Continuity
 
