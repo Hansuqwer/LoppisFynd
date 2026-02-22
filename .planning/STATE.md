@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
-**Current focus:** Phase 1 complete; ready to plan Phase 2 - Cloud AI + Privacy Controls
+**Current focus:** Phase 1 verification (human needed) — iOS build/smoke test deferred
 
 ## Current Position
 
 **Phase:** 1 of 5 (Dependency Modernization Baseline)
 **Current Plan:** 2
 **Total Plans in Phase:** 2
-**Status:** Phase complete (checkpoint approved; iOS smoke test deferred risk logged)
+**Status:** Awaiting phase verification (status: human_needed)
 **Last Activity:** 2026-02-22
-**Progress:** [██████████] 100%
+**Progress:** [█████████░] 90%
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ### Blockers/Concerns
 
+- **Blocked:** Phase 1 verification status is `human_needed` until iOS build/launch is validated.
 - **Skipped/Deferred:** iOS minimal smoke test (no macOS environment available).
 - **Risk:** Potential iOS build/runtime issues could slip through until macOS/iOS validation is available.
 
