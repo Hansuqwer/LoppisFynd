@@ -36,11 +36,11 @@ Requirements for the next major delivery cycle (2026): remove first-run blockers
 
 ### Dependency Modernization
 
-- [ ] **DEP-01**: Update Riverpod to the targeted current stable range and keep the app functional
-- [ ] **DEP-02**: Update Drift to the targeted current stable range and keep migrations/queries working
-- [ ] **DEP-03**: Update camera and workmanager packages without regressions
-- [ ] **DEP-04**: Build passes on latest Flutter stable; no deprecated APIs in use
-- [ ] **DEP-05**: Full test suite passes after dependency updates
+- [x] **DEP-01**: Update Riverpod to the targeted current stable range and keep the app functional
+- [x] **DEP-02**: Update Drift to the targeted current stable range and keep migrations/queries working
+- [x] **DEP-03**: Update camera and workmanager packages without regressions
+- [x] **DEP-04**: Build passes on latest Flutter stable; no deprecated APIs in use
+- [x] **DEP-05**: Full test suite passes after dependency updates
 
 ### UI Tokens + Dark Mode (UI System v2 Adoption)
 
@@ -102,11 +102,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRIV-01 | Phase 2 | Pending |
 | PRIV-02 | Phase 2 | Pending |
 | PRIV-03 | Phase 2 | Pending |
-| DEP-01 | Phase 1 | Pending |
-| DEP-02 | Phase 1 | Pending |
-| DEP-03 | Phase 1 | Pending |
-| DEP-04 | Phase 1 | Pending |
-| DEP-05 | Phase 1 | Pending |
+| DEP-01 | Phase 1 | Complete |
+| DEP-02 | Phase 1 | Complete |
+| DEP-03 | Phase 1 | Complete |
+| DEP-04 | Phase 1 | Complete |
+| DEP-05 | Phase 1 | Complete |
 | UI-01 | Phase 5 | Pending |
 | UI-02 | Phase 5 | Pending |
 | UI-03 | Phase 5 | Pending |

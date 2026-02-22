@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
-**Current focus:** Phase 1 verification (human needed) — iOS build validated via CI
+**Current focus:** Phase 2 - Cloud AI + Privacy Controls
 
 ## Current Position
 
-**Phase:** 1 of 5 (Dependency Modernization Baseline)
-**Current Plan:** 2
-**Total Plans in Phase:** 2
-**Status:** Awaiting phase verification (status: human_needed)
+**Phase:** 2 of 5 (Cloud AI + Privacy Controls)
+**Current Plan:** 0
+**Total Plans in Phase:** TBD
+**Status:** Ready to plan
 **Last Activity:** 2026-02-22
-**Progress:** [█████████░] 90%
+**Progress:** [██░░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -33,18 +33,18 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ### Decisions
 
 - Closed Phase 01 Plan 02 verification checkpoint as approved, with iOS minimal smoke test explicitly deferred due to lack of macOS access.
+- Proceed to Phase 2 even though Phase 1 verification remains incomplete on iOS; treat iOS validation as deferred risk.
 
 ### Pending Todos
 
-- Push latest commits and confirm GitHub Actions job `ios-build` passes (build iOS simulator app + install + launch).
+- Run iOS build + launch validation when macOS access is available (or via CI `ios-build`).
 
 ### Blockers/Concerns
 
-- **Blocked:** Phase 1 verification status is `human_needed` until iOS build is validated (CI `ios-build`).
-- **Risk:** iOS runtime smoke test is still unvalidated; CI only proves buildability, not on-device behavior.
+- **Risk:** iOS runtime smoke test is unvalidated; validate on macOS before release.
 
 ## Session Continuity
 
 **Last session:** 2026-02-22T09:15:26.043Z
-**Stopped At:** Completed 01-dependency-modernization-baseline-01-02-PLAN.md
+**Stopped At:** Phase 1 execution complete; Phase 2 ready to plan
 **Resume File:** None
