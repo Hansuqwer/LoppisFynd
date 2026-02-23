@@ -45,56 +45,110 @@ class TraderaClient {
       'pageNumber': pageNumber,
     });
 
-    http.Response? resp;
+    http.Response? lastResponse;
     Object? lastError;
 
     for (var attempt = 1; attempt <= _maxAttempts; attempt += 1) {
+      http.Response resp;
       try {
         resp = await _httpClient
             .post(_functionUrl, headers: headers, body: payload)
             .timeout(_timeout);
-
-        // Retry on transient server/rate-limit errors.
-        if (resp.statusCode == 429 || (resp.statusCode >= 500)) {
-          throw _RetryableHttpStatus(resp.statusCode);
-        }
-
-        break;
-      } on _RetryableHttpStatus catch (e) {
-        lastError = e;
-        if (attempt >= _maxAttempts) rethrow;
-        await Future<void>.delayed(_retryDelay(attempt));
       } on TimeoutException catch (e) {
         lastError = e;
-        if (attempt >= _maxAttempts) rethrow;
+        if (attempt >= _maxAttempts) break;
         await Future<void>.delayed(_retryDelay(attempt));
+        continue;
       } on SocketException catch (e) {
         lastError = e;
-        if (attempt >= _maxAttempts) rethrow;
+        if (attempt >= _maxAttempts) break;
         await Future<void>.delayed(_retryDelay(attempt));
+        continue;
       } on http.ClientException catch (e) {
         lastError = e;
-        if (attempt >= _maxAttempts) rethrow;
+        if (attempt >= _maxAttempts) break;
         await Future<void>.delayed(_retryDelay(attempt));
+        continue;
       }
+
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        final decoded = jsonDecode(resp.body);
+        if (decoded is! Map) {
+          throw const FormatException('Expected JSON object');
+        }
+        return TraderaProxyResponse.fromJson(decoded.cast<String, Object?>());
+      }
+
+      // Rate limiting is actionable (avoid tight retry loops).
+      if (resp.statusCode == 429) {
+        throw _proxyErrorToException(resp);
+      }
+
+      // Retry transient server errors.
+      if (resp.statusCode >= 500) {
+        lastResponse = resp;
+        lastError = _RetryableHttpStatus(resp.statusCode);
+        if (attempt >= _maxAttempts) break;
+        await Future<void>.delayed(_retryDelay(attempt));
+        continue;
+      }
+
+      // Non-retryable HTTP errors.
+      throw _proxyErrorToException(resp);
     }
 
-    if (resp == null) {
-      throw lastError ?? StateError('TraderaClient: no response');
+    if (lastResponse != null) {
+      throw _proxyErrorToException(lastResponse);
     }
 
-    final bodyText = resp.body;
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw TraderaClientException(
-        'Tradera proxy failed: ${resp.statusCode} ${bodyText.substring(0, bodyText.length > 300 ? 300 : bodyText.length)}',
+    if (lastError is TimeoutException) {
+      throw const TraderaClientException(
+        'Tradera proxy timed out. Check your connection and try again.',
+      );
+    }
+    if (lastError is SocketException) {
+      throw const TraderaClientException(
+        'No network connection. Try again when you are online.',
       );
     }
 
-    final decoded = jsonDecode(bodyText);
-    if (decoded is! Map) {
-      throw const FormatException('Expected JSON object');
+    throw TraderaClientException(
+      'Tradera proxy request failed: ${lastError ?? 'unknown error'}',
+    );
+  }
+
+  TraderaClientException _proxyErrorToException(http.Response resp) {
+    final bodyText = resp.body;
+
+    final retryAfterSecondsFromHeader = _parseRetryAfterSeconds(
+      resp.headers['retry-after'],
+    );
+
+    final proxyError = _tryParseProxyError(bodyText);
+    if (proxyError != null) {
+      final retryAfterSeconds =
+          proxyError.retryAfterSeconds ?? retryAfterSecondsFromHeader;
+      final message = retryAfterSeconds != null
+          ? '${proxyError.message} (try again in ${retryAfterSeconds}s)'
+          : proxyError.message;
+      return TraderaClientException(message);
     }
-    return TraderaProxyResponse.fromJson(decoded.cast<String, Object?>());
+
+    if (resp.statusCode == 429) {
+      final retryAfterSeconds = retryAfterSecondsFromHeader;
+      final message = retryAfterSeconds != null
+          ? 'Rate limited. Try again in ${retryAfterSeconds}s.'
+          : 'Rate limited. Try again soon.';
+      return TraderaClientException(message);
+    }
+
+    final snippet = bodyText.substring(
+      0,
+      bodyText.length > 300 ? 300 : bodyText.length,
+    );
+    return TraderaClientException(
+      'Tradera proxy failed: ${resp.statusCode} $snippet',
+    );
   }
 }
 
@@ -103,6 +157,57 @@ class _RetryableHttpStatus implements Exception {
   final int statusCode;
   @override
   String toString() => 'Retryable HTTP $statusCode';
+}
+
+class _ProxyError {
+  const _ProxyError({
+    required this.code,
+    required this.message,
+    this.retryAfterSeconds,
+  });
+
+  final String code;
+  final String message;
+  final int? retryAfterSeconds;
+}
+
+_ProxyError? _tryParseProxyError(String bodyText) {
+  Object? decoded;
+  try {
+    decoded = jsonDecode(bodyText);
+  } catch (_) {
+    return null;
+  }
+  if (decoded is! Map) return null;
+
+  final errorObj = decoded['error'];
+  if (errorObj is! Map) return null;
+
+  final code = errorObj['code'];
+  final message = errorObj['message'];
+  if (code is! String || message is! String) return null;
+
+  final ras = errorObj['retryAfterSeconds'];
+  int? retryAfterSeconds;
+  if (ras is int) retryAfterSeconds = ras;
+  if (ras is num) retryAfterSeconds = ras.toInt();
+
+  return _ProxyError(
+    code: code,
+    message: message,
+    retryAfterSeconds: retryAfterSeconds != null && retryAfterSeconds > 0
+        ? retryAfterSeconds
+        : null,
+  );
+}
+
+int? _parseRetryAfterSeconds(String? headerValue) {
+  if (headerValue == null) return null;
+  final trimmed = headerValue.trim();
+  if (trimmed.isEmpty) return null;
+  final v = int.tryParse(trimmed);
+  if (v == null) return null;
+  return v > 0 ? v : null;
 }
 
 Duration _retryDelay(int attempt) {
