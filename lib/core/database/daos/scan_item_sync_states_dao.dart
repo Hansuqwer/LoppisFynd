@@ -16,6 +16,12 @@ class ScanItemSyncStatesDao extends DatabaseAccessor<AppDatabase>
     )..where((t) => t.scanItemId.equals(scanItemId))).getSingleOrNull();
   }
 
+  Stream<ScanItemSyncState?> watchByScanItemId(String scanItemId) {
+    final q = select(scanItemSyncStates)
+      ..where((t) => t.scanItemId.equals(scanItemId));
+    return q.watchSingleOrNull();
+  }
+
   Future<void> upsert({
     required String scanItemId,
     required int attempts,

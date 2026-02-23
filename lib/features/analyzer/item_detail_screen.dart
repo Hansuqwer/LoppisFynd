@@ -356,12 +356,26 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final db = ref.watch(appDatabaseProvider);
     final syncScheduler = ref.watch(syncSchedulerProvider);
     final userId = ref.watch(activeUserIdProvider);
+    final config = ref.watch(appConfigProvider);
     final cloudIdentificationEnabled = ref
         .watch(cloudIdentificationEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
-    final isOnline = ref
-        .watch(isOnlineProvider)
+    final isOnlineAsync = ref.watch(isOnlineProvider);
+    final isOnline = isOnlineAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => true,
+    );
+
+    final compsEnabled = ref
+        .watch(fetchSoldPriceCompsEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
+    final isOnlineForComps = isOnlineAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => false,
+    );
+    final hasTraderaProxy = config.hasTraderaProxy;
+    final compsActionsEnabled =
+        compsEnabled && isOnlineForComps && hasTraderaProxy;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -525,11 +539,24 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         stream: db.scanItemCompsDao.watchByScanItemId(item.id),
                         builder: (context, snapshot) {
                           final comps = snapshot.data;
-                          return _PriceChart(
-                            min: item.minPrice,
-                            median: item.medianPrice,
-                            max: item.maxPrice,
-                            compsRawJson: comps?.rawJson,
+                          final fetchedAt = comps?.fetchedAt;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _PriceChart(
+                                min: item.minPrice,
+                                median: item.medianPrice,
+                                max: item.maxPrice,
+                                compsRawJson: comps?.rawJson,
+                              ),
+                              if (fetchedAt != null) ...[
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Last updated: ${_formatTimestamp(context, fetchedAt)}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ],
                           );
                         },
                       ),
@@ -653,16 +680,22 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                           Expanded(
                             child: GlassButton(
                               label: l10n.itemDetailQueueSync,
-                              onPressed: () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                await _queueSync(db);
-                                if (!mounted) return;
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.itemDetailQueuedForSync),
-                                  ),
-                                );
-                              },
+                              onPressed: !compsActionsEnabled
+                                  ? null
+                                  : () async {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      await _queueSync(db);
+                                      if (!mounted) return;
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            l10n.itemDetailQueuedForSync,
+                                          ),
+                                        ),
+                                      );
+                                    },
                               icon: const Icon(Icons.cloud_upload_rounded),
                             ),
                           ),
@@ -671,21 +704,135 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                             child: GlassButton(
                               label: l10n.settingsSyncNow,
                               tone: GlassButtonTone.neutral,
-                              onPressed: () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                await _queueSync(db);
-                                await syncScheduler.syncOnce();
-                                if (!mounted) return;
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.itemDetailSyncCompleted),
-                                  ),
-                                );
-                              },
+                              onPressed: !compsActionsEnabled
+                                  ? null
+                                  : () async {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      await _queueSync(db);
+                                      await syncScheduler.syncOnce();
+                                      if (!mounted) return;
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            l10n.itemDetailSyncCompleted,
+                                          ),
+                                        ),
+                                      );
+                                    },
                               icon: const Icon(Icons.sync_rounded),
                             ),
                           ),
                         ],
+                      ),
+                      if (!compsActionsEnabled) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        if (!compsEnabled) ...[
+                          Text(
+                            '${l10n.settingsFetchSoldPriceCompsToggleTitle}: ${l10n.commonOff}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xxs),
+                          Text(
+                            l10n.settingsFetchSoldPriceCompsToggleSubtitle,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          GlassButton(
+                            label: l10n.commonOpenSettings,
+                            tone: GlassButtonTone.neutral,
+                            icon: const Icon(Icons.settings_rounded),
+                            onPressed: _openSettings,
+                          ),
+                        ] else if (!isOnlineForComps) ...[
+                          Text(
+                            l10n.bannerOffline,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ] else if (!hasTraderaProxy) ...[
+                          Text(
+                            l10n.settingsTraderaProxyNotConfigured,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ],
+                      StreamBuilder(
+                        stream: db.scanItemSyncStatesDao.watchByScanItemId(
+                          item.id,
+                        ),
+                        builder: (context, snapshot) {
+                          final state = snapshot.data;
+                          final lastError = state?.lastError?.trim();
+                          if (!compsEnabled) return const SizedBox.shrink();
+                          if (lastError == null || lastError.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final nextAttemptAt = state?.nextAttemptAt;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: AppColors.dopamineRed.withValues(
+                                  alpha: 0.10,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.md,
+                                ),
+                                border: Border.all(
+                                  color: AppColors.dopamineRed.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline_rounded,
+                                        size: 18,
+                                        color: AppColors.dopamineRed,
+                                      ),
+                                      const SizedBox(width: AppSpacing.xs),
+                                      Expanded(
+                                        child: Text(
+                                          'Last sync failed',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.xxs),
+                                  Text(
+                                    lastError,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                  if (nextAttemptAt != null) ...[
+                                    const SizedBox(height: AppSpacing.xxs),
+                                    Text(
+                                      'Next attempt: ${_formatTimestamp(context, nextAttemptAt)}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -1142,6 +1289,16 @@ class _PriceChart extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatTimestamp(BuildContext context, DateTime dt) {
+  final localizations = MaterialLocalizations.of(context);
+  final date = localizations.formatMediumDate(dt);
+  final time = localizations.formatTimeOfDay(
+    TimeOfDay.fromDateTime(dt),
+    alwaysUse24HourFormat: MediaQuery.of(context).alwaysUse24HourFormat,
+  );
+  return '$date $time';
 }
 
 String _formatSek(double? value) {
