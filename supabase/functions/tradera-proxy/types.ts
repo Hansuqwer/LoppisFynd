@@ -40,3 +40,13 @@ export interface TraderaProxyResponse {
   totalNumberOfPages: number | null;
   items: TraderaProxyItem[];
 }
+
+export interface TraderaProxyError {
+  code: string;
+  message: string;
+  retryAfterSeconds?: number;
+}
+
+export interface TraderaProxyErrorResponse {
+  error: TraderaProxyError;
+}

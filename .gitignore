@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Node (used by Deno npm auto-install)
+**/node_modules/
+
 # Build outputs in subprojects
 **/build/
 
