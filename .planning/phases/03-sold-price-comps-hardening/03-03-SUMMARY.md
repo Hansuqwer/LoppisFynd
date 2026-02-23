@@ -56,7 +56,7 @@ completed: 2026-02-23
 Each task was committed atomically:
 
 1. **Task 1: Reschedule background comps work when the Settings toggle changes** - `6a0ce35` (fix)
-2. **Checkpoint: Verify background scheduling reacts immediately to comps toggle** - (auto-approved due to `workflow.auto_advance=true`)
+2. **Checkpoint: Verify background scheduling reacts immediately to comps toggle** - Deferred (awaiting device verification)
 
 **Plan metadata:** (docs commit after SUMMARY + STATE updates)
 

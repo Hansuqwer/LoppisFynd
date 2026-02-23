@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 **Phase:** 3 of 5 (Sold-Price Comps Hardening)
 **Current Plan:** 3
 **Total Plans in Phase:** 3
-**Status:** Phase complete — ready for verification
+**Status:** Phase complete — human verification pending (03-03 Workmanager scheduling)
 **Last Activity:** 2026-02-23
 **Progress:** [██████████] 100%
 
@@ -57,11 +57,13 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ### Pending Todos
 
 - Run iOS build + launch validation when macOS access is available (or via CI `ios-build`).
+- Phase 3: On-device verify comps toggle OFF->ON immediately cancels/(re)schedules background work (03-03 checkpoint).
 
 ### Blockers/Concerns
 
 - **Risk:** iOS runtime smoke test is unvalidated; validate on macOS before release.
 - **Note:** Phase 2 cloud Identify was verified end-to-end on Android with deployed Supabase proxy; run iOS smoke test when macOS access is available.
+- **Risk:** Phase 3 background Workmanager scheduling behavior is wired but needs device verification before marking Phase 3 fully verified.
 
 ## Session Continuity
 
