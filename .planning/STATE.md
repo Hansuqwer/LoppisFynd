@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
-**Current focus:** Phase 2 - Cloud AI + Privacy Controls
+**Current focus:** Phase 3 - Sold-Price Comps Hardening
 
 ## Current Position
 
-**Phase:** 2 of 5 (Cloud AI + Privacy Controls)
-**Current Plan:** 5
-**Total Plans in Phase:** 5
-**Status:** Phase complete — ready for verification
-**Last Activity:** 2026-02-22
-**Progress:** [██████████] 100%
+**Phase:** 3 of 5 (Sold-Price Comps Hardening)
+**Current Plan:** 2
+**Total Plans in Phase:** 2
+**Status:** Ready to execute
+**Last Activity:** 2026-02-23
+**Progress:** [█████████░] 89%
 
 ## Performance Metrics
 
@@ -32,6 +32,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 02 P03 | 24 min | 2 tasks | 31 files |
 | Phase 02-cloud-ai-privacy-controls P04 | 7 min | 3 tasks | 3 files |
 | Phase 02-cloud-ai-privacy-controls P05 | 14 min | 3 tasks | 11 files |
+| Phase 03 P01 | 10 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -55,10 +56,10 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ### Blockers/Concerns
 
 - **Risk:** iOS runtime smoke test is unvalidated; validate on macOS before release.
-- **Note:** Re-run Phase 2 verification (truths #2 and #4) to confirm scan-capture background inference no longer triggers cloud calls without consent.
+- **Note:** Phase 2 cloud Identify was verified end-to-end on Android with deployed Supabase proxy; run iOS smoke test when macOS access is available.
 
 ## Session Continuity
 
-**Last session:** 2026-02-22T19:25:58.653Z
-**Stopped At:** Completed 02-cloud-ai-privacy-controls-05-PLAN.md
+**Last session:** 2026-02-23T06:32:11.995Z
+**Stopped At:** Completed 03-01-PLAN.md
 **Resume File:** None
