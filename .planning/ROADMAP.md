@@ -61,11 +61,12 @@ Plans:
   2. When background comps are enabled, comps refresh attempts happen automatically (best-effort) and update items when successful.
   3. When the user disables sold-price comps, the app performs no comps network calls and the UI clearly indicates comps are disabled.
   4. When the proxy rate-limits/blocks/errors, the user sees a clear, actionable error state and core app flows still work.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Wire comps enable/disable and background refresh behavior
-- [ ] 03-02: Add proxy abuse protection and user-facing error handling
+- [x] 03-01-PLAN.md — Wire comps enable/disable, background gating, and last-updated UI
+- [x] 03-02-PLAN.md — Add proxy abuse protection + stable error contract + actionable client errors
+- [ ] 03-03-PLAN.md — Gap closure: Reschedule background work when comps toggle changes
 
 ### Phase 4: Opt-In Offline Fallback
 **Goal**: Users can optionally enable a lightweight offline identification mode that works without network connectivity and shows evidence.
@@ -109,6 +110,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
 | 2. Cloud AI + Privacy Controls | 5/5 | Complete    | 2026-02-22 |
-| 3. Sold-Price Comps Hardening | 0/TBD | Not started | - |
+| 3. Sold-Price Comps Hardening | 2/3 | In progress | - |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
