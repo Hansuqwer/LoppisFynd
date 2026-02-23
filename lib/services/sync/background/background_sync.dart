@@ -6,6 +6,7 @@ import 'package:workmanager/workmanager.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/settings/app_settings_keys.dart';
 import '../../market/market_bridge.dart';
 import '../../market/tradera_client.dart';
 import '../sync_scheduler.dart';
@@ -29,6 +30,17 @@ class BackgroundSync {
 
   static Future<void> scheduleIfConfigured({required AppDatabase db}) async {
     if (!isSupported) return;
+
+    final enabled =
+        (await db.appSettingsDao.getInt(
+          kPrivacyFetchSoldPriceCompsEnabledKeyV1,
+        )) ??
+        1;
+    if (enabled != 1) {
+      await Workmanager().cancelByUniqueName(_taskName);
+      return;
+    }
+
     final config = AppConfig.fromEnvironment();
     if (!config.hasTraderaProxy) {
       // Avoid leaving stale periodic work scheduled when the app is run without
@@ -65,6 +77,13 @@ void callbackDispatcher() {
 
     final db = AppDatabase.open();
     try {
+      final enabled =
+          (await db.appSettingsDao.getInt(
+            kPrivacyFetchSoldPriceCompsEnabledKeyV1,
+          )) ??
+          1;
+      if (enabled != 1) return true;
+
       final market = MarketBridge(
         tradera: TraderaClient(functionUrl: Uri.parse(config.traderaProxyUrl)),
         db: db,

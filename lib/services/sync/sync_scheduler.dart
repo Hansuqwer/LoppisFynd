@@ -4,6 +4,7 @@ import 'dart:math';
 
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
+import '../../core/settings/app_settings_keys.dart';
 import '../../core/time/clock.dart';
 import '../../core/utils/serial_task_queue.dart';
 import '../analytics/analytics_service.dart';
@@ -45,6 +46,13 @@ class SyncScheduler {
   Future<void> _syncOnceInternal() async {
     _events.add(const SyncRunStarted());
     try {
+      final enabled =
+          (await _db.appSettingsDao.getInt(
+            kPrivacyFetchSoldPriceCompsEnabledKeyV1,
+          )) ??
+          1;
+      if (enabled != 1) return;
+
       final sw = Stopwatch()..start();
       final now = _clock.now();
       final dayKey = _dayKey(now);
