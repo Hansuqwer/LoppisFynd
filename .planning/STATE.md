@@ -54,6 +54,10 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 03]: Rate limit key prefers JWT sub when present, else hashed bearer token, else IP
 - [Phase 03]: Fail closed with server_not_configured when Upstash env vars are missing
 
+### Roadmap Evolution
+
+- Phase 6 added: Commercial-safe offline object detection (YOLOX)
+
 ### Pending Todos
 
 - Run iOS build + launch validation when macOS access is available (or via CI `ios-build`).
@@ -67,6 +71,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-23T20:50:40.151Z
-**Stopped At:** Completed 03-03-PLAN.md
-**Resume File:** None
+**Last session:** 2026-02-23T23:03:39.550Z
+**Stopped At:** Phase 6 context gathered
+**Resume File:** .planning/phases/06-commercial-safe-offline-object-detection-yolox/06-CONTEXT.md
