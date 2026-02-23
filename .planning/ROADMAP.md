@@ -12,7 +12,7 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
 
 - [x] **Phase 1: Dependency Modernization Baseline** - Update core packages and Flutter toolchain with tests passing. (completed 2026-02-22)
 - [x] **Phase 2: Cloud AI + Privacy Controls** - Default Gemini identification via server proxy with no first-run blocker. (completed 2026-02-22)
-- [ ] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection.
+- [x] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection. (completed 2026-02-23)
 - [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification with evidence and safe licensing.
 - [ ] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across primitives plus golden coverage.
 
@@ -66,7 +66,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md — Wire comps enable/disable, background gating, and last-updated UI
 - [x] 03-02-PLAN.md — Add proxy abuse protection + stable error contract + actionable client errors
-- [ ] 03-03-PLAN.md — Gap closure: Reschedule background work when comps toggle changes
+- [x] 03-03-PLAN.md — Gap closure: Reschedule background work when comps toggle changes
 
 ### Phase 4: Opt-In Offline Fallback
 **Goal**: Users can optionally enable a lightweight offline identification mode that works without network connectivity and shows evidence.
@@ -110,6 +110,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
 | 2. Cloud AI + Privacy Controls | 5/5 | Complete    | 2026-02-22 |
-| 3. Sold-Price Comps Hardening | 2/3 | In progress | - |
+| 3. Sold-Price Comps Hardening | 3/3 | Complete    | 2026-02-23 |
 | 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
