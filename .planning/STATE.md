@@ -12,9 +12,9 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 **Phase:** 3 of 5 (Sold-Price Comps Hardening)
 **Current Plan:** 2
 **Total Plans in Phase:** 2
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Last Activity:** 2026-02-23
-**Progress:** [█████████░] 89%
+**Progress:** [██████████] 100%
 
 ## Performance Metrics
 
@@ -33,6 +33,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 02-cloud-ai-privacy-controls P04 | 7 min | 3 tasks | 3 files |
 | Phase 02-cloud-ai-privacy-controls P05 | 14 min | 3 tasks | 11 files |
 | Phase 03 P01 | 10 min | 2 tasks | 5 files |
+| Phase 03-sold-price-comps-hardening P02 | 26 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -48,6 +49,9 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 02]: Enforce PRIV-03 with crops-only JPEG re-encode and strict upload byte budget
 - [Phase 02-cloud-ai-privacy-controls]: [Phase 02]: Scanner auto-capture uses debounce + per-barcode cooldown
 - [Phase 02-cloud-ai-privacy-controls]: [Phase 02]: Batch tray drag-to-delete is local-only (clears sync metadata + best-effort file cleanup)
+- [Phase 03]: Treat HTTP 429 as actionable (no tight client retry loop); surface retry-after to UX
+- [Phase 03]: Rate limit key prefers JWT sub when present, else hashed bearer token, else IP
+- [Phase 03]: Fail closed with server_not_configured when Upstash env vars are missing
 
 ### Pending Todos
 
@@ -60,6 +64,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-23T06:32:11.995Z
-**Stopped At:** Completed 03-01-PLAN.md
+**Last session:** 2026-02-23T06:53:39.637Z
+**Stopped At:** Completed 03-02-PLAN.md
 **Resume File:** None
