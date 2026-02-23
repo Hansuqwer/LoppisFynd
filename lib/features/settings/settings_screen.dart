@@ -560,6 +560,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               kPrivacyFetchSoldPriceCompsEnabledKeyV1,
               v ? 1 : 0,
             );
+            await BackgroundSync.scheduleIfConfigured(db: db);
           },
         ),
         const SizedBox(height: AppSpacing.lg),
