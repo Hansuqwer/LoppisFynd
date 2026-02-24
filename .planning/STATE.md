@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a user quickly identify and price a secondhand item from a photo, even with unreliable connectivity.
-**Current focus:** Phase 3 - Sold-Price Comps Hardening
+**Current focus:** Phase 4 - Opt-In Offline Fallback
 
 ## Current Position
 
-**Phase:** 3 of 5 (Sold-Price Comps Hardening)
-**Current Plan:** 3
-**Total Plans in Phase:** 3
-**Status:** Phase complete — human verification pending (03-03 Workmanager scheduling)
-**Last Activity:** 2026-02-23
-**Progress:** [██████████] 100%
+**Phase:** 4 of 5 (Opt-In Offline Fallback)
+**Current Plan:** 2
+**Total Plans in Phase:** 4
+**Status:** In progress (04-01 complete)
+**Last Activity:** 2026-02-24
+**Progress:** [████████░░] 79%
 
 ## Performance Metrics
 
@@ -35,6 +35,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 03 P01 | 10 min | 2 tasks | 5 files |
 | Phase 03-sold-price-comps-hardening P02 | 26 min | 2 tasks | 8 files |
 | Phase 03-sold-price-comps-hardening P03 | 2 min | 2 tasks | 1 files |
+| Phase 04-opt-in-offline-fallback P01 | 30 min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -53,10 +54,13 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 03]: Treat HTTP 429 as actionable (no tight client retry loop); surface retry-after to UX
 - [Phase 03]: Rate limit key prefers JWT sub when present, else hashed bearer token, else IP
 - [Phase 03]: Fail closed with server_not_configured when Upstash env vars are missing
+- [Phase 04-opt-in-offline-fallback]: Select TensorFlow-hosted EfficientDet Lite0 detection metadata model (<10MiB) and pin expectedBytes + sha256
+- [Phase 04-opt-in-offline-fallback]: Embed full Apache-2.0 and CC BY 4.0 legal texts in offline model catalog for OFF-04 attribution surfaces
 
 ### Roadmap Evolution
 
 - Phase 6 added: Commercial-safe offline object detection (YOLOX)
+- Phase 6 merged into Phase 4 (Opt-In Offline Fallback) and removed from the roadmap
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-23T23:03:39.550Z
-**Stopped At:** Phase 6 context gathered
-**Resume File:** .planning/phases/06-commercial-safe-offline-object-detection-yolox/06-CONTEXT.md
+**Last session:** 2026-02-24T06:54:17.062Z
+**Stopped At:** Completed 04-opt-in-offline-fallback-01-PLAN.md
+**Resume File:** None

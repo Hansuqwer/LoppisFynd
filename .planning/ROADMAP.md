@@ -78,12 +78,13 @@ Plans:
   3. Any offline model download is clearly presented as optional, shows its size up front, and stays under 10MB (excluding the app bundle).
   4. Offline results present evidence suitable for UI display (e.g., bounding boxes and confidence).
   5. The user can view offline model attribution/license information in-app.
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [ ] 04-01-PLAN.md — Offline model catalog + download pipeline (pause/resume/cancel) with <10MB guardrails
 - [ ] 04-02-PLAN.md — Offline detector runtime (evidence schema + confidence threshold + parsing + providers)
-- [ ] 04-03-PLAN.md — Offline UX wiring (settings opt-in, split-view evidence UI, entry points, and licenses)
+- [ ] 04-03-PLAN.md — Settings opt-in + one-time download suggestion + in-app offline licenses (OFF-04)
+- [ ] 04-04-PLAN.md — Offline detection UX (split-view evidence + download card), entry points, and device checkpoint
 
 ### Phase 5: UI Tokens + Dark Mode Parity
 **Goal**: UI System v2 tokens drive light/dark theming across shared primitives with regression protection.
