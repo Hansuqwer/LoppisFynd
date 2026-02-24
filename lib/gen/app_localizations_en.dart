@@ -184,6 +184,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
+  String get commonCopied => 'Copied.';
+
+  @override
   String get commonCreate => 'Create';
 
   @override
@@ -474,6 +477,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsModulePrivacyTitle => 'Privacy';
 
   @override
+  String get settingsModuleLegalTitle => 'Legal & Licenses';
+
+  @override
+  String get settingsOfflineIdentificationToggleTitle =>
+      'Enable offline identification';
+
+  @override
+  String settingsOfflineIdentificationToggleSubtitle(String size) {
+    return 'Optional on-device detection. Download required ($size).';
+  }
+
+  @override
+  String settingsOfflineDownloadSuggestion(String size) {
+    return 'Offline identification is enabled. Download the offline model now? ($size)';
+  }
+
+  @override
+  String get settingsOfflineDownloadSuggestionAction => 'Download';
+
+  @override
+  String get settingsOfflineDownloadStarted =>
+      'Starting offline model download…';
+
+  @override
+  String get settingsOfflineDownloadInProgress =>
+      'Offline model download in progress.';
+
+  @override
+  String get settingsOfflineDownloadInstalled => 'Offline model installed.';
+
+  @override
+  String settingsOfflineDownloadFailed(String error) {
+    return 'Offline model download failed: $error';
+  }
+
+  @override
+  String get settingsOfflineAttributionTitle => 'Offline model attribution';
+
+  @override
+  String get settingsOfflineAttributionSummary =>
+      'Runtime and model weights are Apache-2.0; trained on COCO annotations (CC BY 4.0).';
+
+  @override
+  String get settingsOfflineAttributionViewFull => 'View full license text';
+
+  @override
+  String get settingsLegalDescription =>
+      'Licenses and attributions for Loppisfynd and the optional offline model.';
+
+  @override
+  String get settingsOpenLegal => 'Open legal';
+
+  @override
   String get settingsMarketSyncTitle => 'Market sync';
 
   @override
@@ -630,6 +686,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOpenSyncStatus => 'Open sync status';
+
+  @override
+  String get legalTitle => 'Legal';
+
+  @override
+  String get legalLicensesTitle => 'Licenses';
+
+  @override
+  String get legalLicensesSubtitle =>
+      'Review third-party notices and offline model attributions.';
+
+  @override
+  String get legalThirdPartyLicenses => 'Third-party licenses';
+
+  @override
+  String get legalOfflineModelLicenses => 'Offline model licenses';
+
+  @override
+  String get legalOfflineModelLicensesTitle => 'Offline model licenses';
+
+  @override
+  String legalOfflineModelSize(String size) {
+    return 'Download size: $size';
+  }
+
+  @override
+  String get legalOfflineLicenseRuntimeTitle => 'Runtime / inference stack';
+
+  @override
+  String get legalOfflineLicenseRuntimeSummary =>
+      'TensorFlow Lite runtime used for on-device inference (Apache-2.0).';
+
+  @override
+  String get legalOfflineLicenseWeightsTitle => 'Model weights';
+
+  @override
+  String get legalOfflineLicenseWeightsSummary =>
+      'The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).';
+
+  @override
+  String get legalOfflineLicenseDatasetTitle =>
+      'Dataset / training attribution';
+
+  @override
+  String get legalOfflineLicenseDatasetSummary =>
+      'COCO annotations are licensed under CC BY 4.0.';
+
+  @override
+  String get legalSourceUrlLabel => 'Source URL';
+
+  @override
+  String get legalCopySourceUrl => 'Copy URL';
+
+  @override
+  String get legalViewFullLicenseText => 'View full license text';
 
   @override
   String get draftEditorTitle => 'Draft listing';

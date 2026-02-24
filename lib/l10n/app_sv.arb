@@ -63,6 +63,7 @@
 
   "buttonRetry": "Försök igen",
   "commonCancel": "Avbryt",
+  "commonCopied": "Kopierat.",
   "commonCreate": "Skapa",
   "commonDelete": "Ta bort",
   "commonOpenSettings": "Öppna inställningar",
@@ -167,6 +168,32 @@
   "settingsModuleSyncDataDescription": "Molnsynk är under utveckling.",
   "settingsModuleAiModelTitle": "AI & Modell",
   "settingsModulePrivacyTitle": "Integritet",
+  "settingsModuleLegalTitle": "Juridik & licenser",
+
+  "settingsOfflineIdentificationToggleTitle": "Aktivera offline-identifiering",
+  "settingsOfflineIdentificationToggleSubtitle": "Valfri identifiering på enheten. Nedladdning krävs ({size}).",
+  "@settingsOfflineIdentificationToggleSubtitle": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "settingsOfflineDownloadSuggestion": "Offline-identifiering är aktiverat. Vill du ladda ner offline-modellen nu? ({size})",
+  "@settingsOfflineDownloadSuggestion": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "settingsOfflineDownloadSuggestionAction": "Ladda ner",
+  "settingsOfflineDownloadStarted": "Startar nedladdning av offline-modell…",
+  "settingsOfflineDownloadInProgress": "Nedladdning av offline-modell pågår.",
+  "settingsOfflineDownloadInstalled": "Offline-modellen är installerad.",
+  "settingsOfflineDownloadFailed": "Nedladdning misslyckades: {error}",
+  "@settingsOfflineDownloadFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+
+  "settingsOfflineAttributionTitle": "Attribution för offline-modell",
+  "settingsOfflineAttributionSummary": "Runtime och modellvikter är Apache-2.0; tränad på COCO-annoteringar (CC BY 4.0).",
+  "settingsOfflineAttributionViewFull": "Visa full licenstext",
+
+  "settingsLegalDescription": "Licenser och attributioner för Loppisfynd och den valfria offline-modellen.",
+  "settingsOpenLegal": "Öppna juridik",
 
   "settingsMarketSyncTitle": "Marknadssynk",
   "settingsTraderaProxyConfigured": "Tradera-proxy konfigurerad.",
@@ -227,6 +254,26 @@
   "settingsSyncStatusTitle": "Synkstatus",
   "settingsSyncStatusSubtitle": "Se synkhälsa, fel och konflikter.",
   "settingsOpenSyncStatus": "Öppna synkstatus",
+
+  "legalTitle": "Juridik",
+  "legalLicensesTitle": "Licenser",
+  "legalLicensesSubtitle": "Granska tredjepartsnotiser och offline-modellens attribution.",
+  "legalThirdPartyLicenses": "Tredjepartslicenser",
+  "legalOfflineModelLicenses": "Offline-modellens licenser",
+  "legalOfflineModelLicensesTitle": "Offline-modellens licenser",
+  "legalOfflineModelSize": "Nedladdningsstorlek: {size}",
+  "@legalOfflineModelSize": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "legalOfflineLicenseRuntimeTitle": "Runtime / inferens",
+  "legalOfflineLicenseRuntimeSummary": "TensorFlow Lite-runtime som används för inferens på enheten (Apache-2.0).",
+  "legalOfflineLicenseWeightsTitle": "Modellvikter",
+  "legalOfflineLicenseWeightsSummary": "Den nedladdade EfficientDet Lite0-viktfilen (Apache-2.0).",
+  "legalOfflineLicenseDatasetTitle": "Dataset / träningsattribution",
+  "legalOfflineLicenseDatasetSummary": "COCO-annoteringar är licensierade under CC BY 4.0.",
+  "legalSourceUrlLabel": "Käll-URL",
+  "legalCopySourceUrl": "Kopiera URL",
+  "legalViewFullLicenseText": "Visa full licenstext",
 
   "draftEditorTitle": "Annonsutkast",
   "draftEditorFieldsTitle": "Utkastfält",

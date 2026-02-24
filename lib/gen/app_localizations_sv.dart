@@ -185,6 +185,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get commonCancel => 'Avbryt';
 
   @override
+  String get commonCopied => 'Kopierat.';
+
+  @override
   String get commonCreate => 'Skapa';
 
   @override
@@ -477,6 +480,61 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsModulePrivacyTitle => 'Integritet';
 
   @override
+  String get settingsModuleLegalTitle => 'Juridik & licenser';
+
+  @override
+  String get settingsOfflineIdentificationToggleTitle =>
+      'Aktivera offline-identifiering';
+
+  @override
+  String settingsOfflineIdentificationToggleSubtitle(String size) {
+    return 'Valfri identifiering på enheten. Nedladdning krävs ($size).';
+  }
+
+  @override
+  String settingsOfflineDownloadSuggestion(String size) {
+    return 'Offline-identifiering är aktiverat. Vill du ladda ner offline-modellen nu? ($size)';
+  }
+
+  @override
+  String get settingsOfflineDownloadSuggestionAction => 'Ladda ner';
+
+  @override
+  String get settingsOfflineDownloadStarted =>
+      'Startar nedladdning av offline-modell…';
+
+  @override
+  String get settingsOfflineDownloadInProgress =>
+      'Nedladdning av offline-modell pågår.';
+
+  @override
+  String get settingsOfflineDownloadInstalled =>
+      'Offline-modellen är installerad.';
+
+  @override
+  String settingsOfflineDownloadFailed(String error) {
+    return 'Nedladdning misslyckades: $error';
+  }
+
+  @override
+  String get settingsOfflineAttributionTitle =>
+      'Attribution för offline-modell';
+
+  @override
+  String get settingsOfflineAttributionSummary =>
+      'Runtime och modellvikter är Apache-2.0; tränad på COCO-annoteringar (CC BY 4.0).';
+
+  @override
+  String get settingsOfflineAttributionViewFull => 'Visa full licenstext';
+
+  @override
+  String get settingsLegalDescription =>
+      'Licenser och attributioner för Loppisfynd och den valfria offline-modellen.';
+
+  @override
+  String get settingsOpenLegal => 'Öppna juridik';
+
+  @override
   String get settingsMarketSyncTitle => 'Marknadssynk';
 
   @override
@@ -632,6 +690,60 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsOpenSyncStatus => 'Öppna synkstatus';
+
+  @override
+  String get legalTitle => 'Juridik';
+
+  @override
+  String get legalLicensesTitle => 'Licenser';
+
+  @override
+  String get legalLicensesSubtitle =>
+      'Granska tredjepartsnotiser och offline-modellens attribution.';
+
+  @override
+  String get legalThirdPartyLicenses => 'Tredjepartslicenser';
+
+  @override
+  String get legalOfflineModelLicenses => 'Offline-modellens licenser';
+
+  @override
+  String get legalOfflineModelLicensesTitle => 'Offline-modellens licenser';
+
+  @override
+  String legalOfflineModelSize(String size) {
+    return 'Nedladdningsstorlek: $size';
+  }
+
+  @override
+  String get legalOfflineLicenseRuntimeTitle => 'Runtime / inferens';
+
+  @override
+  String get legalOfflineLicenseRuntimeSummary =>
+      'TensorFlow Lite-runtime som används för inferens på enheten (Apache-2.0).';
+
+  @override
+  String get legalOfflineLicenseWeightsTitle => 'Modellvikter';
+
+  @override
+  String get legalOfflineLicenseWeightsSummary =>
+      'Den nedladdade EfficientDet Lite0-viktfilen (Apache-2.0).';
+
+  @override
+  String get legalOfflineLicenseDatasetTitle => 'Dataset / träningsattribution';
+
+  @override
+  String get legalOfflineLicenseDatasetSummary =>
+      'COCO-annoteringar är licensierade under CC BY 4.0.';
+
+  @override
+  String get legalSourceUrlLabel => 'Käll-URL';
+
+  @override
+  String get legalCopySourceUrl => 'Kopiera URL';
+
+  @override
+  String get legalViewFullLicenseText => 'Visa full licenstext';
 
   @override
   String get draftEditorTitle => 'Annonsutkast';

@@ -11,12 +11,15 @@ import '../../core/tokens/app_tokens.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_board.dart';
 import '../../shared/widgets/glass_button.dart';
+import '../../services/offline_detection/offline_model_catalog.dart';
+import '../../services/offline_detection/offline_model_download_controller.dart';
 import '../../services/sync/cloud_photo_sync_service.dart';
 import '../../services/sync/cloud_metadata_sync_service.dart';
 import '../../services/sync/background/background_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/navigation/spring_route.dart';
 import 'account_deletion_screen.dart';
+import 'legal_screen.dart';
 import 'privacy_screen.dart';
 import 'sync_status_screen.dart';
 
@@ -36,6 +39,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _cloudPhotoSyncing = false;
   bool _signingOut = false;
   String? _lastDisplayName;
+
+  OfflineModelDownloadController? _offlineDownloadController;
 
   static const _kDevModeEnabled = 'dev_mode_enabled_v1';
   bool _devModeEnabled = false;
@@ -74,7 +79,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void dispose() {
     _devModeTapTimer?.cancel();
     _displayNameController.dispose();
+    _offlineDownloadController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _downloadOfflineModel() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.settingsOfflineDownloadStarted)),
+    );
+
+    final controller = _offlineDownloadController ??=
+        OfflineModelDownloadController();
+    await controller.startOrResume();
+    if (!mounted) return;
+
+    final s = controller.state.value;
+    if (s is OfflineModelInstalled) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsOfflineDownloadInstalled)),
+      );
+      return;
+    }
+    if (s is OfflineModelFailed) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsOfflineDownloadFailed(s.message))),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.settingsOfflineDownloadInProgress)),
+    );
   }
 
   void _handleVersionTap() {
@@ -273,6 +311,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     userId,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                _SettingsModuleCard(
+                  icon: Icons.gavel_rounded,
+                  title: l10n.settingsModuleLegalTitle,
+                  child: _buildLegalModule(context, l10n),
+                ),
               ],
             ),
           ),
@@ -452,6 +496,99 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FutureBuilder<int?>(
+          future: db.appSettingsDao.getInt(kOfflineIdentificationEnabledKeyV1),
+          builder: (context, snapshot) {
+            final enabled = (snapshot.data ?? 0) == 1;
+            return SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsOfflineIdentificationToggleTitle),
+              subtitle: Text(
+                l10n.settingsOfflineIdentificationToggleSubtitle(
+                  kOfflineDetectionModel.sizeLabel,
+                ),
+              ),
+              value: enabled,
+              onChanged: (v) async {
+                final messenger = ScaffoldMessenger.of(context);
+                await db.appSettingsDao.setInt(
+                  kOfflineIdentificationEnabledKeyV1,
+                  v ? 1 : 0,
+                );
+
+                if (!v) return;
+
+                final shown =
+                    (await db.appSettingsDao.getInt(
+                      kOfflineModelDownloadSuggestionShownKeyV1,
+                    )) ==
+                    1;
+                if (shown) return;
+
+                await db.appSettingsDao.setInt(
+                  kOfflineModelDownloadSuggestionShownKeyV1,
+                  1,
+                );
+                if (!mounted) return;
+
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.settingsOfflineDownloadSuggestion(
+                        kOfflineDetectionModel.sizeLabel,
+                      ),
+                    ),
+                    action: SnackBarAction(
+                      label: l10n.settingsOfflineDownloadSuggestionAction,
+                      onPressed: () {
+                        unawaited(_downloadOfflineModel());
+                      },
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.glassFill,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.settingsOfflineAttributionTitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                l10n.settingsOfflineAttributionSummary,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              GlassButton(
+                label: l10n.settingsOfflineAttributionViewFull,
+                tone: GlassButtonTone.neutral,
+                icon: const Icon(Icons.description_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    SpringRoute(
+                      builder: (_) => const OfflineModelLicensesScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FutureBuilder<int?>(
           future: db.appSettingsDao.getInt(
             'ai_accuracy_mode_${userId ?? 'guest'}',
           ),
@@ -489,6 +626,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ],
             );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegalModule(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.settingsLegalDescription,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        GlassButton(
+          label: l10n.settingsOpenLegal,
+          icon: const Icon(Icons.gavel_rounded),
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(SpringRoute(builder: (_) => const LegalScreen()));
           },
         ),
       ],

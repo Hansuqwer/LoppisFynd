@@ -62,6 +62,7 @@
   "bannerOffline": "Offline mode: price fetch is paused.",
   "buttonRetry": "Retry",
   "commonCancel": "Cancel",
+  "commonCopied": "Copied.",
   "commonCreate": "Create",
   "commonDelete": "Delete",
   "commonOpenSettings": "Open Settings",
@@ -166,6 +167,32 @@
   "settingsModuleSyncDataDescription": "Cloud sync is under development.",
   "settingsModuleAiModelTitle": "AI & Model",
   "settingsModulePrivacyTitle": "Privacy",
+  "settingsModuleLegalTitle": "Legal & Licenses",
+
+  "settingsOfflineIdentificationToggleTitle": "Enable offline identification",
+  "settingsOfflineIdentificationToggleSubtitle": "Optional on-device detection. Download required ({size}).",
+  "@settingsOfflineIdentificationToggleSubtitle": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "settingsOfflineDownloadSuggestion": "Offline identification is enabled. Download the offline model now? ({size})",
+  "@settingsOfflineDownloadSuggestion": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "settingsOfflineDownloadSuggestionAction": "Download",
+  "settingsOfflineDownloadStarted": "Starting offline model download…",
+  "settingsOfflineDownloadInProgress": "Offline model download in progress.",
+  "settingsOfflineDownloadInstalled": "Offline model installed.",
+  "settingsOfflineDownloadFailed": "Offline model download failed: {error}",
+  "@settingsOfflineDownloadFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+
+  "settingsOfflineAttributionTitle": "Offline model attribution",
+  "settingsOfflineAttributionSummary": "Runtime and model weights are Apache-2.0; trained on COCO annotations (CC BY 4.0).",
+  "settingsOfflineAttributionViewFull": "View full license text",
+
+  "settingsLegalDescription": "Licenses and attributions for Loppisfynd and the optional offline model.",
+  "settingsOpenLegal": "Open legal",
 
   "settingsMarketSyncTitle": "Market sync",
   "settingsTraderaProxyConfigured": "Tradera proxy configured.",
@@ -226,6 +253,26 @@
   "settingsSyncStatusTitle": "Sync status",
   "settingsSyncStatusSubtitle": "See sync health, errors, and conflicts.",
   "settingsOpenSyncStatus": "Open sync status",
+
+  "legalTitle": "Legal",
+  "legalLicensesTitle": "Licenses",
+  "legalLicensesSubtitle": "Review third-party notices and offline model attributions.",
+  "legalThirdPartyLicenses": "Third-party licenses",
+  "legalOfflineModelLicenses": "Offline model licenses",
+  "legalOfflineModelLicensesTitle": "Offline model licenses",
+  "legalOfflineModelSize": "Download size: {size}",
+  "@legalOfflineModelSize": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "legalOfflineLicenseRuntimeTitle": "Runtime / inference stack",
+  "legalOfflineLicenseRuntimeSummary": "TensorFlow Lite runtime used for on-device inference (Apache-2.0).",
+  "legalOfflineLicenseWeightsTitle": "Model weights",
+  "legalOfflineLicenseWeightsSummary": "The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).",
+  "legalOfflineLicenseDatasetTitle": "Dataset / training attribution",
+  "legalOfflineLicenseDatasetSummary": "COCO annotations are licensed under CC BY 4.0.",
+  "legalSourceUrlLabel": "Source URL",
+  "legalCopySourceUrl": "Copy URL",
+  "legalViewFullLicenseText": "View full license text",
 
   "draftEditorTitle": "Draft listing",
   "draftEditorFieldsTitle": "Draft fields",

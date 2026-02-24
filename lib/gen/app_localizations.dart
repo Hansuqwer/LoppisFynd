@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get commonCancel;
 
+  /// No description provided for @commonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied.'**
+  String get commonCopied;
+
   /// No description provided for @commonCreate.
   ///
   /// In en, this message translates to:
@@ -938,6 +944,90 @@ abstract class AppLocalizations {
   /// **'Privacy'**
   String get settingsModulePrivacyTitle;
 
+  /// No description provided for @settingsModuleLegalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal & Licenses'**
+  String get settingsModuleLegalTitle;
+
+  /// No description provided for @settingsOfflineIdentificationToggleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable offline identification'**
+  String get settingsOfflineIdentificationToggleTitle;
+
+  /// No description provided for @settingsOfflineIdentificationToggleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional on-device detection. Download required ({size}).'**
+  String settingsOfflineIdentificationToggleSubtitle(String size);
+
+  /// No description provided for @settingsOfflineDownloadSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline identification is enabled. Download the offline model now? ({size})'**
+  String settingsOfflineDownloadSuggestion(String size);
+
+  /// No description provided for @settingsOfflineDownloadSuggestionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get settingsOfflineDownloadSuggestionAction;
+
+  /// No description provided for @settingsOfflineDownloadStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting offline model download…'**
+  String get settingsOfflineDownloadStarted;
+
+  /// No description provided for @settingsOfflineDownloadInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model download in progress.'**
+  String get settingsOfflineDownloadInProgress;
+
+  /// No description provided for @settingsOfflineDownloadInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model installed.'**
+  String get settingsOfflineDownloadInstalled;
+
+  /// No description provided for @settingsOfflineDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model download failed: {error}'**
+  String settingsOfflineDownloadFailed(String error);
+
+  /// No description provided for @settingsOfflineAttributionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model attribution'**
+  String get settingsOfflineAttributionTitle;
+
+  /// No description provided for @settingsOfflineAttributionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime and model weights are Apache-2.0; trained on COCO annotations (CC BY 4.0).'**
+  String get settingsOfflineAttributionSummary;
+
+  /// No description provided for @settingsOfflineAttributionViewFull.
+  ///
+  /// In en, this message translates to:
+  /// **'View full license text'**
+  String get settingsOfflineAttributionViewFull;
+
+  /// No description provided for @settingsLegalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses and attributions for Loppisfynd and the optional offline model.'**
+  String get settingsLegalDescription;
+
+  /// No description provided for @settingsOpenLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open legal'**
+  String get settingsOpenLegal;
+
   /// No description provided for @settingsMarketSyncTitle.
   ///
   /// In en, this message translates to:
@@ -1219,6 +1309,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open sync status'**
   String get settingsOpenSyncStatus;
+
+  /// No description provided for @legalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legalTitle;
+
+  /// No description provided for @legalLicensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
+  String get legalLicensesTitle;
+
+  /// No description provided for @legalLicensesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review third-party notices and offline model attributions.'**
+  String get legalLicensesSubtitle;
+
+  /// No description provided for @legalThirdPartyLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party licenses'**
+  String get legalThirdPartyLicenses;
+
+  /// No description provided for @legalOfflineModelLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model licenses'**
+  String get legalOfflineModelLicenses;
+
+  /// No description provided for @legalOfflineModelLicensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model licenses'**
+  String get legalOfflineModelLicensesTitle;
+
+  /// No description provided for @legalOfflineModelSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Download size: {size}'**
+  String legalOfflineModelSize(String size);
+
+  /// No description provided for @legalOfflineLicenseRuntimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime / inference stack'**
+  String get legalOfflineLicenseRuntimeTitle;
+
+  /// No description provided for @legalOfflineLicenseRuntimeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'TensorFlow Lite runtime used for on-device inference (Apache-2.0).'**
+  String get legalOfflineLicenseRuntimeSummary;
+
+  /// No description provided for @legalOfflineLicenseWeightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model weights'**
+  String get legalOfflineLicenseWeightsTitle;
+
+  /// No description provided for @legalOfflineLicenseWeightsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).'**
+  String get legalOfflineLicenseWeightsSummary;
+
+  /// No description provided for @legalOfflineLicenseDatasetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dataset / training attribution'**
+  String get legalOfflineLicenseDatasetTitle;
+
+  /// No description provided for @legalOfflineLicenseDatasetSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'COCO annotations are licensed under CC BY 4.0.'**
+  String get legalOfflineLicenseDatasetSummary;
+
+  /// No description provided for @legalSourceUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source URL'**
+  String get legalSourceUrlLabel;
+
+  /// No description provided for @legalCopySourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get legalCopySourceUrl;
+
+  /// No description provided for @legalViewFullLicenseText.
+  ///
+  /// In en, this message translates to:
+  /// **'View full license text'**
+  String get legalViewFullLicenseText;
 
   /// No description provided for @draftEditorTitle.
   ///
