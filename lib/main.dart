@@ -18,6 +18,7 @@ import 'services/ai/inference/inference_isolate_service.dart';
 import 'services/market/market_bridge.dart';
 import 'services/market/market_data_source.dart';
 import 'services/market/tradera_client.dart';
+import 'services/offline_detection/offline_licenses.dart';
 import 'services/sync/sync_scheduler.dart';
 import 'services/analytics/analytics_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -32,6 +33,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  registerOfflineLicenses();
 
   ErrorWidget.builder = (details) {
     return Material(
