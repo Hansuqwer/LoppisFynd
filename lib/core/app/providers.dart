@@ -12,6 +12,7 @@ import '../../services/ai/inference/inference_isolate_service.dart';
 import '../../services/sync/sync_scheduler.dart';
 import '../../services/sync/cloud/cloud_sync_coordinator.dart';
 import '../../services/analytics/analytics_service.dart';
+import '../../services/offline_detection/offline_detector.dart';
 
 T _uninitialized<T>(String name) {
   throw StateError('$name is not initialized. Override it in ProviderScope.');
@@ -90,6 +91,17 @@ final fetchSoldPriceCompsEnabledProvider = StreamProvider<bool>((ref) {
   return db.appSettingsDao
       .watchInt(kPrivacyFetchSoldPriceCompsEnabledKeyV1)
       .map((v) => (v ?? 1) == 1);
+});
+
+final offlineIdentificationEnabledProvider = StreamProvider<bool>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao
+      .watchInt(kOfflineIdentificationEnabledKeyV1)
+      .map((v) => (v ?? 0) == 1);
+});
+
+final offlineDetectorProvider = Provider<OfflineDetector>((ref) {
+  return OfflineDetector();
 });
 
 final featureFlagsProvider = Provider<FeatureFlags>((ref) {

@@ -10,3 +10,14 @@ const String kPrivacyFetchSoldPriceCompsEnabledKeyV1 =
 /// 0/absent = unknown, 1 = accepted, 2 = not now.
 const String kCloudIdentificationDisclosureChoiceKeyV1 =
     'cloud_identification_disclosure_choice_v1';
+
+/// 0/absent = disabled, 1 = enabled.
+const String kOfflineIdentificationEnabledKeyV1 =
+    'offline_identification_enabled_v1';
+
+/// 0/absent = not shown, 1 = shown.
+///
+/// Used to proactively suggest downloading the offline model once after
+/// enabling offline identification.
+const String kOfflineModelDownloadSuggestionShownKeyV1 =
+    'offline_model_download_suggestion_shown_v1';
