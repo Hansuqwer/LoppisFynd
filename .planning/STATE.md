@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 **Phase:** 4 of 5 (Opt-In Offline Fallback)
-**Current Plan:** 3
+**Current Plan:** 4
 **Total Plans in Phase:** 4
 **Status:** Ready to execute
 **Last Activity:** 2026-02-24
-**Progress:** [█████████░] 86%
+**Progress:** [█████████░] 93%
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 03-sold-price-comps-hardening P03 | 2 min | 2 tasks | 1 files |
 | Phase 04-opt-in-offline-fallback P01 | 30 min | 3 tasks | 12 files |
 | Phase 04-opt-in-offline-fallback P02 | 11 min | 3 tasks | 6 files |
+| Phase 04-opt-in-offline-fallback P03 | 6 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,8 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 04-opt-in-offline-fallback]: Embed full Apache-2.0 and CC BY 4.0 legal texts in offline model catalog for OFF-04 attribution surfaces
 - [Phase 04-opt-in-offline-fallback]: Use hard minimum score 0.35 with centralized High/Med/Low banding for offline detections
 - [Phase 04-opt-in-offline-fallback]: Run offline detection decode/preprocess/inference in background isolate (Isolate.run) to avoid UI jank
+- [Phase 04-opt-in-offline-fallback]: Use SnackBar action for the one-time download suggestion (non-modal)
+- [Phase 04-opt-in-offline-fallback]: Expose offline license summaries in a dedicated screen plus full-text viewer
 
 ### Roadmap Evolution
 
@@ -78,6 +81,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-24T08:09:52.290Z
-**Stopped At:** Completed 04-opt-in-offline-fallback-02-PLAN.md
+**Last session:** 2026-02-24T08:25:33.655Z
+**Stopped At:** Completed 04-opt-in-offline-fallback-03-PLAN.md
 **Resume File:** None
