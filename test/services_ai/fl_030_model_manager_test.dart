@@ -154,6 +154,112 @@ void main() {
     expect(await File('${installed.path}.partial').exists(), isFalse);
   });
 
+  test(
+    'ModelManager downloadFromUrl supports pause and resumes later',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('fynd_model_test_');
+      addTearDown(() async => temp.delete(recursive: true));
+
+      final payload = List<int>.generate(128 * 1024, (i) => i % 251);
+      const pauseAt = 12 * 1024;
+
+      final seenRanges = <String?>[];
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() async => server.close(force: true));
+      server.listen((request) async {
+        final range = request.headers.value(HttpHeaders.rangeHeader);
+        seenRanges.add(range);
+
+        final match = range == null
+            ? null
+            : RegExp(r'^bytes=(\d+)-$').firstMatch(range);
+
+        if (match != null) {
+          final start = int.parse(match.group(1)!);
+          final end = payload.length - 1;
+
+          request.response.statusCode = HttpStatus.partialContent;
+          request.response.headers.set(
+            HttpHeaders.contentRangeHeader,
+            'bytes $start-$end/${payload.length}',
+          );
+          request.response.contentLength = payload.length - start;
+          request.response.add(payload.sublist(start));
+          await request.response.close();
+          return;
+        }
+
+        request.response.statusCode = 200;
+        request.response.contentLength = payload.length;
+
+        const chunkSize = 1024;
+        try {
+          for (var i = 0; i < payload.length; i += chunkSize) {
+            final end = (i + chunkSize) > payload.length
+                ? payload.length
+                : (i + chunkSize);
+            request.response.add(payload.sublist(i, end));
+            await request.response.flush();
+            await Future<void>.delayed(const Duration(milliseconds: 2));
+          }
+        } catch (_) {
+          // Client may abort early on pause.
+        } finally {
+          try {
+            await request.response.close();
+          } catch (_) {
+            // Best effort.
+          }
+        }
+      });
+
+      final manager = ModelManager(
+        spec: const ModelSpec(id: 'test', fileName: 'pause.bin'),
+        baseDirProvider: () async => temp,
+      );
+
+      final installed = await manager.modelFile();
+      await installed.writeAsBytes(List<int>.filled(123, 1), flush: true);
+      final beforeBytes = await installed.readAsBytes();
+
+      var paused = false;
+      await expectLater(
+        () => manager.downloadFromUrl(
+          url: Uri.parse('http://${server.address.host}:${server.port}/model'),
+          onProgress: (received, total) {
+            if (total != null && received < total && received >= pauseAt) {
+              paused = true;
+            }
+          },
+          isPaused: () => paused,
+        ),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(await installed.readAsBytes(), beforeBytes);
+      final partial = File('${installed.path}.partial');
+      expect(await partial.exists(), isTrue);
+      final partialLen = await partial.length();
+      expect(partialLen, greaterThan(0));
+      expect(partialLen, lessThan(payload.length));
+
+      paused = false;
+      await manager.downloadFromUrl(
+        url: Uri.parse('http://${server.address.host}:${server.port}/model'),
+      );
+
+      expect(
+        seenRanges.whereType<String>().toList(),
+        contains('bytes=$partialLen-'),
+      );
+      final state = await manager.state();
+      expect(state.installed, isTrue);
+      expect(state.bytes, payload.length);
+      expect(await state.file!.readAsBytes(), payload);
+      expect(await File('${installed.path}.partial').exists(), isFalse);
+    },
+  );
+
   test('ModelManager downloadFromUrl cleans up partial on error', () async {
     final temp = await Directory.systemTemp.createTemp('fynd_model_test_');
     addTearDown(() async => temp.delete(recursive: true));

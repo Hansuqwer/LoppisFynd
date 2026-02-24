@@ -71,6 +71,7 @@ class ModelManager {
     required Uri url,
     void Function(int received, int? total)? onProgress,
     bool Function()? isCancelled,
+    bool Function()? isPaused,
   }) async {
     final target = await modelFile();
     final tmp = File('${target.path}.partial');
@@ -79,6 +80,10 @@ class ModelManager {
     try {
       if (isCancelled?.call() == true) {
         throw const _ModelDownloadCancelledException();
+      }
+
+      if (isPaused?.call() == true) {
+        throw const _ModelDownloadPausedException();
       }
 
       var existingBytes = 0;
@@ -166,6 +171,10 @@ class ModelManager {
             if (isCancelled?.call() == true) {
               throw const _ModelDownloadCancelledException();
             }
+
+            if (isPaused?.call() == true) {
+              throw const _ModelDownloadPausedException();
+            }
             received += chunk.length;
             onProgress?.call(received, total);
             return chunk;
@@ -179,11 +188,22 @@ class ModelManager {
         throw const _ModelDownloadCancelledException();
       }
 
+      final shouldPause =
+          isPaused?.call() == true && (total == null || received < total);
+      if (shouldPause) {
+        throw const _ModelDownloadPausedException();
+      }
+
       if (await target.exists()) {
         await target.delete();
       }
       await tmp.rename(target.path);
-    } catch (_) {
+    } catch (e) {
+      final paused = isPaused?.call() == true;
+      if (e is _ModelDownloadPausedException || paused) {
+        rethrow;
+      }
+
       try {
         if (await tmp.exists()) {
           await tmp.delete();
@@ -227,4 +247,11 @@ class _ModelDownloadCancelledException implements Exception {
 
   @override
   String toString() => 'Model download cancelled';
+}
+
+class _ModelDownloadPausedException implements Exception {
+  const _ModelDownloadPausedException();
+
+  @override
+  String toString() => 'Model download paused';
 }
