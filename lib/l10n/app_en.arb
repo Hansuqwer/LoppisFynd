@@ -191,6 +191,35 @@
   "settingsOfflineAttributionSummary": "Runtime and model weights are Apache-2.0; trained on COCO annotations (CC BY 4.0).",
   "settingsOfflineAttributionViewFull": "View full license text",
 
+  "offlineIdentifyTitle": "Offline identification",
+  "offlineIdentifyEvidenceTitle": "Evidence",
+  "offlineIdentifyResultsTitle": "Results",
+  "offlineIdentifyRunCta": "Run",
+  "offlineIdentifyRunningLabel": "Running…",
+  "offlineIdentifyWorkingOverlay": "Working…",
+  "offlineIdentifyApplyCta": "Apply",
+  "offlineIdentifyNoResults": "Run offline identification to see detections here.",
+  "offlineIdentifyDisabledHint": "Offline identification is turned off. Enable it in Settings to run detection.",
+
+  "offlineModelCardTitle": "Offline model",
+  "offlineModelCardBody": "Download required to run offline identification. Size: {size}.",
+  "@offlineModelCardBody": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "offlineModelDownloadCta": "Download",
+  "offlineModelDownloadingLabel": "Downloading…",
+  "offlineModelPausedLabel": "Paused",
+  "offlineModelPauseCta": "Pause",
+  "offlineModelResumeCta": "Resume",
+  "offlineModelCancelCta": "Cancel",
+  "offlineModelInstalledLabel": "Installed.",
+  "offlineModelInstalledCta": "Installed",
+  "offlineModelFailedLabel": "Download failed: {error}",
+  "@offlineModelFailedLabel": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "offlineModelRetryCta": "Retry",
+
   "settingsLegalDescription": "Licenses and attributions for Loppisfynd and the optional offline model.",
   "settingsOpenLegal": "Open legal",
 

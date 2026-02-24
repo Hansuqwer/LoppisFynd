@@ -523,6 +523,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOfflineAttributionViewFull => 'View full license text';
 
   @override
+  String get offlineIdentifyTitle => 'Offline identification';
+
+  @override
+  String get offlineIdentifyEvidenceTitle => 'Evidence';
+
+  @override
+  String get offlineIdentifyResultsTitle => 'Results';
+
+  @override
+  String get offlineIdentifyRunCta => 'Run';
+
+  @override
+  String get offlineIdentifyRunningLabel => 'Running…';
+
+  @override
+  String get offlineIdentifyWorkingOverlay => 'Working…';
+
+  @override
+  String get offlineIdentifyApplyCta => 'Apply';
+
+  @override
+  String get offlineIdentifyNoResults =>
+      'Run offline identification to see detections here.';
+
+  @override
+  String get offlineIdentifyDisabledHint =>
+      'Offline identification is turned off. Enable it in Settings to run detection.';
+
+  @override
+  String get offlineModelCardTitle => 'Offline model';
+
+  @override
+  String offlineModelCardBody(String size) {
+    return 'Download required to run offline identification. Size: $size.';
+  }
+
+  @override
+  String get offlineModelDownloadCta => 'Download';
+
+  @override
+  String get offlineModelDownloadingLabel => 'Downloading…';
+
+  @override
+  String get offlineModelPausedLabel => 'Paused';
+
+  @override
+  String get offlineModelPauseCta => 'Pause';
+
+  @override
+  String get offlineModelResumeCta => 'Resume';
+
+  @override
+  String get offlineModelCancelCta => 'Cancel';
+
+  @override
+  String get offlineModelInstalledLabel => 'Installed.';
+
+  @override
+  String get offlineModelInstalledCta => 'Installed';
+
+  @override
+  String offlineModelFailedLabel(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get offlineModelRetryCta => 'Retry';
+
+  @override
   String get settingsLegalDescription =>
       'Licenses and attributions for Loppisfynd and the optional offline model.';
 

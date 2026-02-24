@@ -192,6 +192,35 @@
   "settingsOfflineAttributionSummary": "Runtime och modellvikter är Apache-2.0; tränad på COCO-annoteringar (CC BY 4.0).",
   "settingsOfflineAttributionViewFull": "Visa full licenstext",
 
+  "offlineIdentifyTitle": "Offline-identifiering",
+  "offlineIdentifyEvidenceTitle": "Bevis",
+  "offlineIdentifyResultsTitle": "Resultat",
+  "offlineIdentifyRunCta": "Kör",
+  "offlineIdentifyRunningLabel": "Kör…",
+  "offlineIdentifyWorkingOverlay": "Arbetar…",
+  "offlineIdentifyApplyCta": "Använd",
+  "offlineIdentifyNoResults": "Kör offline-identifiering för att se träffar här.",
+  "offlineIdentifyDisabledHint": "Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.",
+
+  "offlineModelCardTitle": "Offline-modell",
+  "offlineModelCardBody": "Nedladdning krävs för offline-identifiering. Storlek: {size}.",
+  "@offlineModelCardBody": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "offlineModelDownloadCta": "Ladda ner",
+  "offlineModelDownloadingLabel": "Laddar ner…",
+  "offlineModelPausedLabel": "Pausad",
+  "offlineModelPauseCta": "Pausa",
+  "offlineModelResumeCta": "Fortsätt",
+  "offlineModelCancelCta": "Avbryt",
+  "offlineModelInstalledLabel": "Installerad.",
+  "offlineModelInstalledCta": "Installerad",
+  "offlineModelFailedLabel": "Nedladdning misslyckades: {error}",
+  "@offlineModelFailedLabel": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "offlineModelRetryCta": "Försök igen",
+
   "settingsLegalDescription": "Licenser och attributioner för Loppisfynd och den valfria offline-modellen.",
   "settingsOpenLegal": "Öppna juridik",
 

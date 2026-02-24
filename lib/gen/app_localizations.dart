@@ -1016,6 +1016,132 @@ abstract class AppLocalizations {
   /// **'View full license text'**
   String get settingsOfflineAttributionViewFull;
 
+  /// No description provided for @offlineIdentifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline identification'**
+  String get offlineIdentifyTitle;
+
+  /// No description provided for @offlineIdentifyEvidenceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence'**
+  String get offlineIdentifyEvidenceTitle;
+
+  /// No description provided for @offlineIdentifyResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Results'**
+  String get offlineIdentifyResultsTitle;
+
+  /// No description provided for @offlineIdentifyRunCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get offlineIdentifyRunCta;
+
+  /// No description provided for @offlineIdentifyRunningLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Running…'**
+  String get offlineIdentifyRunningLabel;
+
+  /// No description provided for @offlineIdentifyWorkingOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get offlineIdentifyWorkingOverlay;
+
+  /// No description provided for @offlineIdentifyApplyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get offlineIdentifyApplyCta;
+
+  /// No description provided for @offlineIdentifyNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Run offline identification to see detections here.'**
+  String get offlineIdentifyNoResults;
+
+  /// No description provided for @offlineIdentifyDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline identification is turned off. Enable it in Settings to run detection.'**
+  String get offlineIdentifyDisabledHint;
+
+  /// No description provided for @offlineModelCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline model'**
+  String get offlineModelCardTitle;
+
+  /// No description provided for @offlineModelCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download required to run offline identification. Size: {size}.'**
+  String offlineModelCardBody(String size);
+
+  /// No description provided for @offlineModelDownloadCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get offlineModelDownloadCta;
+
+  /// No description provided for @offlineModelDownloadingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get offlineModelDownloadingLabel;
+
+  /// No description provided for @offlineModelPausedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get offlineModelPausedLabel;
+
+  /// No description provided for @offlineModelPauseCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get offlineModelPauseCta;
+
+  /// No description provided for @offlineModelResumeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get offlineModelResumeCta;
+
+  /// No description provided for @offlineModelCancelCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get offlineModelCancelCta;
+
+  /// No description provided for @offlineModelInstalledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed.'**
+  String get offlineModelInstalledLabel;
+
+  /// No description provided for @offlineModelInstalledCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get offlineModelInstalledCta;
+
+  /// No description provided for @offlineModelFailedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed: {error}'**
+  String offlineModelFailedLabel(String error);
+
+  /// No description provided for @offlineModelRetryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get offlineModelRetryCta;
+
   /// No description provided for @settingsLegalDescription.
   ///
   /// In en, this message translates to:

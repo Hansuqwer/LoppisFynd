@@ -14,9 +14,16 @@ import '../../shared/widgets/nature_background.dart';
 import '../analyzer/item_detail_screen.dart';
 
 class DraftEditorScreen extends ConsumerStatefulWidget {
-  const DraftEditorScreen({super.key, required this.scanItemId});
+  const DraftEditorScreen({
+    super.key,
+    required this.scanItemId,
+    this.prefillTitle,
+    this.prefillDescription,
+  });
 
   final String scanItemId;
+  final String? prefillTitle;
+  final String? prefillDescription;
 
   @override
   ConsumerState<DraftEditorScreen> createState() => _DraftEditorScreenState();
@@ -30,6 +37,8 @@ class _DraftEditorScreenState extends ConsumerState<DraftEditorScreen> {
   String? _lastTitle;
   String? _lastDescription;
   double? _lastPrice;
+
+  var _prefillApplied = false;
 
   @override
   void dispose() {
@@ -67,24 +76,38 @@ class _DraftEditorScreenState extends ConsumerState<DraftEditorScreen> {
                   builder: (context, snapshot) {
                     final draft = snapshot.data;
 
-                    final title = draft?.title;
-                    if (title != _lastTitle) {
-                      _lastTitle = title;
-                      _titleController.text = title ?? '';
-                    }
+                    if (draft == null) {
+                      if (!_prefillApplied) {
+                        final preTitle = widget.prefillTitle?.trim();
+                        final preDesc = widget.prefillDescription?.trim();
+                        if (preTitle != null && preTitle.isNotEmpty) {
+                          _titleController.text = preTitle;
+                        }
+                        if (preDesc != null && preDesc.isNotEmpty) {
+                          _descriptionController.text = preDesc;
+                        }
+                        _prefillApplied = true;
+                      }
+                    } else {
+                      final title = draft.title;
+                      if (title != _lastTitle) {
+                        _lastTitle = title;
+                        _titleController.text = title ?? '';
+                      }
 
-                    final description = draft?.description;
-                    if (description != _lastDescription) {
-                      _lastDescription = description;
-                      _descriptionController.text = description ?? '';
-                    }
+                      final description = draft.description;
+                      if (description != _lastDescription) {
+                        _lastDescription = description;
+                        _descriptionController.text = description ?? '';
+                      }
 
-                    final price = draft?.askingPriceSek;
-                    if (price != _lastPrice) {
-                      _lastPrice = price;
-                      _priceController.text = price == null
-                          ? ''
-                          : price.toStringAsFixed(price % 1 == 0 ? 0 : 2);
+                      final price = draft.askingPriceSek;
+                      if (price != _lastPrice) {
+                        _lastPrice = price;
+                        _priceController.text = price == null
+                            ? ''
+                            : price.toStringAsFixed(price % 1 == 0 ? 0 : 2);
+                      }
                     }
 
                     final tags = <String>{};

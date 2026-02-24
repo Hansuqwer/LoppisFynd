@@ -528,6 +528,75 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsOfflineAttributionViewFull => 'Visa full licenstext';
 
   @override
+  String get offlineIdentifyTitle => 'Offline-identifiering';
+
+  @override
+  String get offlineIdentifyEvidenceTitle => 'Bevis';
+
+  @override
+  String get offlineIdentifyResultsTitle => 'Resultat';
+
+  @override
+  String get offlineIdentifyRunCta => 'Kör';
+
+  @override
+  String get offlineIdentifyRunningLabel => 'Kör…';
+
+  @override
+  String get offlineIdentifyWorkingOverlay => 'Arbetar…';
+
+  @override
+  String get offlineIdentifyApplyCta => 'Använd';
+
+  @override
+  String get offlineIdentifyNoResults =>
+      'Kör offline-identifiering för att se träffar här.';
+
+  @override
+  String get offlineIdentifyDisabledHint =>
+      'Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.';
+
+  @override
+  String get offlineModelCardTitle => 'Offline-modell';
+
+  @override
+  String offlineModelCardBody(String size) {
+    return 'Nedladdning krävs för offline-identifiering. Storlek: $size.';
+  }
+
+  @override
+  String get offlineModelDownloadCta => 'Ladda ner';
+
+  @override
+  String get offlineModelDownloadingLabel => 'Laddar ner…';
+
+  @override
+  String get offlineModelPausedLabel => 'Pausad';
+
+  @override
+  String get offlineModelPauseCta => 'Pausa';
+
+  @override
+  String get offlineModelResumeCta => 'Fortsätt';
+
+  @override
+  String get offlineModelCancelCta => 'Avbryt';
+
+  @override
+  String get offlineModelInstalledLabel => 'Installerad.';
+
+  @override
+  String get offlineModelInstalledCta => 'Installerad';
+
+  @override
+  String offlineModelFailedLabel(String error) {
+    return 'Nedladdning misslyckades: $error';
+  }
+
+  @override
+  String get offlineModelRetryCta => 'Försök igen';
+
+  @override
   String get settingsLegalDescription =>
       'Licenser och attributioner för Loppisfynd och den valfria offline-modellen.';
 
