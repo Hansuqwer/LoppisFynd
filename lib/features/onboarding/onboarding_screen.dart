@@ -136,7 +136,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ];
 
     final isLast = _index == pages.length - 1;
-    final canComplete = true;
 
     return Scaffold(
       body: Stack(
@@ -255,7 +254,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   ? null
                                   : (!isLast)
                                   ? _next
-                                  : (canComplete ? _setDone : null),
+                                  : _setDone,
                             ),
                           ),
                         ],

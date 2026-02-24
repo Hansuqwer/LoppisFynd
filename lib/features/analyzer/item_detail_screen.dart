@@ -50,6 +50,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
   @override
   void dispose() {
+    _identifyCancel?.cancel();
     _purchaseController.dispose();
     _fixedFeesController.dispose();
     _shippingController.dispose();
@@ -191,6 +192,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       if (path != null && path.trim().isNotEmpty) {
         preview = File(path);
       }
+
+      if (!mounted) return;
 
       final l10n = AppLocalizations.of(context)!;
       final next = await showCloudIdentificationDisclosure(

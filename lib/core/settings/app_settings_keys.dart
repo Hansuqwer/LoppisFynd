@@ -1,7 +1,6 @@
 /// Stable keys for `AppSettingsDao` persisted app settings.
 ///
 /// Keep these names versioned (`*_v1`) so future migrations can coexist.
-
 const String kPrivacyCloudIdentificationEnabledKeyV1 =
     'privacy_cloud_identification_enabled_v1';
 

@@ -39,7 +39,9 @@ class CloudAiProxyClient {
         'prompt': prompt,
         'maxTokens': maxTokens,
         'imageBase64Jpeg': base64Encode(imageJpegBytes),
-        if (requestId != null) 'requestId': requestId,
+        ...?(requestId == null
+            ? null
+            : <String, Object?>{'requestId': requestId}),
       };
 
       final resp = await client.post(
