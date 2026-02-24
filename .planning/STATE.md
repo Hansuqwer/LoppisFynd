@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 **Phase:** 4 of 5 (Opt-In Offline Fallback)
-**Current Plan:** 2
+**Current Plan:** 3
 **Total Plans in Phase:** 4
-**Status:** In progress (04-01 complete)
+**Status:** Ready to execute
 **Last Activity:** 2026-02-24
-**Progress:** [████████░░] 79%
+**Progress:** [█████████░] 86%
 
 ## Performance Metrics
 
@@ -36,6 +36,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 | Phase 03-sold-price-comps-hardening P02 | 26 min | 2 tasks | 8 files |
 | Phase 03-sold-price-comps-hardening P03 | 2 min | 2 tasks | 1 files |
 | Phase 04-opt-in-offline-fallback P01 | 30 min | 3 tasks | 12 files |
+| Phase 04-opt-in-offline-fallback P02 | 11 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -56,6 +57,8 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 - [Phase 03]: Fail closed with server_not_configured when Upstash env vars are missing
 - [Phase 04-opt-in-offline-fallback]: Select TensorFlow-hosted EfficientDet Lite0 detection metadata model (<10MiB) and pin expectedBytes + sha256
 - [Phase 04-opt-in-offline-fallback]: Embed full Apache-2.0 and CC BY 4.0 legal texts in offline model catalog for OFF-04 attribution surfaces
+- [Phase 04-opt-in-offline-fallback]: Use hard minimum score 0.35 with centralized High/Med/Low banding for offline detections
+- [Phase 04-opt-in-offline-fallback]: Run offline detection decode/preprocess/inference in background isolate (Isolate.run) to avoid UI jank
 
 ### Roadmap Evolution
 
@@ -75,6 +78,6 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Session Continuity
 
-**Last session:** 2026-02-24T06:54:17.062Z
-**Stopped At:** Completed 04-opt-in-offline-fallback-01-PLAN.md
+**Last session:** 2026-02-24T08:09:52.290Z
+**Stopped At:** Completed 04-opt-in-offline-fallback-02-PLAN.md
 **Resume File:** None
