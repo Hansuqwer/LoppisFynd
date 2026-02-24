@@ -16,6 +16,7 @@ import '../../shared/widgets/cloud_identification_disclosure.dart';
 import '../../services/ai/inference/ai_types.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../drafts/draft_editor_screen.dart';
+import '../offline_detection/offline_detection_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../gen/app_localizations.dart';
@@ -601,6 +602,23 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                         isOnline: isOnline,
                                       );
                                     },
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: GlassButton(
+                              label: l10n.offlineIdentifyTitle,
+                              tone: GlassButtonTone.neutral,
+                              icon: const Icon(Icons.offline_bolt_rounded),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  SpringRoute(
+                                    builder: (_) => OfflineDetectionScreen(
+                                      scanItemId: item.id,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],

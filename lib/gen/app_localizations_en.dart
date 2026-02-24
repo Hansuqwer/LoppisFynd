@@ -535,6 +535,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineIdentifyRunCta => 'Run';
 
   @override
+  String get offlineIdentifyReviewCta => 'Review';
+
+  @override
   String get offlineIdentifyRunningLabel => 'Running…';
 
   @override

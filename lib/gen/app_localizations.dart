@@ -1040,6 +1040,12 @@ abstract class AppLocalizations {
   /// **'Run'**
   String get offlineIdentifyRunCta;
 
+  /// No description provided for @offlineIdentifyReviewCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get offlineIdentifyReviewCta;
+
   /// No description provided for @offlineIdentifyRunningLabel.
   ///
   /// In en, this message translates to:

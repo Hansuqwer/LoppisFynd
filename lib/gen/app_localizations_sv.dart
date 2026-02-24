@@ -540,6 +540,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offlineIdentifyRunCta => 'Kör';
 
   @override
+  String get offlineIdentifyReviewCta => 'Granska';
+
+  @override
   String get offlineIdentifyRunningLabel => 'Kör…';
 
   @override

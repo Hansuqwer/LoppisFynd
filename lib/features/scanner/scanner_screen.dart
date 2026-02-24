@@ -17,6 +17,7 @@ import '../../shared/widgets/glass_button.dart';
 import '../../shared/widgets/glass_overlay.dart';
 import '../../core/navigation/spring_route.dart';
 import '../analyzer/item_detail_screen.dart';
+import '../offline_detection/offline_detection_screen.dart';
 import '../../gen/app_localizations.dart';
 import '../../services/sync/cloud/entity_keys.dart';
 import 'barcode/mlkit_input_image.dart';
@@ -468,7 +469,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       await HapticFeedback.lightImpact();
       messenger.showSnackBar(
-        SnackBar(content: Text(l10n.snackbarSavedScan(captured.id))),
+        SnackBar(
+          content: Text(l10n.snackbarSavedScan(captured.id)),
+          action: SnackBarAction(
+            label: l10n.offlineIdentifyReviewCta,
+            onPressed: () {
+              Navigator.of(context).push(
+                SpringRoute(
+                  builder: (_) =>
+                      OfflineDetectionScreen(scanItemId: captured.id),
+                ),
+              );
+            },
+          ),
+        ),
       );
 
       if (resumeBarcodeStream && mounted) {
@@ -508,6 +522,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           final input = inputImageFromCameraImage(
             image: image,
             sensorOrientation: controller.description.sensorOrientation,
+            deviceOrientation: controller.value.deviceOrientation,
+            lensDirection: controller.description.lensDirection,
           );
           if (input == null) return;
 
