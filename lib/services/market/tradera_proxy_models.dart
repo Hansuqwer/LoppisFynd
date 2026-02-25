@@ -1,3 +1,11 @@
+enum TraderaItemType {
+  auction,
+  auctionWithBuyItNow,
+  pureBuyItNow,
+  shopItem,
+  unknown,
+}
+
 class TraderaProxyResponse {
   const TraderaProxyResponse({
     required this.totalNumberOfItems,
@@ -24,6 +32,8 @@ class TraderaProxyItem {
     required this.shortDescription,
     required this.endDate,
     required this.maxBid,
+    required this.buyItNowPrice,
+    required this.itemType,
     required this.totalBids,
     required this.hasBids,
     required this.isEnded,
@@ -35,6 +45,8 @@ class TraderaProxyItem {
   final String shortDescription;
   final DateTime? endDate;
   final int? maxBid;
+  final int? buyItNowPrice;
+  final TraderaItemType itemType;
   final int? totalBids;
   final bool? hasBids;
   final bool? isEnded;
@@ -51,6 +63,8 @@ class TraderaProxyItem {
     final shortDescription = _readString(json['shortDescription']);
     final endDate = _readNullableDateTime(json['endDate']);
     final maxBid = _readNullableInt(json['maxBid']);
+    final buyItNowPrice = _readNullableInt(json['buyItNowPrice']);
+    final itemType = _readItemType(json['itemType']);
     final totalBids = _readNullableInt(json['totalBids']);
     final hasBids = _readNullableBool(json['hasBids']);
     final isEnded = _readNullableBool(json['isEnded']);
@@ -62,6 +76,8 @@ class TraderaProxyItem {
       shortDescription: shortDescription,
       endDate: endDate,
       maxBid: maxBid,
+      buyItNowPrice: buyItNowPrice,
+      itemType: itemType,
       totalBids: totalBids,
       hasBids: hasBids,
       isEnded: isEnded,
@@ -69,6 +85,17 @@ class TraderaProxyItem {
       thumbnailLink: thumbnailLink,
     );
   }
+}
+
+TraderaItemType _readItemType(Object? value) {
+  if (value is! String) return TraderaItemType.unknown;
+  return switch (value) {
+    'Auction' => TraderaItemType.auction,
+    'AuctionWithBuyItNow' => TraderaItemType.auctionWithBuyItNow,
+    'PureBuyItNow' => TraderaItemType.pureBuyItNow,
+    'ShopItem' => TraderaItemType.shopItem,
+    _ => TraderaItemType.unknown,
+  };
 }
 
 int _readInt(Object? value) {

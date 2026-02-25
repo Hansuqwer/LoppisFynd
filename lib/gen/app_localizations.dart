@@ -170,6 +170,36 @@ abstract class AppLocalizations {
   /// **'Updated contrast setting.'**
   String get settingsContrastUpdated;
 
+  /// No description provided for @settingsThemeModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsThemeModeLabel;
+
+  /// No description provided for @settingsThemeModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeModeSystem;
+
+  /// No description provided for @settingsThemeModeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeModeLight;
+
+  /// No description provided for @settingsThemeModeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeModeDark;
+
+  /// No description provided for @settingsThemeModeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated theme setting.'**
+  String get settingsThemeModeSaved;
+
   /// No description provided for @settingsPrivacyDataSectionTitle.
   ///
   /// In en, this message translates to:
@@ -1075,6 +1105,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline identification is turned off. Enable it in Settings to run detection.'**
   String get offlineIdentifyDisabledHint;
+
+  /// No description provided for @offlineIdentifyConfidenceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} · {label}'**
+  String offlineIdentifyConfidenceSummary(String percent, String label);
 
   /// No description provided for @offlineModelCardTitle.
   ///
@@ -2515,6 +2551,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync completed.'**
   String get itemDetailSyncCompleted;
+
+  /// No description provided for @itemDetailLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: {timestamp}'**
+  String itemDetailLastUpdated(String timestamp);
+
+  /// No description provided for @itemDetailFeatureState.
+  ///
+  /// In en, this message translates to:
+  /// **'{feature}: {state}'**
+  String itemDetailFeatureState(String feature, String state);
+
+  /// No description provided for @itemDetailLastSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync failed'**
+  String get itemDetailLastSyncFailed;
+
+  /// No description provided for @itemDetailNextAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next attempt: {timestamp}'**
+  String itemDetailNextAttempt(String timestamp);
 
   /// No description provided for @itemDetailProfitTitle.
   ///

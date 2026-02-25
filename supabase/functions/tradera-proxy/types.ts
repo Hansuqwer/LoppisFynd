@@ -28,6 +28,13 @@ export interface TraderaProxyItem {
   shortDescription: string;
   endDate: string | null;
   maxBid: number | null;
+  buyItNowPrice: number | null;
+  itemType:
+    | "Auction"
+    | "AuctionWithBuyItNow"
+    | "PureBuyItNow"
+    | "ShopItem"
+    | null;
   totalBids: number | null;
   hasBids: boolean | null;
   isEnded: boolean | null;

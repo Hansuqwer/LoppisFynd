@@ -11,6 +11,8 @@
           <EndDate>2026-02-01T12:00:00</EndDate>
           <BidCount>12</BidCount>
           <MaxBid>245</MaxBid>
+          <BuyItNowPrice>299</BuyItNowPrice>
+          <ItemType>AuctionWithBuyItNow</ItemType>
           <HasBids>true</HasBids>
           <IsEnded>true</IsEnded>
           <ItemUrl>https://www.tradera.com/item/1001</ItemUrl>
@@ -22,6 +24,8 @@
           <EndDate>2026-02-02T12:00:00</EndDate>
           <BidCount>0</BidCount>
           <MaxBid>0</MaxBid>
+          <BuyItNowPrice>179</BuyItNowPrice>
+          <ItemType>PureBuyItNow</ItemType>
           <HasBids>false</HasBids>
           <IsEnded>true</IsEnded>
           <ItemUrl>https://www.tradera.com/item/1002</ItemUrl>

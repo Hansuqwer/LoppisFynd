@@ -164,6 +164,21 @@ class ScanItemsDao extends DatabaseAccessor<AppDatabase>
     await _markDirty(id);
   }
 
+  Future<void> setOfflineDetections({
+    required String id,
+    required String? detectionsJson,
+    required DateTime? fetchedAt,
+  }) async {
+    await (update(scanItems)..where((t) => t.id.equals(id))).write(
+      ScanItemsCompanion(
+        offlineDetectionsJson: Value(detectionsJson),
+        offlineDetectionsFetchedAt: Value(fetchedAt),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await _markDirty(id);
+  }
+
   Future<void> setImagePaths({
     required String id,
     required String? imagePath,

@@ -49,6 +49,21 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsContrastUpdated => 'Uppdaterade kontrastinställning.';
 
   @override
+  String get settingsThemeModeLabel => 'Tema';
+
+  @override
+  String get settingsThemeModeSystem => 'System';
+
+  @override
+  String get settingsThemeModeLight => 'Ljust';
+
+  @override
+  String get settingsThemeModeDark => 'Mörkt';
+
+  @override
+  String get settingsThemeModeSaved => 'Uppdaterade temainställning.';
+
+  @override
   String get settingsPrivacyDataSectionTitle => 'Integritet & data';
 
   @override
@@ -558,6 +573,11 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get offlineIdentifyDisabledHint =>
       'Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.';
+
+  @override
+  String offlineIdentifyConfidenceSummary(String percent, String label) {
+    return '$percent · $label';
+  }
 
   @override
   String get offlineModelCardTitle => 'Offline-modell';
@@ -1351,6 +1371,24 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get itemDetailSyncCompleted => 'Synk klar.';
+
+  @override
+  String itemDetailLastUpdated(String timestamp) {
+    return 'Senast uppdaterad: $timestamp';
+  }
+
+  @override
+  String itemDetailFeatureState(String feature, String state) {
+    return '$feature: $state';
+  }
+
+  @override
+  String get itemDetailLastSyncFailed => 'Senaste synk misslyckades';
+
+  @override
+  String itemDetailNextAttempt(String timestamp) {
+    return 'Nasta forsok: $timestamp';
+  }
 
   @override
   String get itemDetailProfitTitle => 'Vinst';

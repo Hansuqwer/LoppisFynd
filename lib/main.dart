@@ -222,10 +222,18 @@ class _LoppisfyndAppState extends ConsumerState<LoppisfyndApp> {
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
+    final themeMode = ref
+        .watch(themeModePreferenceProvider)
+        .maybeWhen(data: (v) => v, orElse: () => ThemeMode.system);
 
+    final lightTheme = highContrast
+        ? AppTheme.highContrast()
+        : AppTheme.light();
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      theme: highContrast ? AppTheme.highContrast() : AppTheme.light(),
+      theme: lightTheme,
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -233,7 +241,6 @@ class _LoppisfyndAppState extends ConsumerState<LoppisfyndApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('sv'),
       onGenerateRoute: (settings) {
         final name = settings.name ?? '/';
         if (name == '/' || name.isEmpty) {

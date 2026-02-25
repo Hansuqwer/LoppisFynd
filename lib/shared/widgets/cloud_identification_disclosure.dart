@@ -101,7 +101,11 @@ class _Bullet extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('• '),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xxs),
+          child: Icon(Icons.circle, size: 6, color: AppColors.textMuted),
+        ),
+        const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ),

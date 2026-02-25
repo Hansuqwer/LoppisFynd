@@ -77,6 +77,26 @@ class _OfflineDetectionScreenState
 
   Future<void> _maybeAutoRunOnOpen() async {
     try {
+      final db = ref.read(appDatabaseProvider);
+      final userId = ref.read(activeUserIdProvider);
+      final item = await db.scanItemsDao.getById(
+        widget.scanItemId,
+        userId: userId,
+      );
+      if (item == null) return;
+
+      final persisted = item.offlineDetectionsJson;
+      if (persisted != null && persisted.trim().isNotEmpty) {
+        final detections = offlineDetectionsFromJson(persisted);
+        if (!mounted) return;
+        setState(() {
+          _detections = detections;
+          _selectedIndex = detections.isEmpty ? null : 0;
+          _error = null;
+        });
+        return;
+      }
+
       final enabled = await ref.read(
         offlineIdentificationEnabledProvider.future,
       );
@@ -86,13 +106,6 @@ class _OfflineDetectionScreenState
       final install = await detector.installState();
       if (!install.installed) return;
 
-      final db = ref.read(appDatabaseProvider);
-      final userId = ref.read(activeUserIdProvider);
-      final item = await db.scanItemsDao.getById(
-        widget.scanItemId,
-        userId: userId,
-      );
-      if (item == null) return;
       if (!mounted) return;
       await _runDetection(item);
     } catch (_) {
@@ -140,6 +153,12 @@ class _OfflineDetectionScreenState
         _detections = detections;
         _selectedIndex = detections.isEmpty ? null : 0;
       });
+      final db = ref.read(appDatabaseProvider);
+      await db.scanItemsDao.setOfflineDetections(
+        id: item.id,
+        detectionsJson: offlineDetectionsToJson(detections),
+        fetchedAt: DateTime.now(),
+      );
     } on StateError catch (e) {
       if (!mounted) return;
       final msg = e.message;
@@ -169,6 +188,7 @@ class _OfflineDetectionScreenState
         builder: (_) => DraftEditorScreen(
           scanItemId: item.id,
           prefillTitle: title.isEmpty ? null : title,
+          prefillCategory: title.isEmpty ? null : title,
         ),
       ),
     );
@@ -511,7 +531,10 @@ class _ResultsPanelState extends State<_ResultsPanel> {
                       ),
                     ),
                     subtitle: Text(
-                      '${info.percentLabel} · ${info.label}',
+                      l10n.offlineIdentifyConfidenceSummary(
+                        info.percentLabel,
+                        info.label,
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textMuted,
                       ),

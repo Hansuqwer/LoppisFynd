@@ -26,8 +26,10 @@ class MarketStatsCacheDao extends DatabaseAccessor<AppDatabase>
   Future<void> upsert({
     required String queryKey,
     required int count,
+    required double? p25Sek,
     required double minSek,
     required double medianSek,
+    required double? p75Sek,
     required double maxSek,
     required DateTime fetchedAt,
   }) async {
@@ -35,8 +37,10 @@ class MarketStatsCacheDao extends DatabaseAccessor<AppDatabase>
       MarketStatsCacheCompanion(
         queryKey: Value(queryKey),
         count: Value(count),
+        p25Sek: Value(p25Sek),
         minSek: Value(minSek),
         medianSek: Value(medianSek),
+        p75Sek: Value(p75Sek),
         maxSek: Value(maxSek),
         fetchedAt: Value(fetchedAt),
       ),

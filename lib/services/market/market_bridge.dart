@@ -2,6 +2,7 @@ import 'market_math.dart';
 import 'market_data_source.dart';
 import 'market_models.dart';
 import 'tradera_client.dart';
+import 'tradera_proxy_models.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/settings/app_settings_keys.dart';
@@ -47,9 +48,12 @@ class MarketBridge implements MarketDataSource {
     if (cached != null) {
       final stats = MarketStats(
         count: cached.count,
+        p25Sek: (cached.p25Sek ?? cached.minSek).round(),
         minSek: cached.minSek.round(),
         medianSek: cached.medianSek.round(),
+        p75Sek: (cached.p75Sek ?? cached.maxSek).round(),
         maxSek: cached.maxSek.round(),
+        lastUpdated: cached.fetchedAt,
       );
 
       // Cache only stores stats; return empty comps payload.
@@ -67,27 +71,50 @@ class MarketBridge implements MarketDataSource {
     final sales = <MarketSale>[];
 
     for (final item in resp.items) {
-      final price = item.maxBid;
       final endDate = item.endDate;
+      final price = _extractPrice(item);
       if (price == null || price <= 0) continue;
       if (endDate == null) continue;
-      if (item.isEnded == false) continue;
-      if (item.hasBids == false) continue;
       sales.add(MarketSale(priceSek: price, endDate: endDate));
     }
 
     if (sales.isEmpty) return null;
-    final stats = MarketMath.statsFromSalesWithOutlierFilter(sales);
+    final stats = MarketMath.statsFromSalesWithOutlierFilter(
+      sales,
+      lastUpdated: now,
+    );
 
     await _db.marketStatsCacheDao.upsert(
       queryKey: key,
       count: stats.count,
+      p25Sek: stats.p25Sek.toDouble(),
       minSek: stats.minSek.toDouble(),
       medianSek: stats.medianSek.toDouble(),
+      p75Sek: stats.p75Sek.toDouble(),
       maxSek: stats.maxSek.toDouble(),
       fetchedAt: now,
     );
 
     return MarketComps(sales: sales, stats: stats);
+  }
+
+  int? _extractPrice(TraderaProxyItem item) {
+    if (item.isEnded == false) return null;
+    final itemType = item.itemType;
+    if (itemType == TraderaItemType.pureBuyItNow ||
+        itemType == TraderaItemType.shopItem) {
+      return item.buyItNowPrice;
+    }
+
+    if (itemType == TraderaItemType.auction ||
+        itemType == TraderaItemType.auctionWithBuyItNow) {
+      if (item.hasBids != true) return null;
+      return item.maxBid;
+    }
+
+    if (item.hasBids == true && (item.maxBid ?? 0) > 0) {
+      return item.maxBid;
+    }
+    return item.buyItNowPrice;
   }
 }

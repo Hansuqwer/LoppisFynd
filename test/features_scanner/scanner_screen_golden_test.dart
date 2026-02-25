@@ -8,16 +8,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fynd_loppis/core/app/providers.dart';
 import 'package:fynd_loppis/core/config/app_config.dart';
 import 'package:fynd_loppis/core/database/app_database.dart';
-import 'package:fynd_loppis/core/navigation/app_nav_shell.dart';
 import 'package:fynd_loppis/core/storage/scan_image_storage.dart';
 import 'package:fynd_loppis/core/theme/app_theme.dart';
+import 'package:fynd_loppis/features/scanner/scanner_screen.dart';
 import 'package:fynd_loppis/gen/app_localizations.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
 import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
 
 void main() {
-  testWidgets('History empty-state light+dark goldens', (tester) async {
+  testWidgets('Scanner screen light+dark goldens', (tester) async {
     GoogleFonts.config.allowRuntimeFetching = false;
 
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -79,30 +79,32 @@ void main() {
               child: const SizedBox(
                 width: 390,
                 height: 844,
-                child: AppNavShell(),
+                child: ScannerScreen(active: false),
               ),
             ),
           ),
         ),
       );
 
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-
-      await tester.tap(find.byKey(const Key('nav_history')));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await _pumpFrames(tester);
 
       await expectLater(
         find.byKey(boundaryKey),
         matchesGoldenFile(
           mode == ThemeMode.dark
-              ? '../goldens/history_empty_dark.png'
-              : '../goldens/history_empty_light.png',
+              ? '../goldens/scanner_screen_dark.png'
+              : '../goldens/scanner_screen_light.png',
         ),
       );
     }
 
-    // Dispose widget tree and flush pending Drift stream timers.
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpAndSettle();
+    await _pumpFrames(tester);
   });
+}
+
+Future<void> _pumpFrames(WidgetTester tester) async {
+  for (var i = 0; i < 12; i += 1) {
+    await tester.pump(const Duration(milliseconds: 120));
+  }
 }

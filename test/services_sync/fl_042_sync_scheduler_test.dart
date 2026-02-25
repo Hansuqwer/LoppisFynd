@@ -68,13 +68,16 @@ void main() {
     final scheduler = SyncScheduler(
       db: db,
       market: _FakeMarket(
-        const MarketComps(
+        MarketComps(
           sales: [],
           stats: MarketStats(
             count: 3,
+            p25Sek: 120,
             minSek: 100,
             medianSek: 200,
+            p75Sek: 320,
             maxSek: 500,
+            lastUpdated: DateTime(2026, 2, 14, 10),
           ),
         ),
       ),

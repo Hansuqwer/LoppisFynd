@@ -18,6 +18,11 @@
   "settingsAccessibility": "Tillgänglighet",
   "settingsHighContrast": "Hög kontrast",
   "settingsContrastUpdated": "Uppdaterade kontrastinställning.",
+  "settingsThemeModeLabel": "Tema",
+  "settingsThemeModeSystem": "System",
+  "settingsThemeModeLight": "Ljust",
+  "settingsThemeModeDark": "Mörkt",
+  "settingsThemeModeSaved": "Uppdaterade temainställning.",
 
   "settingsPrivacyDataSectionTitle": "Integritet & data",
   "settingsCloudIdentificationToggleTitle": "Skicka beskärningar för molnidentifiering",
@@ -202,6 +207,13 @@
   "offlineIdentifyApplyCta": "Använd",
   "offlineIdentifyNoResults": "Kör offline-identifiering för att se träffar här.",
   "offlineIdentifyDisabledHint": "Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.",
+  "offlineIdentifyConfidenceSummary": "{percent} · {label}",
+  "@offlineIdentifyConfidenceSummary": {
+    "placeholders": {
+      "percent": {"type": "String"},
+      "label": {"type": "String"}
+    }
+  },
 
   "offlineModelCardTitle": "Offline-modell",
   "offlineModelCardBody": "Nedladdning krävs för offline-identifiering. Storlek: {size}.",
@@ -521,6 +533,22 @@
   "itemDetailQueueSync": "Köa synk",
   "itemDetailQueuedForSync": "Köad för synk.",
   "itemDetailSyncCompleted": "Synk klar.",
+  "itemDetailLastUpdated": "Senast uppdaterad: {timestamp}",
+  "@itemDetailLastUpdated": {
+    "placeholders": {"timestamp": {"type": "String"}}
+  },
+  "itemDetailFeatureState": "{feature}: {state}",
+  "@itemDetailFeatureState": {
+    "placeholders": {
+      "feature": {"type": "String"},
+      "state": {"type": "String"}
+    }
+  },
+  "itemDetailLastSyncFailed": "Senaste synk misslyckades",
+  "itemDetailNextAttempt": "Nasta forsok: {timestamp}",
+  "@itemDetailNextAttempt": {
+    "placeholders": {"timestamp": {"type": "String"}}
+  },
   "itemDetailProfitTitle": "Vinst",
   "itemDetailPurchasePriceLabel": "Inköp (SEK)",
   "itemDetailFixedFeesLabel": "Fasta avgifter (SEK)",

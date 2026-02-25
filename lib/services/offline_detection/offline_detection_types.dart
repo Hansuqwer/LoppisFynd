@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -49,6 +51,22 @@ class NormalizedRect {
   String toString() {
     return 'NormalizedRect(left: $left, top: $top, right: $right, bottom: $bottom)';
   }
+
+  Map<String, Object> toJson() => {
+    'left': left,
+    'top': top,
+    'right': right,
+    'bottom': bottom,
+  };
+
+  factory NormalizedRect.fromJson(Map<String, Object?> json) {
+    return NormalizedRect(
+      left: _readDouble(json['left']),
+      top: _readDouble(json['top']),
+      right: _readDouble(json['right']),
+      bottom: _readDouble(json['bottom']),
+    );
+  }
 }
 
 @immutable
@@ -81,6 +99,39 @@ class OfflineDetection {
   String toString() {
     return 'OfflineDetection(label: $label, score: $score, box: $box)';
   }
+
+  Map<String, Object> toJson() => {
+    'label': label,
+    'score': score,
+    'box': box.toJson(),
+  };
+
+  factory OfflineDetection.fromJson(Map<String, Object?> json) {
+    final boxAny = json['box'];
+    if (boxAny is! Map) {
+      throw const FormatException('OfflineDetection.box must be an object');
+    }
+    return OfflineDetection(
+      label: _readString(json['label']),
+      score: _readDouble(json['score']),
+      box: NormalizedRect.fromJson(boxAny.cast<String, Object?>()),
+    );
+  }
+}
+
+String offlineDetectionsToJson(List<OfflineDetection> detections) {
+  return jsonEncode(detections.map((d) => d.toJson()).toList(growable: false));
+}
+
+List<OfflineDetection> offlineDetectionsFromJson(String jsonText) {
+  final decoded = jsonDecode(jsonText);
+  if (decoded is! List) {
+    throw const FormatException('Offline detections payload must be a list');
+  }
+  return decoded
+      .whereType<Map>()
+      .map((v) => OfflineDetection.fromJson(v.cast<String, Object?>()))
+      .toList(growable: false);
 }
 
 /// Hard confidence cutoff (OFF-03): detections below this are not surfaced.
@@ -128,4 +179,14 @@ double _clamp01(double v) {
   if (v < 0) return 0;
   if (v > 1) return 1;
   return v;
+}
+
+double _readDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  throw const FormatException('Expected numeric value');
+}
+
+String _readString(Object? value) {
+  if (value is String) return value;
+  throw const FormatException('Expected string value');
 }

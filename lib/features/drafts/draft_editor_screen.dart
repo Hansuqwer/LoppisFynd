@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -18,11 +19,13 @@ class DraftEditorScreen extends ConsumerStatefulWidget {
     super.key,
     required this.scanItemId,
     this.prefillTitle,
+    this.prefillCategory,
     this.prefillDescription,
   });
 
   final String scanItemId;
   final String? prefillTitle;
+  final String? prefillCategory;
   final String? prefillDescription;
 
   @override
@@ -82,6 +85,15 @@ class _DraftEditorScreenState extends ConsumerState<DraftEditorScreen> {
                         final preDesc = widget.prefillDescription?.trim();
                         if (preTitle != null && preTitle.isNotEmpty) {
                           _titleController.text = preTitle;
+                        }
+                        final preCategory = widget.prefillCategory?.trim();
+                        if (preCategory != null && preCategory.isNotEmpty) {
+                          unawaited(
+                            db.scanItemsDao.setCategory(
+                              id: widget.scanItemId,
+                              category: preCategory,
+                            ),
+                          );
                         }
                         if (preDesc != null && preDesc.isNotEmpty) {
                           _descriptionController.text = preDesc;

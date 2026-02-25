@@ -34,6 +34,8 @@ function parseItem(itemXml: string): TraderaProxyItem | null {
   const endDate = (extractTag(itemXml, "EndDate") ?? "").trim() || null;
 
   const maxBid = parseNullableInt(extractTag(itemXml, "MaxBid"));
+  const buyItNowPrice = parseNullableInt(extractTag(itemXml, "BuyItNowPrice"));
+  const itemType = parseNullableItemType(extractTag(itemXml, "ItemType"));
   const totalBids =
     parseNullableInt(extractTag(itemXml, "BidCount")) ??
     parseNullableInt(extractTag(itemXml, "TotalBids"));
@@ -52,12 +54,29 @@ function parseItem(itemXml: string): TraderaProxyItem | null {
     shortDescription,
     endDate,
     maxBid,
+    buyItNowPrice,
+    itemType,
     totalBids,
     hasBids,
     isEnded,
     itemLink,
     thumbnailLink,
   };
+}
+
+function parseNullableItemType(text: string | null): TraderaProxyItem["itemType"] {
+  if (text == null) return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  if (
+    trimmed === "Auction" ||
+    trimmed === "AuctionWithBuyItNow" ||
+    trimmed === "PureBuyItNow" ||
+    trimmed === "ShopItem"
+  ) {
+    return trimmed;
+  }
+  return null;
 }
 
 function extractTag(xml: string, tagName: string): string | null {

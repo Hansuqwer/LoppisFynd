@@ -49,6 +49,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsContrastUpdated => 'Updated contrast setting.';
 
   @override
+  String get settingsThemeModeLabel => 'Theme';
+
+  @override
+  String get settingsThemeModeSystem => 'System';
+
+  @override
+  String get settingsThemeModeLight => 'Light';
+
+  @override
+  String get settingsThemeModeDark => 'Dark';
+
+  @override
+  String get settingsThemeModeSaved => 'Updated theme setting.';
+
+  @override
   String get settingsPrivacyDataSectionTitle => 'Privacy & Data';
 
   @override
@@ -553,6 +568,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offlineIdentifyDisabledHint =>
       'Offline identification is turned off. Enable it in Settings to run detection.';
+
+  @override
+  String offlineIdentifyConfidenceSummary(String percent, String label) {
+    return '$percent · $label';
+  }
 
   @override
   String get offlineModelCardTitle => 'Offline model';
@@ -1349,6 +1369,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemDetailSyncCompleted => 'Sync completed.';
+
+  @override
+  String itemDetailLastUpdated(String timestamp) {
+    return 'Last updated: $timestamp';
+  }
+
+  @override
+  String itemDetailFeatureState(String feature, String state) {
+    return '$feature: $state';
+  }
+
+  @override
+  String get itemDetailLastSyncFailed => 'Last sync failed';
+
+  @override
+  String itemDetailNextAttempt(String timestamp) {
+    return 'Next attempt: $timestamp';
+  }
 
   @override
   String get itemDetailProfitTitle => 'Profit';

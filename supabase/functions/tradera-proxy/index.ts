@@ -35,10 +35,18 @@ type RateLimitResult = {
   retryAfterSeconds?: number;
 };
 
+type DailyQuotaResult = {
+  allowed: boolean;
+  used: number;
+  budget: number;
+  retryAfterSeconds?: number;
+};
+
 type Deps = {
   env?: EnvProvider;
   fetch?: FetchLike;
   rateLimit?: (key: string) => Promise<RateLimitResult>;
+  dailyQuota?: (key: string) => Promise<DailyQuotaResult>;
 };
 
 export async function handleRequest(
@@ -62,6 +70,7 @@ export async function handleRequest(
   const env = deps.env ?? { get: (k: string) => Deno.env.get(k) };
 
   const rateLimit = deps.rateLimit ?? createUpstashRateLimit(env);
+  const dailyQuota = deps.dailyQuota ?? createUpstashDailyQuotaGuard(env);
   const key = await rateLimitKey(req);
 
   let rl: RateLimitResult;
@@ -103,6 +112,45 @@ export async function handleRequest(
             Number.isFinite(rl.retryAfterSeconds) &&
             rl.retryAfterSeconds > 0
             ? String(Math.ceil(rl.retryAfterSeconds))
+            : undefined,
+      },
+    );
+  }
+
+  let dq: DailyQuotaResult;
+  try {
+    dq = await dailyQuota(key);
+  } catch (e) {
+    return errorJson(
+      {
+        code: "upstream_failed",
+        message: `Daily quota check failed: ${String(e)}`.slice(0, 2000),
+      },
+      502,
+    );
+  }
+
+  if (!dq.allowed) {
+    console.warn("tradera-proxy daily quota exhausted", {
+      key,
+      used: dq.used,
+      budget: dq.budget,
+      retryAfterSeconds: dq.retryAfterSeconds,
+    });
+    return errorJson(
+      {
+        code: "daily_quota_exhausted",
+        message:
+          "Daily Tradera budget exhausted. Please retry later.",
+        retryAfterSeconds: dq.retryAfterSeconds,
+      },
+      429,
+      {
+        "retry-after":
+          typeof dq.retryAfterSeconds === "number" &&
+            Number.isFinite(dq.retryAfterSeconds) &&
+            dq.retryAfterSeconds > 0
+            ? String(Math.ceil(dq.retryAfterSeconds))
             : undefined,
       },
     );
@@ -279,6 +327,9 @@ function errorJson(
 let upstashRateLimitOnce:
   | ((key: string) => Promise<RateLimitResult>)
   | null = null;
+let upstashDailyQuotaOnce:
+  | ((key: string) => Promise<DailyQuotaResult>)
+  | null = null;
 
 function createUpstashRateLimit(env: EnvProvider): (key: string) => Promise<RateLimitResult> {
   if (upstashRateLimitOnce) return upstashRateLimitOnce;
@@ -317,6 +368,79 @@ function createUpstashRateLimit(env: EnvProvider): (key: string) => Promise<Rate
   };
 
   return upstashRateLimitOnce;
+}
+
+function createUpstashDailyQuotaGuard(
+  env: EnvProvider,
+): (key: string) => Promise<DailyQuotaResult> {
+  if (upstashDailyQuotaOnce) return upstashDailyQuotaOnce;
+
+  const url = (env.get("UPSTASH_REDIS_REST_URL") ?? "").trim();
+  const token = (env.get("UPSTASH_REDIS_REST_TOKEN") ?? "").trim();
+  const budgetRaw = (env.get("TRADERA_DAILY_BUDGET") ?? "100").trim();
+  const budgetParsed = Number.parseInt(budgetRaw, 10);
+  const budget = Number.isFinite(budgetParsed) && budgetParsed > 0
+    ? budgetParsed
+    : 100;
+
+  if (!url || !token) {
+    upstashDailyQuotaOnce = async () => {
+      throw new Error(
+        "server_not_configured: Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Supabase secrets",
+      );
+    };
+    return upstashDailyQuotaOnce;
+  }
+
+  const redis = new Redis({ url, token });
+
+  upstashDailyQuotaOnce = async (key: string) => {
+    const now = new Date();
+    const dayKey =
+      `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+    const redisKey = `tradera:daily:${dayKey}:${key}`;
+
+    const used = await redis.incr(redisKey);
+    if (used === 1) {
+      const resetAt = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0,
+        0,
+        0,
+        0,
+      );
+      const ttlSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+      await redis.expire(redisKey, ttlSeconds);
+    }
+
+    if (used > budget) {
+      const nextUtcMidnightMs = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0,
+        0,
+        0,
+        0,
+      );
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((nextUtcMidnightMs - Date.now()) / 1000),
+      );
+      return {
+        allowed: false,
+        used,
+        budget,
+        retryAfterSeconds,
+      };
+    }
+
+    return { allowed: true, used, budget };
+  };
+
+  return upstashDailyQuotaOnce;
 }
 
 async function rateLimitKey(req: Request): Promise<string> {

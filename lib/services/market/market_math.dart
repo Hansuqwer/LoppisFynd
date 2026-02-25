@@ -1,30 +1,41 @@
 import 'market_models.dart';
 
 class MarketMath {
-  static MarketStats statsFromSales(List<MarketSale> sales) {
+  static MarketStats statsFromSales(
+    List<MarketSale> sales, {
+    DateTime? lastUpdated,
+  }) {
     if (sales.isEmpty) {
       throw const FormatException('No sales');
     }
     final prices = sales.map((s) => s.priceSek).toList()..sort();
 
+    final p25Sek = _quartile(prices, 0.25);
     final minSek = prices.first;
     final maxSek = prices.last;
     final medianSek = _medianInt(prices);
+    final p75Sek = _quartile(prices, 0.75);
 
     return MarketStats(
       count: prices.length,
+      p25Sek: p25Sek,
       minSek: minSek,
       medianSek: medianSek,
+      p75Sek: p75Sek,
       maxSek: maxSek,
+      lastUpdated: lastUpdated ?? DateTime.now(),
     );
   }
 
-  static MarketStats statsFromSalesWithOutlierFilter(List<MarketSale> sales) {
+  static MarketStats statsFromSalesWithOutlierFilter(
+    List<MarketSale> sales, {
+    DateTime? lastUpdated,
+  }) {
     final filtered = filterSalesOutliersIqr(sales);
     if (filtered.length >= 5) {
-      return statsFromSales(filtered);
+      return statsFromSales(filtered, lastUpdated: lastUpdated);
     }
-    return statsFromSales(sales);
+    return statsFromSales(sales, lastUpdated: lastUpdated);
   }
 
   static List<MarketSale> filterSalesOutliersIqr(List<MarketSale> sales) {

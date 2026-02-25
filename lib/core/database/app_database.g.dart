@@ -783,6 +783,28 @@ class $ScanItemsTable extends ScanItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _offlineDetectionsJsonMeta =
+      const VerificationMeta('offlineDetectionsJson');
+  @override
+  late final GeneratedColumn<String> offlineDetectionsJson =
+      GeneratedColumn<String>(
+        'offline_detections_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _offlineDetectionsFetchedAtMeta =
+      const VerificationMeta('offlineDetectionsFetchedAt');
+  @override
+  late final GeneratedColumn<DateTime> offlineDetectionsFetchedAt =
+      GeneratedColumn<DateTime>(
+        'offline_detections_fetched_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _queryMeta = const VerificationMeta('query');
   @override
   late final GeneratedColumn<String> query = GeneratedColumn<String>(
@@ -962,6 +984,8 @@ class $ScanItemsTable extends ScanItems
     imagePath,
     thumbPath,
     aiJson,
+    offlineDetectionsJson,
+    offlineDetectionsFetchedAt,
     query,
     desc,
     category,
@@ -1026,6 +1050,24 @@ class $ScanItemsTable extends ScanItems
       context.handle(
         _aiJsonMeta,
         aiJson.isAcceptableOrUnknown(data['ai_json']!, _aiJsonMeta),
+      );
+    }
+    if (data.containsKey('offline_detections_json')) {
+      context.handle(
+        _offlineDetectionsJsonMeta,
+        offlineDetectionsJson.isAcceptableOrUnknown(
+          data['offline_detections_json']!,
+          _offlineDetectionsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('offline_detections_fetched_at')) {
+      context.handle(
+        _offlineDetectionsFetchedAtMeta,
+        offlineDetectionsFetchedAt.isAcceptableOrUnknown(
+          data['offline_detections_fetched_at']!,
+          _offlineDetectionsFetchedAtMeta,
+        ),
       );
     }
     if (data.containsKey('query')) {
@@ -1172,6 +1214,14 @@ class $ScanItemsTable extends ScanItems
         DriftSqlType.string,
         data['${effectivePrefix}ai_json'],
       ),
+      offlineDetectionsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}offline_detections_json'],
+      ),
+      offlineDetectionsFetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}offline_detections_fetched_at'],
+      ),
       query: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}query'],
@@ -1257,6 +1307,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
   final String? imagePath;
   final String? thumbPath;
   final String? aiJson;
+  final String? offlineDetectionsJson;
+  final DateTime? offlineDetectionsFetchedAt;
   final String? query;
   final String? desc;
   final String? category;
@@ -1280,6 +1332,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
     this.imagePath,
     this.thumbPath,
     this.aiJson,
+    this.offlineDetectionsJson,
+    this.offlineDetectionsFetchedAt,
     this.query,
     this.desc,
     this.category,
@@ -1313,6 +1367,14 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
     }
     if (!nullToAbsent || aiJson != null) {
       map['ai_json'] = Variable<String>(aiJson);
+    }
+    if (!nullToAbsent || offlineDetectionsJson != null) {
+      map['offline_detections_json'] = Variable<String>(offlineDetectionsJson);
+    }
+    if (!nullToAbsent || offlineDetectionsFetchedAt != null) {
+      map['offline_detections_fetched_at'] = Variable<DateTime>(
+        offlineDetectionsFetchedAt,
+      );
     }
     if (!nullToAbsent || query != null) {
       map['query'] = Variable<String>(query);
@@ -1381,6 +1443,13 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
       aiJson: aiJson == null && nullToAbsent
           ? const Value.absent()
           : Value(aiJson),
+      offlineDetectionsJson: offlineDetectionsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(offlineDetectionsJson),
+      offlineDetectionsFetchedAt:
+          offlineDetectionsFetchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(offlineDetectionsFetchedAt),
       query: query == null && nullToAbsent
           ? const Value.absent()
           : Value(query),
@@ -1436,6 +1505,12 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       thumbPath: serializer.fromJson<String?>(json['thumbPath']),
       aiJson: serializer.fromJson<String?>(json['aiJson']),
+      offlineDetectionsJson: serializer.fromJson<String?>(
+        json['offlineDetectionsJson'],
+      ),
+      offlineDetectionsFetchedAt: serializer.fromJson<DateTime?>(
+        json['offlineDetectionsFetchedAt'],
+      ),
       query: serializer.fromJson<String?>(json['query']),
       desc: serializer.fromJson<String?>(json['desc']),
       category: serializer.fromJson<String?>(json['category']),
@@ -1468,6 +1543,12 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
       'imagePath': serializer.toJson<String?>(imagePath),
       'thumbPath': serializer.toJson<String?>(thumbPath),
       'aiJson': serializer.toJson<String?>(aiJson),
+      'offlineDetectionsJson': serializer.toJson<String?>(
+        offlineDetectionsJson,
+      ),
+      'offlineDetectionsFetchedAt': serializer.toJson<DateTime?>(
+        offlineDetectionsFetchedAt,
+      ),
       'query': serializer.toJson<String?>(query),
       'desc': serializer.toJson<String?>(desc),
       'category': serializer.toJson<String?>(category),
@@ -1496,6 +1577,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
     Value<String?> imagePath = const Value.absent(),
     Value<String?> thumbPath = const Value.absent(),
     Value<String?> aiJson = const Value.absent(),
+    Value<String?> offlineDetectionsJson = const Value.absent(),
+    Value<DateTime?> offlineDetectionsFetchedAt = const Value.absent(),
     Value<String?> query = const Value.absent(),
     Value<String?> desc = const Value.absent(),
     Value<String?> category = const Value.absent(),
@@ -1519,6 +1602,12 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     thumbPath: thumbPath.present ? thumbPath.value : this.thumbPath,
     aiJson: aiJson.present ? aiJson.value : this.aiJson,
+    offlineDetectionsJson: offlineDetectionsJson.present
+        ? offlineDetectionsJson.value
+        : this.offlineDetectionsJson,
+    offlineDetectionsFetchedAt: offlineDetectionsFetchedAt.present
+        ? offlineDetectionsFetchedAt.value
+        : this.offlineDetectionsFetchedAt,
     query: query.present ? query.value : this.query,
     desc: desc.present ? desc.value : this.desc,
     category: category.present ? category.value : this.category,
@@ -1550,6 +1639,12 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       thumbPath: data.thumbPath.present ? data.thumbPath.value : this.thumbPath,
       aiJson: data.aiJson.present ? data.aiJson.value : this.aiJson,
+      offlineDetectionsJson: data.offlineDetectionsJson.present
+          ? data.offlineDetectionsJson.value
+          : this.offlineDetectionsJson,
+      offlineDetectionsFetchedAt: data.offlineDetectionsFetchedAt.present
+          ? data.offlineDetectionsFetchedAt.value
+          : this.offlineDetectionsFetchedAt,
       query: data.query.present ? data.query.value : this.query,
       desc: data.desc.present ? data.desc.value : this.desc,
       category: data.category.present ? data.category.value : this.category,
@@ -1594,6 +1689,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
           ..write('imagePath: $imagePath, ')
           ..write('thumbPath: $thumbPath, ')
           ..write('aiJson: $aiJson, ')
+          ..write('offlineDetectionsJson: $offlineDetectionsJson, ')
+          ..write('offlineDetectionsFetchedAt: $offlineDetectionsFetchedAt, ')
           ..write('query: $query, ')
           ..write('desc: $desc, ')
           ..write('category: $category, ')
@@ -1622,6 +1719,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
     imagePath,
     thumbPath,
     aiJson,
+    offlineDetectionsJson,
+    offlineDetectionsFetchedAt,
     query,
     desc,
     category,
@@ -1649,6 +1748,8 @@ class ScanItem extends DataClass implements Insertable<ScanItem> {
           other.imagePath == this.imagePath &&
           other.thumbPath == this.thumbPath &&
           other.aiJson == this.aiJson &&
+          other.offlineDetectionsJson == this.offlineDetectionsJson &&
+          other.offlineDetectionsFetchedAt == this.offlineDetectionsFetchedAt &&
           other.query == this.query &&
           other.desc == this.desc &&
           other.category == this.category &&
@@ -1674,6 +1775,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
   final Value<String?> imagePath;
   final Value<String?> thumbPath;
   final Value<String?> aiJson;
+  final Value<String?> offlineDetectionsJson;
+  final Value<DateTime?> offlineDetectionsFetchedAt;
   final Value<String?> query;
   final Value<String?> desc;
   final Value<String?> category;
@@ -1698,6 +1801,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
     this.imagePath = const Value.absent(),
     this.thumbPath = const Value.absent(),
     this.aiJson = const Value.absent(),
+    this.offlineDetectionsJson = const Value.absent(),
+    this.offlineDetectionsFetchedAt = const Value.absent(),
     this.query = const Value.absent(),
     this.desc = const Value.absent(),
     this.category = const Value.absent(),
@@ -1723,6 +1828,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
     this.imagePath = const Value.absent(),
     this.thumbPath = const Value.absent(),
     this.aiJson = const Value.absent(),
+    this.offlineDetectionsJson = const Value.absent(),
+    this.offlineDetectionsFetchedAt = const Value.absent(),
     this.query = const Value.absent(),
     this.desc = const Value.absent(),
     this.category = const Value.absent(),
@@ -1749,6 +1856,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
     Expression<String>? imagePath,
     Expression<String>? thumbPath,
     Expression<String>? aiJson,
+    Expression<String>? offlineDetectionsJson,
+    Expression<DateTime>? offlineDetectionsFetchedAt,
     Expression<String>? query,
     Expression<String>? desc,
     Expression<String>? category,
@@ -1774,6 +1883,10 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
       if (imagePath != null) 'image_path': imagePath,
       if (thumbPath != null) 'thumb_path': thumbPath,
       if (aiJson != null) 'ai_json': aiJson,
+      if (offlineDetectionsJson != null)
+        'offline_detections_json': offlineDetectionsJson,
+      if (offlineDetectionsFetchedAt != null)
+        'offline_detections_fetched_at': offlineDetectionsFetchedAt,
       if (query != null) 'query': query,
       if (desc != null) 'desc': desc,
       if (category != null) 'category': category,
@@ -1803,6 +1916,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
     Value<String?>? imagePath,
     Value<String?>? thumbPath,
     Value<String?>? aiJson,
+    Value<String?>? offlineDetectionsJson,
+    Value<DateTime?>? offlineDetectionsFetchedAt,
     Value<String?>? query,
     Value<String?>? desc,
     Value<String?>? category,
@@ -1828,6 +1943,10 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
       imagePath: imagePath ?? this.imagePath,
       thumbPath: thumbPath ?? this.thumbPath,
       aiJson: aiJson ?? this.aiJson,
+      offlineDetectionsJson:
+          offlineDetectionsJson ?? this.offlineDetectionsJson,
+      offlineDetectionsFetchedAt:
+          offlineDetectionsFetchedAt ?? this.offlineDetectionsFetchedAt,
       query: query ?? this.query,
       desc: desc ?? this.desc,
       category: category ?? this.category,
@@ -1869,6 +1988,16 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
     }
     if (aiJson.present) {
       map['ai_json'] = Variable<String>(aiJson.value);
+    }
+    if (offlineDetectionsJson.present) {
+      map['offline_detections_json'] = Variable<String>(
+        offlineDetectionsJson.value,
+      );
+    }
+    if (offlineDetectionsFetchedAt.present) {
+      map['offline_detections_fetched_at'] = Variable<DateTime>(
+        offlineDetectionsFetchedAt.value,
+      );
     }
     if (query.present) {
       map['query'] = Variable<String>(query.value);
@@ -1937,6 +2066,8 @@ class ScanItemsCompanion extends UpdateCompanion<ScanItem> {
           ..write('imagePath: $imagePath, ')
           ..write('thumbPath: $thumbPath, ')
           ..write('aiJson: $aiJson, ')
+          ..write('offlineDetectionsJson: $offlineDetectionsJson, ')
+          ..write('offlineDetectionsFetchedAt: $offlineDetectionsFetchedAt, ')
           ..write('query: $query, ')
           ..write('desc: $desc, ')
           ..write('category: $category, ')
@@ -4747,6 +4878,15 @@ class $MarketStatsCacheTable extends MarketStatsCache
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _p25SekMeta = const VerificationMeta('p25Sek');
+  @override
+  late final GeneratedColumn<double> p25Sek = GeneratedColumn<double>(
+    'p25_sek',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _minSekMeta = const VerificationMeta('minSek');
   @override
   late final GeneratedColumn<double> minSek = GeneratedColumn<double>(
@@ -4766,6 +4906,15 @@ class $MarketStatsCacheTable extends MarketStatsCache
     false,
     type: DriftSqlType.double,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _p75SekMeta = const VerificationMeta('p75Sek');
+  @override
+  late final GeneratedColumn<double> p75Sek = GeneratedColumn<double>(
+    'p75_sek',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _maxSekMeta = const VerificationMeta('maxSek');
   @override
@@ -4791,8 +4940,10 @@ class $MarketStatsCacheTable extends MarketStatsCache
   List<GeneratedColumn> get $columns => [
     queryKey,
     count,
+    p25Sek,
     minSek,
     medianSek,
+    p75Sek,
     maxSek,
     fetchedAt,
   ];
@@ -4824,6 +4975,12 @@ class $MarketStatsCacheTable extends MarketStatsCache
     } else if (isInserting) {
       context.missing(_countMeta);
     }
+    if (data.containsKey('p25_sek')) {
+      context.handle(
+        _p25SekMeta,
+        p25Sek.isAcceptableOrUnknown(data['p25_sek']!, _p25SekMeta),
+      );
+    }
     if (data.containsKey('min_sek')) {
       context.handle(
         _minSekMeta,
@@ -4839,6 +4996,12 @@ class $MarketStatsCacheTable extends MarketStatsCache
       );
     } else if (isInserting) {
       context.missing(_medianSekMeta);
+    }
+    if (data.containsKey('p75_sek')) {
+      context.handle(
+        _p75SekMeta,
+        p75Sek.isAcceptableOrUnknown(data['p75_sek']!, _p75SekMeta),
+      );
     }
     if (data.containsKey('max_sek')) {
       context.handle(
@@ -4873,6 +5036,10 @@ class $MarketStatsCacheTable extends MarketStatsCache
         DriftSqlType.int,
         data['${effectivePrefix}count'],
       )!,
+      p25Sek: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}p25_sek'],
+      ),
       minSek: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}min_sek'],
@@ -4881,6 +5048,10 @@ class $MarketStatsCacheTable extends MarketStatsCache
         DriftSqlType.double,
         data['${effectivePrefix}median_sek'],
       )!,
+      p75Sek: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}p75_sek'],
+      ),
       maxSek: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}max_sek'],
@@ -4902,15 +5073,19 @@ class MarketStatsCacheData extends DataClass
     implements Insertable<MarketStatsCacheData> {
   final String queryKey;
   final int count;
+  final double? p25Sek;
   final double minSek;
   final double medianSek;
+  final double? p75Sek;
   final double maxSek;
   final DateTime fetchedAt;
   const MarketStatsCacheData({
     required this.queryKey,
     required this.count,
+    this.p25Sek,
     required this.minSek,
     required this.medianSek,
+    this.p75Sek,
     required this.maxSek,
     required this.fetchedAt,
   });
@@ -4919,8 +5094,14 @@ class MarketStatsCacheData extends DataClass
     final map = <String, Expression>{};
     map['query_key'] = Variable<String>(queryKey);
     map['count'] = Variable<int>(count);
+    if (!nullToAbsent || p25Sek != null) {
+      map['p25_sek'] = Variable<double>(p25Sek);
+    }
     map['min_sek'] = Variable<double>(minSek);
     map['median_sek'] = Variable<double>(medianSek);
+    if (!nullToAbsent || p75Sek != null) {
+      map['p75_sek'] = Variable<double>(p75Sek);
+    }
     map['max_sek'] = Variable<double>(maxSek);
     map['fetched_at'] = Variable<DateTime>(fetchedAt);
     return map;
@@ -4930,8 +5111,14 @@ class MarketStatsCacheData extends DataClass
     return MarketStatsCacheCompanion(
       queryKey: Value(queryKey),
       count: Value(count),
+      p25Sek: p25Sek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(p25Sek),
       minSek: Value(minSek),
       medianSek: Value(medianSek),
+      p75Sek: p75Sek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(p75Sek),
       maxSek: Value(maxSek),
       fetchedAt: Value(fetchedAt),
     );
@@ -4945,8 +5132,10 @@ class MarketStatsCacheData extends DataClass
     return MarketStatsCacheData(
       queryKey: serializer.fromJson<String>(json['queryKey']),
       count: serializer.fromJson<int>(json['count']),
+      p25Sek: serializer.fromJson<double?>(json['p25Sek']),
       minSek: serializer.fromJson<double>(json['minSek']),
       medianSek: serializer.fromJson<double>(json['medianSek']),
+      p75Sek: serializer.fromJson<double?>(json['p75Sek']),
       maxSek: serializer.fromJson<double>(json['maxSek']),
       fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
     );
@@ -4957,8 +5146,10 @@ class MarketStatsCacheData extends DataClass
     return <String, dynamic>{
       'queryKey': serializer.toJson<String>(queryKey),
       'count': serializer.toJson<int>(count),
+      'p25Sek': serializer.toJson<double?>(p25Sek),
       'minSek': serializer.toJson<double>(minSek),
       'medianSek': serializer.toJson<double>(medianSek),
+      'p75Sek': serializer.toJson<double?>(p75Sek),
       'maxSek': serializer.toJson<double>(maxSek),
       'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
     };
@@ -4967,15 +5158,19 @@ class MarketStatsCacheData extends DataClass
   MarketStatsCacheData copyWith({
     String? queryKey,
     int? count,
+    Value<double?> p25Sek = const Value.absent(),
     double? minSek,
     double? medianSek,
+    Value<double?> p75Sek = const Value.absent(),
     double? maxSek,
     DateTime? fetchedAt,
   }) => MarketStatsCacheData(
     queryKey: queryKey ?? this.queryKey,
     count: count ?? this.count,
+    p25Sek: p25Sek.present ? p25Sek.value : this.p25Sek,
     minSek: minSek ?? this.minSek,
     medianSek: medianSek ?? this.medianSek,
+    p75Sek: p75Sek.present ? p75Sek.value : this.p75Sek,
     maxSek: maxSek ?? this.maxSek,
     fetchedAt: fetchedAt ?? this.fetchedAt,
   );
@@ -4983,8 +5178,10 @@ class MarketStatsCacheData extends DataClass
     return MarketStatsCacheData(
       queryKey: data.queryKey.present ? data.queryKey.value : this.queryKey,
       count: data.count.present ? data.count.value : this.count,
+      p25Sek: data.p25Sek.present ? data.p25Sek.value : this.p25Sek,
       minSek: data.minSek.present ? data.minSek.value : this.minSek,
       medianSek: data.medianSek.present ? data.medianSek.value : this.medianSek,
+      p75Sek: data.p75Sek.present ? data.p75Sek.value : this.p75Sek,
       maxSek: data.maxSek.present ? data.maxSek.value : this.maxSek,
       fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
     );
@@ -4995,8 +5192,10 @@ class MarketStatsCacheData extends DataClass
     return (StringBuffer('MarketStatsCacheData(')
           ..write('queryKey: $queryKey, ')
           ..write('count: $count, ')
+          ..write('p25Sek: $p25Sek, ')
           ..write('minSek: $minSek, ')
           ..write('medianSek: $medianSek, ')
+          ..write('p75Sek: $p75Sek, ')
           ..write('maxSek: $maxSek, ')
           ..write('fetchedAt: $fetchedAt')
           ..write(')'))
@@ -5004,16 +5203,26 @@ class MarketStatsCacheData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(queryKey, count, minSek, medianSek, maxSek, fetchedAt);
+  int get hashCode => Object.hash(
+    queryKey,
+    count,
+    p25Sek,
+    minSek,
+    medianSek,
+    p75Sek,
+    maxSek,
+    fetchedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MarketStatsCacheData &&
           other.queryKey == this.queryKey &&
           other.count == this.count &&
+          other.p25Sek == this.p25Sek &&
           other.minSek == this.minSek &&
           other.medianSek == this.medianSek &&
+          other.p75Sek == this.p75Sek &&
           other.maxSek == this.maxSek &&
           other.fetchedAt == this.fetchedAt);
 }
@@ -5021,16 +5230,20 @@ class MarketStatsCacheData extends DataClass
 class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
   final Value<String> queryKey;
   final Value<int> count;
+  final Value<double?> p25Sek;
   final Value<double> minSek;
   final Value<double> medianSek;
+  final Value<double?> p75Sek;
   final Value<double> maxSek;
   final Value<DateTime> fetchedAt;
   final Value<int> rowid;
   const MarketStatsCacheCompanion({
     this.queryKey = const Value.absent(),
     this.count = const Value.absent(),
+    this.p25Sek = const Value.absent(),
     this.minSek = const Value.absent(),
     this.medianSek = const Value.absent(),
+    this.p75Sek = const Value.absent(),
     this.maxSek = const Value.absent(),
     this.fetchedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5038,8 +5251,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
   MarketStatsCacheCompanion.insert({
     required String queryKey,
     required int count,
+    this.p25Sek = const Value.absent(),
     required double minSek,
     required double medianSek,
+    this.p75Sek = const Value.absent(),
     required double maxSek,
     required DateTime fetchedAt,
     this.rowid = const Value.absent(),
@@ -5052,8 +5267,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
   static Insertable<MarketStatsCacheData> custom({
     Expression<String>? queryKey,
     Expression<int>? count,
+    Expression<double>? p25Sek,
     Expression<double>? minSek,
     Expression<double>? medianSek,
+    Expression<double>? p75Sek,
     Expression<double>? maxSek,
     Expression<DateTime>? fetchedAt,
     Expression<int>? rowid,
@@ -5061,8 +5278,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
     return RawValuesInsertable({
       if (queryKey != null) 'query_key': queryKey,
       if (count != null) 'count': count,
+      if (p25Sek != null) 'p25_sek': p25Sek,
       if (minSek != null) 'min_sek': minSek,
       if (medianSek != null) 'median_sek': medianSek,
+      if (p75Sek != null) 'p75_sek': p75Sek,
       if (maxSek != null) 'max_sek': maxSek,
       if (fetchedAt != null) 'fetched_at': fetchedAt,
       if (rowid != null) 'rowid': rowid,
@@ -5072,8 +5291,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
   MarketStatsCacheCompanion copyWith({
     Value<String>? queryKey,
     Value<int>? count,
+    Value<double?>? p25Sek,
     Value<double>? minSek,
     Value<double>? medianSek,
+    Value<double?>? p75Sek,
     Value<double>? maxSek,
     Value<DateTime>? fetchedAt,
     Value<int>? rowid,
@@ -5081,8 +5302,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
     return MarketStatsCacheCompanion(
       queryKey: queryKey ?? this.queryKey,
       count: count ?? this.count,
+      p25Sek: p25Sek ?? this.p25Sek,
       minSek: minSek ?? this.minSek,
       medianSek: medianSek ?? this.medianSek,
+      p75Sek: p75Sek ?? this.p75Sek,
       maxSek: maxSek ?? this.maxSek,
       fetchedAt: fetchedAt ?? this.fetchedAt,
       rowid: rowid ?? this.rowid,
@@ -5098,11 +5321,17 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
     if (count.present) {
       map['count'] = Variable<int>(count.value);
     }
+    if (p25Sek.present) {
+      map['p25_sek'] = Variable<double>(p25Sek.value);
+    }
     if (minSek.present) {
       map['min_sek'] = Variable<double>(minSek.value);
     }
     if (medianSek.present) {
       map['median_sek'] = Variable<double>(medianSek.value);
+    }
+    if (p75Sek.present) {
+      map['p75_sek'] = Variable<double>(p75Sek.value);
     }
     if (maxSek.present) {
       map['max_sek'] = Variable<double>(maxSek.value);
@@ -5121,8 +5350,10 @@ class MarketStatsCacheCompanion extends UpdateCompanion<MarketStatsCacheData> {
     return (StringBuffer('MarketStatsCacheCompanion(')
           ..write('queryKey: $queryKey, ')
           ..write('count: $count, ')
+          ..write('p25Sek: $p25Sek, ')
           ..write('minSek: $minSek, ')
           ..write('medianSek: $medianSek, ')
+          ..write('p75Sek: $p75Sek, ')
           ..write('maxSek: $maxSek, ')
           ..write('fetchedAt: $fetchedAt, ')
           ..write('rowid: $rowid')
@@ -5941,6 +6172,8 @@ typedef $$ScanItemsTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> thumbPath,
       Value<String?> aiJson,
+      Value<String?> offlineDetectionsJson,
+      Value<DateTime?> offlineDetectionsFetchedAt,
       Value<String?> query,
       Value<String?> desc,
       Value<String?> category,
@@ -5967,6 +6200,8 @@ typedef $$ScanItemsTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> thumbPath,
       Value<String?> aiJson,
+      Value<String?> offlineDetectionsJson,
+      Value<DateTime?> offlineDetectionsFetchedAt,
       Value<String?> query,
       Value<String?> desc,
       Value<String?> category,
@@ -6127,6 +6362,16 @@ class $$ScanItemsTableFilterComposer
 
   ColumnFilters<String> get aiJson => $composableBuilder(
     column: $table.aiJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get offlineDetectionsJson => $composableBuilder(
+    column: $table.offlineDetectionsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get offlineDetectionsFetchedAt => $composableBuilder(
+    column: $table.offlineDetectionsFetchedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6369,6 +6614,17 @@ class $$ScanItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get offlineDetectionsJson => $composableBuilder(
+    column: $table.offlineDetectionsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get offlineDetectionsFetchedAt =>
+      $composableBuilder(
+        column: $table.offlineDetectionsFetchedAt,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<String> get query => $composableBuilder(
     column: $table.query,
     builder: (column) => ColumnOrderings(column),
@@ -6496,6 +6752,17 @@ class $$ScanItemsTableAnnotationComposer
 
   GeneratedColumn<String> get aiJson =>
       $composableBuilder(column: $table.aiJson, builder: (column) => column);
+
+  GeneratedColumn<String> get offlineDetectionsJson => $composableBuilder(
+    column: $table.offlineDetectionsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get offlineDetectionsFetchedAt =>
+      $composableBuilder(
+        column: $table.offlineDetectionsFetchedAt,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get query =>
       $composableBuilder(column: $table.query, builder: (column) => column);
@@ -6726,6 +6993,9 @@ class $$ScanItemsTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> thumbPath = const Value.absent(),
                 Value<String?> aiJson = const Value.absent(),
+                Value<String?> offlineDetectionsJson = const Value.absent(),
+                Value<DateTime?> offlineDetectionsFetchedAt =
+                    const Value.absent(),
                 Value<String?> query = const Value.absent(),
                 Value<String?> desc = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -6750,6 +7020,8 @@ class $$ScanItemsTableTableManager
                 imagePath: imagePath,
                 thumbPath: thumbPath,
                 aiJson: aiJson,
+                offlineDetectionsJson: offlineDetectionsJson,
+                offlineDetectionsFetchedAt: offlineDetectionsFetchedAt,
                 query: query,
                 desc: desc,
                 category: category,
@@ -6776,6 +7048,9 @@ class $$ScanItemsTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> thumbPath = const Value.absent(),
                 Value<String?> aiJson = const Value.absent(),
+                Value<String?> offlineDetectionsJson = const Value.absent(),
+                Value<DateTime?> offlineDetectionsFetchedAt =
+                    const Value.absent(),
                 Value<String?> query = const Value.absent(),
                 Value<String?> desc = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -6800,6 +7075,8 @@ class $$ScanItemsTableTableManager
                 imagePath: imagePath,
                 thumbPath: thumbPath,
                 aiJson: aiJson,
+                offlineDetectionsJson: offlineDetectionsJson,
+                offlineDetectionsFetchedAt: offlineDetectionsFetchedAt,
                 query: query,
                 desc: desc,
                 category: category,
@@ -8978,8 +9255,10 @@ typedef $$MarketStatsCacheTableCreateCompanionBuilder =
     MarketStatsCacheCompanion Function({
       required String queryKey,
       required int count,
+      Value<double?> p25Sek,
       required double minSek,
       required double medianSek,
+      Value<double?> p75Sek,
       required double maxSek,
       required DateTime fetchedAt,
       Value<int> rowid,
@@ -8988,8 +9267,10 @@ typedef $$MarketStatsCacheTableUpdateCompanionBuilder =
     MarketStatsCacheCompanion Function({
       Value<String> queryKey,
       Value<int> count,
+      Value<double?> p25Sek,
       Value<double> minSek,
       Value<double> medianSek,
+      Value<double?> p75Sek,
       Value<double> maxSek,
       Value<DateTime> fetchedAt,
       Value<int> rowid,
@@ -9014,6 +9295,11 @@ class $$MarketStatsCacheTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get p25Sek => $composableBuilder(
+    column: $table.p25Sek,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<double> get minSek => $composableBuilder(
     column: $table.minSek,
     builder: (column) => ColumnFilters(column),
@@ -9021,6 +9307,11 @@ class $$MarketStatsCacheTableFilterComposer
 
   ColumnFilters<double> get medianSek => $composableBuilder(
     column: $table.medianSek,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get p75Sek => $composableBuilder(
+    column: $table.p75Sek,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9054,6 +9345,11 @@ class $$MarketStatsCacheTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get p25Sek => $composableBuilder(
+    column: $table.p25Sek,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get minSek => $composableBuilder(
     column: $table.minSek,
     builder: (column) => ColumnOrderings(column),
@@ -9061,6 +9357,11 @@ class $$MarketStatsCacheTableOrderingComposer
 
   ColumnOrderings<double> get medianSek => $composableBuilder(
     column: $table.medianSek,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get p75Sek => $composableBuilder(
+    column: $table.p75Sek,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9090,11 +9391,17 @@ class $$MarketStatsCacheTableAnnotationComposer
   GeneratedColumn<int> get count =>
       $composableBuilder(column: $table.count, builder: (column) => column);
 
+  GeneratedColumn<double> get p25Sek =>
+      $composableBuilder(column: $table.p25Sek, builder: (column) => column);
+
   GeneratedColumn<double> get minSek =>
       $composableBuilder(column: $table.minSek, builder: (column) => column);
 
   GeneratedColumn<double> get medianSek =>
       $composableBuilder(column: $table.medianSek, builder: (column) => column);
+
+  GeneratedColumn<double> get p75Sek =>
+      $composableBuilder(column: $table.p75Sek, builder: (column) => column);
 
   GeneratedColumn<double> get maxSek =>
       $composableBuilder(column: $table.maxSek, builder: (column) => column);
@@ -9142,16 +9449,20 @@ class $$MarketStatsCacheTableTableManager
               ({
                 Value<String> queryKey = const Value.absent(),
                 Value<int> count = const Value.absent(),
+                Value<double?> p25Sek = const Value.absent(),
                 Value<double> minSek = const Value.absent(),
                 Value<double> medianSek = const Value.absent(),
+                Value<double?> p75Sek = const Value.absent(),
                 Value<double> maxSek = const Value.absent(),
                 Value<DateTime> fetchedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MarketStatsCacheCompanion(
                 queryKey: queryKey,
                 count: count,
+                p25Sek: p25Sek,
                 minSek: minSek,
                 medianSek: medianSek,
+                p75Sek: p75Sek,
                 maxSek: maxSek,
                 fetchedAt: fetchedAt,
                 rowid: rowid,
@@ -9160,16 +9471,20 @@ class $$MarketStatsCacheTableTableManager
               ({
                 required String queryKey,
                 required int count,
+                Value<double?> p25Sek = const Value.absent(),
                 required double minSek,
                 required double medianSek,
+                Value<double?> p75Sek = const Value.absent(),
                 required double maxSek,
                 required DateTime fetchedAt,
                 Value<int> rowid = const Value.absent(),
               }) => MarketStatsCacheCompanion.insert(
                 queryKey: queryKey,
                 count: count,
+                p25Sek: p25Sek,
                 minSek: minSek,
                 medianSek: medianSek,
+                p75Sek: p75Sek,
                 maxSek: maxSek,
                 fetchedAt: fetchedAt,
                 rowid: rowid,

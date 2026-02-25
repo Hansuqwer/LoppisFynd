@@ -18,6 +18,11 @@
   "settingsAccessibility": "Accessibility",
   "settingsHighContrast": "High contrast",
   "settingsContrastUpdated": "Updated contrast setting.",
+  "settingsThemeModeLabel": "Theme",
+  "settingsThemeModeSystem": "System",
+  "settingsThemeModeLight": "Light",
+  "settingsThemeModeDark": "Dark",
+  "settingsThemeModeSaved": "Updated theme setting.",
 
   "settingsPrivacyDataSectionTitle": "Privacy & Data",
   "settingsCloudIdentificationToggleTitle": "Send crops for cloud identification",
@@ -201,6 +206,13 @@
   "offlineIdentifyApplyCta": "Apply",
   "offlineIdentifyNoResults": "Run offline identification to see detections here.",
   "offlineIdentifyDisabledHint": "Offline identification is turned off. Enable it in Settings to run detection.",
+  "offlineIdentifyConfidenceSummary": "{percent} · {label}",
+  "@offlineIdentifyConfidenceSummary": {
+    "placeholders": {
+      "percent": {"type": "String"},
+      "label": {"type": "String"}
+    }
+  },
 
   "offlineModelCardTitle": "Offline model",
   "offlineModelCardBody": "Download required to run offline identification. Size: {size}.",
@@ -520,6 +532,22 @@
   "itemDetailQueueSync": "Queue sync",
   "itemDetailQueuedForSync": "Queued for sync.",
   "itemDetailSyncCompleted": "Sync completed.",
+  "itemDetailLastUpdated": "Last updated: {timestamp}",
+  "@itemDetailLastUpdated": {
+    "placeholders": {"timestamp": {"type": "String"}}
+  },
+  "itemDetailFeatureState": "{feature}: {state}",
+  "@itemDetailFeatureState": {
+    "placeholders": {
+      "feature": {"type": "String"},
+      "state": {"type": "String"}
+    }
+  },
+  "itemDetailLastSyncFailed": "Last sync failed",
+  "itemDetailNextAttempt": "Next attempt: {timestamp}",
+  "@itemDetailNextAttempt": {
+    "placeholders": {"timestamp": {"type": "String"}}
+  },
   "itemDetailProfitTitle": "Profit",
   "itemDetailPurchasePriceLabel": "Purchase price (SEK)",
   "itemDetailFixedFeesLabel": "Fixed fees (SEK)",

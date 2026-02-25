@@ -32,6 +32,8 @@ class ScanItems extends Table {
   TextColumn get thumbPath => text().nullable()();
 
   TextColumn get aiJson => text().nullable()();
+  TextColumn get offlineDetectionsJson => text().nullable()();
+  DateTimeColumn get offlineDetectionsFetchedAt => dateTime().nullable()();
   TextColumn get query => text().nullable()();
   TextColumn get desc => text().nullable()();
 

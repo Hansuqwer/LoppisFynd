@@ -141,12 +141,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_profile')));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-
-    expect(find.text('Tillgänglighet'), findsWidgets);
-
     final l10n = AppLocalizations.of(
-      tester.element(find.text('Tillgänglighet').first),
+      tester.element(find.byKey(const Key('nav_profile'))),
     )!;
+
+    expect(find.text(l10n.settingsAccessibility), findsWidgets);
 
     // Dev-only sync controls should be hidden in normal mode.
     expect(find.text(l10n.settingsMarketSyncTitle), findsNothing);

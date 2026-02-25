@@ -556,7 +556,9 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                               if (fetchedAt != null) ...[
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  'Last updated: ${_formatTimestamp(context, fetchedAt)}',
+                                  l10n.itemDetailLastUpdated(
+                                    _formatTimestamp(context, fetchedAt),
+                                  ),
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
@@ -751,7 +753,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                         const SizedBox(height: AppSpacing.xs),
                         if (!compsEnabled) ...[
                           Text(
-                            '${l10n.settingsFetchSoldPriceCompsToggleTitle}: ${l10n.commonOff}',
+                            l10n.itemDetailFeatureState(
+                              l10n.settingsFetchSoldPriceCompsToggleTitle,
+                              l10n.commonOff,
+                            ),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: AppSpacing.xxs),
@@ -822,7 +827,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                       const SizedBox(width: AppSpacing.xs),
                                       Expanded(
                                         child: Text(
-                                          'Last sync failed',
+                                          l10n.itemDetailLastSyncFailed,
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium
@@ -843,7 +848,12 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                   if (nextAttemptAt != null) ...[
                                     const SizedBox(height: AppSpacing.xxs),
                                     Text(
-                                      'Next attempt: ${_formatTimestamp(context, nextAttemptAt)}',
+                                      l10n.itemDetailNextAttempt(
+                                        _formatTimestamp(
+                                          context,
+                                          nextAttemptAt,
+                                        ),
+                                      ),
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodySmall,

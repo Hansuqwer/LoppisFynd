@@ -13,6 +13,8 @@ import '../../core/utils/serial_task_queue.dart';
 import '../../services/ai/inference/ai_types.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../../services/analytics/analytics_service.dart';
+import '../../services/offline_detection/offline_detection_types.dart';
+import '../../services/offline_detection/offline_detector.dart';
 
 class CapturedScan {
   const CapturedScan({required this.id, required this.backgroundWork});
@@ -97,6 +99,10 @@ class ScanCaptureService {
       }
 
       // Best-effort: thumbnail generation is critical; AI can be installed later.
+      unawaited(
+        _runOfflineDetectionBestEffort(id: id, imagePath: stored.imagePath),
+      );
+
       try {
         int? privacyEnabled;
         int? disclosureChoice;
@@ -179,6 +185,40 @@ class ScanCaptureService {
     unawaited(backgroundWork);
 
     return CapturedScan(id: id, backgroundWork: backgroundWork);
+  }
+
+  Future<void> _runOfflineDetectionBestEffort({
+    required String id,
+    required String imagePath,
+  }) async {
+    try {
+      final enabled = await _db.appSettingsDao.getInt(
+        kOfflineIdentificationEnabledKeyV1,
+      );
+      if ((enabled ?? 0) != 1) return;
+
+      final file = File(imagePath);
+      if (!await file.exists()) return;
+
+      final detector = OfflineDetector();
+      final installState = await detector.installState();
+      if (!installState.installed) return;
+
+      final bytes = await file.readAsBytes();
+      final detections = await detector
+          .detectImageBytes(bytes)
+          .timeout(const Duration(milliseconds: 2500));
+
+      await _db.scanItemsDao.setOfflineDetections(
+        id: id,
+        detectionsJson: offlineDetectionsToJson(detections),
+        fetchedAt: DateTime.now(),
+      );
+    } on TimeoutException {
+      // Best-effort only.
+    } catch (_) {
+      // Best-effort only.
+    }
   }
 
   static Future<bool> _defaultIsOnline() async {

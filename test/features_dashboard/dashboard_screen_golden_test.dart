@@ -17,7 +17,7 @@ import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
 
 void main() {
-  testWidgets('Dashboard (Home tab) golden', (tester) async {
+  testWidgets('Dashboard (Home tab) light+dark goldens', (tester) async {
     GoogleFonts.config.allowRuntimeFetching = false;
 
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -47,43 +47,56 @@ void main() {
 
     final boundaryKey = GlobalKey();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          scanImageStorageProvider.overrideWithValue(storage),
-          appConfigProvider.overrideWithValue(config),
-          syncSchedulerProvider.overrideWithValue(syncScheduler),
-          aiInferenceProvider.overrideWithValue(aiInference),
-          highContrastEnabledProvider.overrideWith(
-            (ref) => Stream.value(false),
-          ),
-          onboardingCompleteProvider.overrideWith((ref) => Stream.value(true)),
-          isOnlineProvider.overrideWith((ref) => Stream.value(true)),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          locale: const Locale('sv'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: RepaintBoundary(
-            key: boundaryKey,
-            child: const SizedBox(
-              width: 390,
-              height: 844,
-              child: AppNavShell(),
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+            scanImageStorageProvider.overrideWithValue(storage),
+            appConfigProvider.overrideWithValue(config),
+            syncSchedulerProvider.overrideWithValue(syncScheduler),
+            aiInferenceProvider.overrideWithValue(aiInference),
+            highContrastEnabledProvider.overrideWith(
+              (ref) => Stream.value(false),
+            ),
+            themeModePreferenceProvider.overrideWith(
+              (ref) => Stream.value(mode),
+            ),
+            onboardingCompleteProvider.overrideWith(
+              (ref) => Stream.value(true),
+            ),
+            isOnlineProvider.overrideWith((ref) => Stream.value(true)),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: mode,
+            locale: const Locale('sv'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: RepaintBoundary(
+              key: boundaryKey,
+              child: const SizedBox(
+                width: 390,
+                height: 844,
+                child: AppNavShell(),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    await expectLater(
-      find.byKey(boundaryKey),
-      matchesGoldenFile('../goldens/dashboard_screen.png'),
-    );
+      await expectLater(
+        find.byKey(boundaryKey),
+        matchesGoldenFile(
+          mode == ThemeMode.dark
+              ? '../goldens/dashboard_screen_dark.png'
+              : '../goldens/dashboard_screen_light.png',
+        ),
+      );
+    }
 
     // Dispose widget tree and flush pending Drift stream timers.
     await tester.pumpWidget(const SizedBox.shrink());

@@ -13,15 +13,21 @@ class MarketSale {
 class MarketStats {
   const MarketStats({
     required this.count,
+    required this.p25Sek,
     required this.minSek,
     required this.medianSek,
+    required this.p75Sek,
     required this.maxSek,
+    required this.lastUpdated,
   });
 
   final int count;
+  final int p25Sek;
   final int minSek;
   final int medianSek;
+  final int p75Sek;
   final int maxSek;
+  final DateTime lastUpdated;
 }
 
 class MarketComps {
@@ -34,9 +40,12 @@ class MarketComps {
     'sales': sales.map((s) => s.toJson()).toList(),
     'stats': {
       'count': stats.count,
+      'p25Sek': stats.p25Sek,
       'minSek': stats.minSek,
       'medianSek': stats.medianSek,
+      'p75Sek': stats.p75Sek,
       'maxSek': stats.maxSek,
+      'lastUpdated': stats.lastUpdated.toIso8601String(),
     },
   };
 }

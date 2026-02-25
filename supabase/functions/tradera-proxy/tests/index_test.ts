@@ -67,6 +67,40 @@ Deno.test("injected rateLimit deny returns 429 + retryAfter", async () => {
   if (err["retryAfterSeconds"] !== 42) throw new Error("wrong retryAfterSeconds");
 });
 
+Deno.test("injected dailyQuota deny returns 429 + retryAfter", async () => {
+  const resp = await handleRequest(
+    new Request("http://localhost/tradera-proxy", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ searchWords: "glassvas" }),
+    }),
+    {
+      rateLimit: async () => ({ allowed: true }),
+      dailyQuota: async () => ({
+        allowed: false,
+        used: 101,
+        budget: 100,
+        retryAfterSeconds: 600,
+      }),
+    },
+  );
+
+  if (resp.status !== 429) throw new Error(`expected 429, got ${resp.status}`);
+  if (resp.headers.get("retry-after") !== "600") {
+    throw new Error("missing retry-after header");
+  }
+
+  const body = await resp.json();
+  const err = (body as Record<string, unknown>)["error"] as
+    | Record<string, unknown>
+    | undefined;
+  if (!err) throw new Error("missing error object");
+  if (err["code"] !== "daily_quota_exhausted") throw new Error("wrong code");
+  if (err["retryAfterSeconds"] !== 600) {
+    throw new Error("wrong retryAfterSeconds");
+  }
+});
+
 Deno.test("success path returns JSON compatible with TraderaProxyResponse", async () => {
   const xml = await Deno.readTextFile(
     new URL("../fixtures/get_search_result_advanced_xml_response.xml", import.meta.url),

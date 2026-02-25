@@ -17,7 +17,7 @@ import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
 
 void main() {
-  testWidgets('History empty-state light+dark goldens', (tester) async {
+  testWidgets('Settings screen light+dark goldens', (tester) async {
     GoogleFonts.config.allowRuntimeFetching = false;
 
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -87,21 +87,19 @@ void main() {
       );
 
       await tester.pumpAndSettle(const Duration(seconds: 3));
-
-      await tester.tap(find.byKey(const Key('nav_history')));
+      await tester.tap(find.byKey(const Key('nav_profile')));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
       await expectLater(
         find.byKey(boundaryKey),
         matchesGoldenFile(
           mode == ThemeMode.dark
-              ? '../goldens/history_empty_dark.png'
-              : '../goldens/history_empty_light.png',
+              ? '../goldens/settings_screen_dark.png'
+              : '../goldens/settings_screen_light.png',
         ),
       );
     }
 
-    // Dispose widget tree and flush pending Drift stream timers.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   });

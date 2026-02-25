@@ -85,19 +85,22 @@ void main() {
     );
 
     await tester.pumpAndSettle(const Duration(seconds: 2));
+    final l10n = AppLocalizations.of(
+      tester.element(find.byKey(const Key('nav_dashboard'))),
+    )!;
 
     // Dashboard
-    expect(find.text('Jagarens tavla'), findsWidgets);
+    expect(find.text(l10n.dashboardTitle), findsWidgets);
 
     // Haul
     await tester.tap(find.byKey(const Key('nav_haul')));
     await tester.pumpAndSettle(const Duration(milliseconds: 900));
-    expect(find.text('Pågående fynd'), findsWidgets);
+    expect(find.text(l10n.haulTitle), findsWidgets);
 
     // History
     await tester.tap(find.byKey(const Key('nav_history')));
     await tester.pumpAndSettle(const Duration(milliseconds: 900));
-    expect(find.text('Historik'), findsWidgets);
+    expect(find.text(l10n.historyHistoryTitle), findsWidgets);
 
     // Draft editor can render + save offline.
     await tester.pumpWidget(

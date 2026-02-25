@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart' as legacy;
+import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -102,6 +103,17 @@ final offlineIdentificationEnabledProvider = StreamProvider<bool>((ref) {
 
 final offlineDetectorProvider = Provider<OfflineDetector>((ref) {
   return OfflineDetector();
+});
+
+final themeModePreferenceProvider = StreamProvider<ThemeMode>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao.watchInt(kThemeModePreferenceKeyV1).map((v) {
+    return switch (v ?? 0) {
+      1 => ThemeMode.light,
+      2 => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  });
 });
 
 final featureFlagsProvider = Provider<FeatureFlags>((ref) {

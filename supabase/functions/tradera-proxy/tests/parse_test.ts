@@ -18,4 +18,8 @@ Deno.test("parseSearchAdvancedResponse parses items", async () => {
   if (first.id !== 1001) throw new Error("Expected id=1001");
   if (first.hasBids !== true) throw new Error("Expected hasBids=true");
   if (first.maxBid !== 245) throw new Error("Expected maxBid=245");
+  if (first.buyItNowPrice !== 299) throw new Error("Expected buyItNowPrice=299");
+  if (first.itemType !== "AuctionWithBuyItNow") {
+    throw new Error("Expected itemType=AuctionWithBuyItNow");
+  }
 });

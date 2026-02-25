@@ -13,6 +13,7 @@ import 'package:fynd_loppis/main.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
 import 'package:fynd_loppis/services/market/market_data_source.dart';
 import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
+import 'package:fynd_loppis/gen/app_localizations.dart';
 import 'package:fynd_loppis/shared/widgets/capsule_nav_bar.dart';
 
 void main() {
@@ -62,6 +63,7 @@ void main() {
 
     final nav = find.byKey(const Key('capsule_nav'));
     expect(nav, findsOneWidget);
+    final l10n = AppLocalizations.of(tester.element(nav))!;
 
     // Contract: exactly 5 destinations.
     const destinationKeys = <Key>[
@@ -85,27 +87,27 @@ void main() {
     // Scanner
     await tester.tap(find.byKey(const Key('nav_scanner')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Snabbskanner'), findsWidgets);
+    expect(find.text(l10n.scannerTitle), findsWidgets);
 
     // Haul
     await tester.tap(find.byKey(const Key('nav_haul')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Pågående fynd'), findsWidgets);
+    expect(find.text(l10n.haulTitle), findsWidgets);
 
     // History
     await tester.tap(find.byKey(const Key('nav_history')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Historik'), findsWidgets);
+    expect(find.text(l10n.historyHistoryTitle), findsWidgets);
 
     // Profile
     await tester.tap(find.byKey(const Key('nav_profile')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Tillgänglighet'), findsWidgets);
+    expect(find.text(l10n.settingsAccessibility), findsWidgets);
 
     // Back home
     await tester.tap(find.byKey(const Key('nav_dashboard')));
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('Jagarens tavla'), findsWidgets);
+    expect(find.text(l10n.dashboardTitle), findsWidgets);
 
     // Dispose the widget tree and flush any pending Drift timers.
     await tester.pumpWidget(const SizedBox.shrink());

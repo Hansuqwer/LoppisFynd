@@ -243,6 +243,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final highContrast = ref
         .watch(highContrastEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => false);
+    final themeMode = ref
+        .watch(themeModePreferenceProvider)
+        .maybeWhen(data: (v) => v, orElse: () => ThemeMode.system);
     final cloudIdentificationEnabled = ref
         .watch(cloudIdentificationEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
@@ -305,6 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     db,
                     config,
                     highContrast,
+                    themeMode,
                     cloudIdentificationEnabled,
                     fetchSoldPriceCompsEnabled,
                     email,
@@ -660,6 +664,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     dynamic db,
     dynamic config,
     bool highContrast,
+    ThemeMode themeMode,
     bool cloudIdentificationEnabled,
     bool fetchSoldPriceCompsEnabled,
     String? email,
@@ -687,6 +692,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               SnackBar(content: Text(l10n.settingsContrastUpdated)),
             );
           },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.settingsThemeModeLabel,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            DropdownButton<ThemeMode>(
+              value: themeMode,
+              items: [
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text(l10n.settingsThemeModeSystem),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.light,
+                  child: Text(l10n.settingsThemeModeLight),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.dark,
+                  child: Text(l10n.settingsThemeModeDark),
+                ),
+              ],
+              onChanged: (v) async {
+                if (v == null) return;
+                final messenger = ScaffoldMessenger.of(context);
+                final encoded = switch (v) {
+                  ThemeMode.light => 1,
+                  ThemeMode.dark => 2,
+                  _ => 0,
+                };
+                await db.appSettingsDao.setInt(
+                  kThemeModePreferenceKeyV1,
+                  encoded,
+                );
+                if (!mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l10n.settingsThemeModeSaved)),
+                );
+              },
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
