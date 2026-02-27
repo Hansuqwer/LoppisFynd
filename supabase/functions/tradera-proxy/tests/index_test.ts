@@ -28,6 +28,7 @@ Deno.test("400 invalid JSON returns stable code", async () => {
     }),
     {
       rateLimit: async () => ({ allowed: true }),
+      dailyQuota: async () => ({ allowed: true, used: 1, budget: 100 }),
     },
   );
 
@@ -50,6 +51,7 @@ Deno.test("injected rateLimit deny returns 429 + retryAfter", async () => {
     }),
     {
       rateLimit: async () => ({ allowed: false, retryAfterSeconds: 42 }),
+      dailyQuota: async () => ({ allowed: true, used: 1, budget: 100 }),
     },
   );
 
@@ -64,7 +66,9 @@ Deno.test("injected rateLimit deny returns 429 + retryAfter", async () => {
     | undefined;
   if (!err) throw new Error("missing error object");
   if (err["code"] !== "rate_limited") throw new Error("wrong code");
-  if (err["retryAfterSeconds"] !== 42) throw new Error("wrong retryAfterSeconds");
+  if (err["retryAfterSeconds"] !== 42) {
+    throw new Error("wrong retryAfterSeconds");
+  }
 });
 
 Deno.test("injected dailyQuota deny returns 429 + retryAfter", async () => {
@@ -102,9 +106,8 @@ Deno.test("injected dailyQuota deny returns 429 + retryAfter", async () => {
 });
 
 Deno.test("success path returns JSON compatible with TraderaProxyResponse", async () => {
-  const xml = await Deno.readTextFile(
-    new URL("../fixtures/get_search_result_advanced_xml_response.xml", import.meta.url),
-  );
+  const xml =
+    `<SearchAdvancedResponse><SearchAdvancedResult><TotalNumberOfItems>1</TotalNumberOfItems><TotalNumberOfPages>1</TotalNumberOfPages><Items><Id>1001</Id><ShortDescription>Rorstrand plate</ShortDescription><EndDate>2026-02-16T20:00:00</EndDate><MaxBid>245</MaxBid><BuyItNowPrice>299</BuyItNowPrice><ItemType>AuctionWithBuyItNow</ItemType><BidCount>3</BidCount><HasBids>true</HasBids><IsEnded>true</IsEnded><ItemUrl>https://tradera.example/item/1001</ItemUrl><ThumbnailLink>https://tradera.example/thumb/1001.jpg</ThumbnailLink></Items></SearchAdvancedResult></SearchAdvancedResponse>`;
 
   const resp = await handleRequest(
     new Request("http://localhost/tradera-proxy", {
@@ -121,11 +124,14 @@ Deno.test("success path returns JSON compatible with TraderaProxyResponse", asyn
         },
       },
       rateLimit: async () => ({ allowed: true }),
+      dailyQuota: async () => ({ allowed: true, used: 1, budget: 100 }),
       fetch: async () => new Response(xml, { status: 200 }),
     },
   );
 
-  if (resp.status !== 200) throw new Error(`expected 200, got ${resp.status}`);
+  if (resp.status !== 200) {
+    throw new Error(`expected 200, got ${resp.status}`);
+  }
   if (resp.headers.get("cache-control") !== "no-store") {
     throw new Error("missing cache-control: no-store");
   }
