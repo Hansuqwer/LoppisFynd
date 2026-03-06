@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'gen/app_localizations.dart';
@@ -14,6 +15,7 @@ import 'core/storage/scan_image_storage.dart';
 import 'core/tokens/app_tokens.dart';
 import 'core/theme/app_theme.dart';
 import 'shared/widgets/bento_card.dart';
+import 'services/ai/cloud_ai_proxy_client.dart';
 import 'services/ai/inference/inference_isolate_service.dart';
 import 'services/market/market_bridge.dart';
 import 'services/market/market_data_source.dart';
@@ -33,6 +35,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   registerOfflineLicenses();
 
@@ -143,13 +155,20 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
   final backendKind = config.hasCloudAiProxy
       ? AiBackendKind.cloudGemini
       : AiBackendKind.notImplemented;
-  final cloudAiProxyUrl = config.hasCloudAiProxy
-      ? Uri.parse(config.cloudAiProxyUrl)
-      : null;
+  final cloudAiProxyUrl = config.resolvedCloudAiProxyUri;
 
   final aiInference = AiInferenceIsolateService(
     backendKind: backendKind,
     cloudAiProxyUrl: cloudAiProxyUrl,
+    cloudClient: cloudAiProxyUrl != null
+        ? CloudAiProxyClient(
+            functionUrl: cloudAiProxyUrl,
+            authTokenProvider: () {
+              if (!config.hasSupabase) return null;
+              return Supabase.instance.client.auth.currentSession?.accessToken;
+            },
+          )
+        : null,
   );
 
   runApp(

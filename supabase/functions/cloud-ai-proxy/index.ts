@@ -18,9 +18,11 @@ export const LIMITS = {
   // Base64 chars budget for a JPEG crop (bytes only, no prefix)
   maxImageBase64Chars: 2_000_000,
   // Upper bound for upstream response we embed into `raw`.
+  // Upper bound for upstream response we embed into `raw`.
   maxRawJsonChars: 50_000,
+  // Timeout for the upstream Gemini API call (ms).
+  geminiTimeoutMs: 30_000,
 } as const;
-
 type EnvProvider = {
   get: (key: string) => string | undefined;
 };
@@ -30,11 +32,15 @@ type FetchLike = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+type AuthVerifier = (
+  jwt: string,
+) => Promise<{ userId: string } | null>;
+
 type Deps = {
   env?: EnvProvider;
   fetch?: FetchLike;
+  verifyAuth?: AuthVerifier;
 };
-
 export async function handleRequest(
   req: Request,
   deps: Deps = {},
@@ -45,6 +51,23 @@ export async function handleRequest(
 
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
+  }
+
+  // ── Auth gate: require a valid Supabase JWT ──
+  const env = deps.env ?? { get: (k: string) => Deno.env.get(k) };
+  const verifyAuth = deps.verifyAuth ?? createSupabaseAuthVerifier(env);
+
+  const authHeader = (req.headers.get("authorization") ?? "").trim();
+  const jwt = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice("bearer ".length).trim()
+    : "";
+  if (!jwt) {
+    return json({ error: "Missing bearer token" }, 401);
+  }
+
+  const authResult = await verifyAuth(jwt);
+  if (!authResult) {
+    return json({ error: "Unauthorized" }, 401);
   }
 
   let bodyText = "";
@@ -100,7 +123,6 @@ export async function handleRequest(
     );
   }
 
-  const env = deps.env ?? { get: (k: string) => Deno.env.get(k) };
   const apiKey = (env.get("GEMINI_API_KEY") ?? "").trim();
   const model = (env.get("GEMINI_MODEL") ?? DEFAULT_GEMINI_MODEL).trim() ||
     DEFAULT_GEMINI_MODEL;
@@ -207,7 +229,7 @@ async function callGemini(
     encodeURIComponent(args.model)
   }:generateContent?key=${encodeURIComponent(args.apiKey)}`;
 
-  const payload = {
+  const basePayload = {
     contents: [
       {
         role: "user",
@@ -223,56 +245,99 @@ async function callGemini(
       },
     ],
     generationConfig: {
+      // Important: On Gemini 2.5, hidden "thinking" tokens can consume most
+      // of the output budget, producing truncated JSON. We explicitly set a
+      // low temperature and attempt to disable thinking, with a safe fallback.
       maxOutputTokens: args.maxTokens,
     },
   };
 
-  let resp: Response;
-  try {
-    resp = await doFetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
+  const payloads: Array<Record<string, unknown>> = [
+    {
+      ...basePayload,
+      generationConfig: {
+        ...(basePayload.generationConfig as Record<string, unknown>),
+        temperature: 0.0,
+        responseMimeType: "application/json",
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    return {
-      ok: false,
-      status: 502,
-      error: `Gemini request failed: ${String(e)}`,
-    };
+    },
+    {
+      ...basePayload,
+      generationConfig: {
+        ...(basePayload.generationConfig as Record<string, unknown>),
+        temperature: 0.0,
+        responseMimeType: "application/json",
+      },
+    },
+    basePayload as unknown as Record<string, unknown>,
+  ];
+
+  let lastError: string | null = null;
+
+  for (const payload of payloads) {
+    let resp: Response;
+    try {
+      resp = await doFetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      lastError = `Gemini request failed: ${String(e)}`;
+      continue;
+    }
+
+    const respText = await resp.text();
+
+    if (!resp.ok) {
+      // If the API rejects newer JSON/thinking fields, retry with a simpler payload.
+      if (
+        resp.status === 400 &&
+        (respText.includes("Unknown name") ||
+          respText.includes("Invalid JSON payload") ||
+          respText.includes("Unrecognized") ||
+          respText.includes("cannot find field"))
+      ) {
+        lastError = `Gemini request rejected (${resp.status}): ${respText.slice(0, 2000)}`;
+        continue;
+      }
+
+      return {
+        ok: false,
+        status: 502,
+        error: `Gemini request failed (${resp.status}): ${respText.slice(0, 2000)}`,
+      };
+    }
+
+    let raw: unknown;
+    try {
+      raw = JSON.parse(respText);
+    } catch {
+      raw = { text: respText.slice(0, 2000) };
+    }
+
+    const text = extractTextFromGeminiResponse(raw);
+    if (!text) {
+      return {
+        ok: false,
+        status: 502,
+        error: "Gemini response missing candidate text",
+      };
+    }
+
+    return { ok: true, text, raw };
   }
 
-  const respText = await resp.text();
-
-  if (!resp.ok) {
-    return {
-      ok: false,
-      status: 502,
-      error: `Gemini request failed (${resp.status}): ${
-        respText.slice(0, 2000)
-      }`,
-    };
-  }
-
-  let raw: unknown;
-  try {
-    raw = JSON.parse(respText);
-  } catch {
-    raw = { text: respText.slice(0, 2000) };
-  }
-
-  const text = extractTextFromGeminiResponse(raw);
-  if (!text) {
-    return {
-      ok: false,
-      status: 502,
-      error: "Gemini response missing candidate text",
-    };
-  }
-
-  return { ok: true, text, raw };
+  return {
+    ok: false,
+    status: 502,
+    error: lastError ?? "Gemini request failed",
+  };
 }
 
 function extractTextFromGeminiResponse(raw: unknown): string {
@@ -304,4 +369,30 @@ function extractTextFromGeminiResponse(raw: unknown): string {
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
   return value as Record<string, unknown>;
+}
+
+function createSupabaseAuthVerifier(env: EnvProvider): AuthVerifier {
+  return async (jwt: string) => {
+    const supabaseUrl = (env.get("SUPABASE_URL") ?? "").trim();
+    const supabaseAnonKey = (env.get("SUPABASE_ANON_KEY") ?? "").trim();
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return { userId: "unknown" };
+    }
+
+    try {
+      const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          authorization: `Bearer ${jwt}`,
+          apikey: supabaseAnonKey,
+        },
+      });
+      if (!resp.ok) return null;
+      const data = (await resp.json()) as Record<string, unknown>;
+      const id = typeof data.id === "string" ? data.id : null;
+      if (!id) return null;
+      return { userId: id };
+    } catch {
+      return null;
+    }
+  };
 }

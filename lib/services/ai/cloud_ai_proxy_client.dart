@@ -13,11 +13,16 @@ class CloudAiProxyException implements Exception {
 }
 
 class CloudAiProxyClient {
-  CloudAiProxyClient({required this.functionUrl, http.Client? client})
-    : _client = client;
+  CloudAiProxyClient({
+    required this.functionUrl,
+    http.Client? client,
+    String? Function()? authTokenProvider,
+  }) : _client = client,
+       _authTokenProvider = authTokenProvider;
 
   final Uri functionUrl;
   final http.Client? _client;
+  final String? Function()? _authTokenProvider;
 
   Future<String> generate({
     required String prompt,
@@ -44,12 +49,18 @@ class CloudAiProxyClient {
             : <String, Object?>{'requestId': requestId}),
       };
 
+      final headers = <String, String>{
+        'content-type': 'application/json',
+        'cache-control': 'no-store',
+      };
+      final token = _authTokenProvider?.call();
+      if (token != null && token.isNotEmpty) {
+        headers['authorization'] = 'Bearer $token';
+      }
+
       final resp = await client.post(
         functionUrl,
-        headers: const {
-          'content-type': 'application/json',
-          'cache-control': 'no-store',
-        },
+        headers: headers,
         body: jsonEncode(body),
       );
 

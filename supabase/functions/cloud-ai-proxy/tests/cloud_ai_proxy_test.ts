@@ -1,5 +1,14 @@
 import { handleRequest, LIMITS } from "../index.ts";
 
+const authorizedHeaders = {
+  authorization: "Bearer test-jwt",
+  "content-type": "application/json",
+};
+
+const allowAuth = {
+  verifyAuth: async () => ({ userId: "test-user" }),
+};
+
 Deno.test("OPTIONS returns 204 + CORS headers", async () => {
   const resp = await handleRequest(
     new Request("http://localhost/cloud-ai-proxy", { method: "OPTIONS" }),
@@ -24,9 +33,10 @@ Deno.test("invalid JSON returns 400", async () => {
   const resp = await handleRequest(
     new Request("http://localhost/cloud-ai-proxy", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authorizedHeaders,
       body: "{",
     }),
+    allowAuth,
   );
   if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
 });
@@ -35,9 +45,10 @@ Deno.test("missing/empty prompt returns 400", async () => {
   const resp = await handleRequest(
     new Request("http://localhost/cloud-ai-proxy", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authorizedHeaders,
       body: JSON.stringify({ prompt: "", imageBase64Jpeg: "aGVsbG8=" }),
     }),
+    allowAuth,
   );
   if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
 });
@@ -46,9 +57,10 @@ Deno.test("missing/empty imageBase64Jpeg returns 400", async () => {
   const resp = await handleRequest(
     new Request("http://localhost/cloud-ai-proxy", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authorizedHeaders,
       body: JSON.stringify({ prompt: "hi", imageBase64Jpeg: "" }),
     }),
+    allowAuth,
   );
   if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
 });
@@ -58,9 +70,33 @@ Deno.test("oversized payload returns 413", async () => {
   const resp = await handleRequest(
     new Request("http://localhost/cloud-ai-proxy", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authorizedHeaders,
       body: JSON.stringify({ prompt: "hi", imageBase64Jpeg: tooLarge }),
     }),
+    allowAuth,
   );
   if (resp.status !== 413) throw new Error(`expected 413, got ${resp.status}`);
+});
+
+Deno.test("missing bearer token returns 401", async () => {
+  const resp = await handleRequest(
+    new Request("http://localhost/cloud-ai-proxy", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "hi", imageBase64Jpeg: "aGVsbG8=" }),
+    }),
+  );
+  if (resp.status !== 401) throw new Error(`expected 401, got ${resp.status}`);
+});
+
+Deno.test("invalid bearer token returns 401", async () => {
+  const resp = await handleRequest(
+    new Request("http://localhost/cloud-ai-proxy", {
+      method: "POST",
+      headers: authorizedHeaders,
+      body: JSON.stringify({ prompt: "hi", imageBase64Jpeg: "aGVsbG8=" }),
+    }),
+    { verifyAuth: async () => null },
+  );
+  if (resp.status !== 401) throw new Error(`expected 401, got ${resp.status}`);
 });
