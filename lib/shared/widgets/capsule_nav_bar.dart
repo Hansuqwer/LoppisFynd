@@ -9,12 +9,14 @@ class CapsuleNavDestination {
     required this.label,
     required this.icon,
     this.isPrimary = false,
+    this.badgeCount,
     this.key,
   });
 
   final String label;
   final IconData icon;
   final bool isPrimary;
+  final int? badgeCount;
   final Key? key;
 }
 
@@ -129,35 +131,81 @@ class _NavItem extends StatelessWidget {
         child: SizedBox(
           width: isPrimary ? AppCapsuleNav.primaryItemWidth : AppSpacing.xxxl,
           height: AppSpacing.xxxl,
-          child: Center(
-            child: AnimatedContainer(
-              duration: AppMotion.normal,
-              curve: AppMotion.curve,
-              padding: EdgeInsets.all(
-                isPrimary ? AppCapsuleNav.primaryIconPadding : AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: isPrimary
-                    ? (selected
-                          ? AppColors.accentEarth
-                          : AppColors.accentEarth.withValues(
-                              alpha: AppOpacity.capsuleNavFill,
-                            ))
-                    : (selected ? AppColors.glassFill : Colors.transparent),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(
-                  color: isPrimary
-                      ? (selected
-                            ? AppColors.cloudDancer.withValues(
-                                alpha: AppOpacity.capsuleNavFill,
-                              )
-                            : Colors.transparent)
-                      : (selected ? AppColors.glassStroke : Colors.transparent),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: AnimatedContainer(
+                  duration: AppMotion.normal,
+                  curve: AppMotion.curve,
+                  padding: EdgeInsets.all(
+                    isPrimary
+                        ? AppCapsuleNav.primaryIconPadding
+                        : AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPrimary
+                        ? (selected
+                              ? AppColors.accentEarth
+                              : AppColors.accentEarth.withValues(
+                                  alpha: AppOpacity.capsuleNavFill,
+                                ))
+                        : (selected ? AppColors.glassFill : Colors.transparent),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                      color: isPrimary
+                          ? (selected
+                                ? AppColors.cloudDancer.withValues(
+                                    alpha: AppOpacity.capsuleNavFill,
+                                  )
+                                : Colors.transparent)
+                          : (selected
+                                ? AppColors.glassStroke
+                                : Colors.transparent),
+                    ),
+                  ),
+                  child: Icon(destination.icon, color: iconColor, size: 24),
                 ),
               ),
-              child: Icon(destination.icon, color: iconColor, size: 24),
-            ),
+              if ((destination.badgeCount ?? 0) > 0)
+                Positioned(
+                  right: 0,
+                  top: 2,
+                  child: _NavBadge(count: destination.badgeCount!),
+                ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavBadge extends StatelessWidget {
+  const _NavBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count > 9 ? '9+' : '$count';
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+      padding: const EdgeInsets.all(AppSpacing.xxs),
+      decoration: BoxDecoration(
+        color: AppColors.dopamineRed,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: AppColors.textOnPrimary.withValues(alpha: 0.35),
+        ),
+        boxShadow: AppShadows.pressed,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppColors.textOnPrimary,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );

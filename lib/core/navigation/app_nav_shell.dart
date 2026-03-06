@@ -13,6 +13,7 @@ import '../../features/settings/settings_screen.dart';
 import '../../core/app/providers.dart';
 import '../../shared/widgets/offline_banner.dart';
 import '../../features/analyzer/item_detail_screen.dart';
+import 'background_zone.dart';
 import 'spring_route.dart';
 import '../../shared/widgets/capsule_nav_bar.dart';
 import '../../shared/widgets/nature_background.dart';
@@ -27,6 +28,8 @@ class AppNavShell extends ConsumerStatefulWidget {
 }
 
 class _AppNavShellState extends ConsumerState<AppNavShell> {
+  static const _kDevModeEnabled = 'dev_mode_enabled_v1';
+
   var _tab = AppTab.dashboard;
 
   final _builtTabs = <int>{};
@@ -124,6 +127,13 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
     super.dispose();
   }
 
+  BackgroundZone _zoneForTab(AppTab tab) {
+    return switch (tab) {
+      AppTab.profile => BackgroundZone.secondary,
+      _ => BackgroundZone.main,
+    };
+  }
+
   Widget _buildTab(int index) {
     return _tabCache.putIfAbsent(index, () {
       return switch (AppTab.values[index]) {
@@ -145,79 +155,107 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
   Widget build(BuildContext context) {
     assert(AppTab.values.length == 5);
 
+    final db = ref.watch(appDatabaseProvider);
+    final userId = ref.watch(activeUserIdProvider);
     final isOnline = ref
         .watch(isOnlineProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
 
     _builtTabs.add(_index);
 
-    return Scaffold(
-      extendBody: true,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const NatureBackground(),
-          Column(
-            children: [
-              if (!isOnline)
-                OfflineBanner(
-                  message: AppLocalizations.of(context)!.bannerOffline,
+    return StreamBuilder<int?>(
+      stream: db.appSettingsDao.watchInt(_kDevModeEnabled),
+      builder: (context, devModeSnapshot) {
+        final isDevMode = (devModeSnapshot.data ?? 0) == 1;
+        final pendingSyncStream = isDevMode
+            ? db.scanItemsDao.watchPendingSyncCount(userId: userId)
+            : Stream<int>.value(0);
+
+        return StreamBuilder<int>(
+          stream: pendingSyncStream,
+          builder: (context, pendingSyncSnapshot) {
+            final pendingSyncCount = pendingSyncSnapshot.data ?? 0;
+
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: Scaffold(
+                extendBody: true,
+                body: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    NatureBackground(zone: _zoneForTab(_tab)),
+                    Column(
+                      children: [
+                        if (!isOnline)
+                          OfflineBanner(
+                            message: AppLocalizations.of(
+                              context,
+                            )!.bannerOffline,
+                          ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              bottom: CapsuleNavBar.obstructionHeight(context),
+                            ),
+                            child: IndexedStack(
+                              index: _index,
+                              children: List.generate(AppTab.values.length, (
+                                i,
+                              ) {
+                                final selected = i == _index;
+                                return TickerMode(
+                                  enabled: selected,
+                                  child: _builtTabs.contains(i)
+                                      ? _buildTab(i)
+                                      : const SizedBox.shrink(),
+                                );
+                              }),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    CapsuleNavBar(
+                      selectedIndex: _index,
+                      onSelected: _setIndex,
+                      destinations: [
+                        CapsuleNavDestination(
+                          key: const Key('nav_dashboard'),
+                          icon: LucideIcons.layoutGrid,
+                          label: AppLocalizations.of(context)!.tabHome,
+                        ),
+                        CapsuleNavDestination(
+                          key: const Key('nav_scanner'),
+                          icon: LucideIcons.camera,
+                          label: AppLocalizations.of(context)!.tabScan,
+                          isPrimary: true,
+                        ),
+                        CapsuleNavDestination(
+                          key: const Key('nav_haul'),
+                          icon: LucideIcons.shoppingBag,
+                          label: AppLocalizations.of(context)!.tabHaul,
+                        ),
+                        CapsuleNavDestination(
+                          key: const Key('nav_history'),
+                          icon: LucideIcons.map,
+                          label: AppLocalizations.of(context)!.tabHistory,
+                        ),
+                        CapsuleNavDestination(
+                          key: const Key('nav_profile'),
+                          icon: LucideIcons.userCog,
+                          label: AppLocalizations.of(context)!.tabProfile,
+                          badgeCount: isDevMode ? pendingSyncCount : null,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: CapsuleNavBar.obstructionHeight(context),
-                  ),
-                  child: IndexedStack(
-                    index: _index,
-                    children: List.generate(AppTab.values.length, (i) {
-                      final selected = i == _index;
-                      return TickerMode(
-                        enabled: selected,
-                        child: _builtTabs.contains(i)
-                            ? _buildTab(i)
-                            : const SizedBox.shrink(),
-                      );
-                    }),
-                  ),
-                ),
               ),
-            ],
-          ),
-          CapsuleNavBar(
-            selectedIndex: _index,
-            onSelected: _setIndex,
-            destinations: [
-              CapsuleNavDestination(
-                key: const Key('nav_dashboard'),
-                icon: LucideIcons.layoutGrid,
-                label: AppLocalizations.of(context)!.tabHome,
-              ),
-              CapsuleNavDestination(
-                key: const Key('nav_scanner'),
-                icon: LucideIcons.camera,
-                label: AppLocalizations.of(context)!.tabScan,
-                isPrimary: true,
-              ),
-              CapsuleNavDestination(
-                key: const Key('nav_haul'),
-                icon: LucideIcons.shoppingBag,
-                label: AppLocalizations.of(context)!.tabHaul,
-              ),
-              CapsuleNavDestination(
-                key: const Key('nav_history'),
-                icon: LucideIcons.map,
-                label: AppLocalizations.of(context)!.tabHistory,
-              ),
-              CapsuleNavDestination(
-                key: const Key('nav_profile'),
-                icon: LucideIcons.userCog,
-                label: AppLocalizations.of(context)!.tabProfile,
-              ),
-            ],
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -43,6 +43,21 @@ class ScanItemsDao extends DatabaseAccessor<AppDatabase>
     return query.watch();
   }
 
+  Stream<int> watchPendingSyncCount({String? userId}) {
+    final pendingStatuses = [
+      ScanItemStatus.pendingSync.name,
+      ScanItemStatus.syncing.name,
+    ];
+    final query = selectOnly(scanItems)
+      ..addColumns([scanItems.id.count()])
+      ..where(scanItems.status.isIn(pendingStatuses))
+      ..where(_userScope(scanItems, userId));
+
+    return query.watchSingle().map((row) {
+      return row.read(scanItems.id.count()) ?? 0;
+    });
+  }
+
   Future<List<ScanItem>> listAll({String? userId}) {
     final query = select(scanItems)
       ..where((t) => _userScope(t, userId))

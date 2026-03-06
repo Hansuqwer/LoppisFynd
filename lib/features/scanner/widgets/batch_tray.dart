@@ -210,6 +210,13 @@ class _TrayItemFeedback extends StatelessWidget {
                   fit: BoxFit.cover,
                   cacheWidth: 152,
                   cacheHeight: 152,
+                  errorBuilder: (context, _, _) {
+                    return Container(
+                      color: AppColors.surface,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.image_not_supported),
+                    );
+                  },
                 ),
         ),
       ),
