@@ -45,8 +45,8 @@ lib/l10n/app_localizations*.dart
 # Environment files (keep secrets out of git)
 .env
 .env.*
-!.env.example
-
+# Archived planning assets (large PDFs/ZIPs, not needed for builds)
+roadmapv2/
 # Symbolication related
 app.*.symbols
 
