@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' as legacy;
 
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
@@ -23,6 +25,11 @@ import '../../gen/app_localizations.dart';
 import 'flip_factor.dart';
 import 'profit_calculator.dart';
 
+final itemIdentifyStateProvider =
+    legacy.StateProvider.family<AsyncValue<void>, String>(
+      (ref, _) => const AsyncData(null),
+    );
+
 class ItemDetailScreen extends ConsumerStatefulWidget {
   const ItemDetailScreen({super.key, required this.scanItemId});
 
@@ -33,12 +40,16 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
+  static const _autoSaveDelay = Duration(milliseconds: 600);
+
   final _purchaseController = TextEditingController();
   final _fixedFeesController = TextEditingController();
   final _shippingController = TextEditingController();
   final _queryController = TextEditingController();
   final _categoryController = TextEditingController();
   final _notesController = TextEditingController();
+  final _saveDebounces = <String, Timer>{};
+  final _pendingSaveActions = <String, Future<void> Function()>{};
   double? _lastPurchase;
   double? _lastFixedFees;
   double? _lastShipping;
@@ -46,12 +57,15 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   String? _lastCategory;
   String? _lastNotes;
 
-  var _identifying = false;
   AiCancelToken? _identifyCancel;
 
   @override
   void dispose() {
     _identifyCancel?.cancel();
+    for (final timer in _saveDebounces.values) {
+      timer.cancel();
+    }
+    _pendingSaveActions.clear();
     _purchaseController.dispose();
     _fixedFeesController.dispose();
     _shippingController.dispose();
@@ -91,15 +105,63 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     return db.scanItemsDao.setCategory(id: widget.scanItemId, category: text);
   }
 
-  Future<void> _queueSync(AppDatabase db) async {
-    final query = _queryController.text.trim();
-    if (query.isEmpty) return;
+  void _setIdentifyState(AsyncValue<void> state) {
+    ref.read(itemIdentifyStateProvider(widget.scanItemId).notifier).state =
+        state;
+  }
 
-    await db.scanItemsDao.setQuery(id: widget.scanItemId, query: query);
-    await db.scanItemsDao.transitionStatus(
-      id: widget.scanItemId,
-      to: ScanItemStatus.pendingSync,
-    );
+  void _scheduleDebouncedSave(String key, Future<void> Function() action) {
+    _saveDebounces[key]?.cancel();
+    _pendingSaveActions[key] = action;
+    _saveDebounces[key] = Timer(_autoSaveDelay, () async {
+      _saveDebounces.remove(key);
+      final pendingAction = _pendingSaveActions.remove(key) ?? action;
+      await pendingAction();
+    });
+  }
+
+  Future<void> _flushAllDebouncedSaves() async {
+    final pendingKeys = _saveDebounces.keys.toList(growable: false);
+    for (final key in pendingKeys) {
+      _saveDebounces[key]?.cancel();
+      _saveDebounces.remove(key);
+    }
+
+    final actions = _pendingSaveActions.values.toList(growable: false);
+    _pendingSaveActions.clear();
+    for (final action in actions) {
+      await action();
+    }
+  }
+
+  Future<void> _flushDebouncedSave(
+    String key,
+    Future<void> Function() action,
+  ) async {
+    _saveDebounces[key]?.cancel();
+    _saveDebounces.remove(key);
+    _pendingSaveActions.remove(key);
+    await action();
+  }
+
+  bool _hasInFlightAiWork({
+    required ScanItem item,
+    required bool cloudIdentificationEnabled,
+    required bool hasCloudAiProxy,
+  }) {
+    if (!cloudIdentificationEnabled || !hasCloudAiProxy) {
+      return false;
+    }
+
+    final hasAiResult =
+        (item.query?.trim().isNotEmpty ?? false) ||
+        (item.desc?.trim().isNotEmpty ?? false) ||
+        item.confidence != null;
+    if (hasAiResult) {
+      return false;
+    }
+
+    return item.status == ScanItemStatus.pendingIdentify;
   }
 
   void _openSettings() {
@@ -168,7 +230,17 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   Future<void> _handleCloudIdentifyTap(
     ScanItem item, {
     required bool isOnline,
+    required bool hasCloudAiProxy,
   }) async {
+    if (!hasCloudAiProxy) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)),
+      );
+      return;
+    }
+
     final db = ref.read(appDatabaseProvider);
     final enabled =
         (await db.appSettingsDao.getInt(
@@ -238,11 +310,19 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     required String? userId,
     required String? imagePath,
   }) async {
-    if (_identifying) return null;
-    if (imagePath == null || imagePath.trim().isEmpty) return 'No image.';
+    final l10n = AppLocalizations.of(context)!;
+    final identifyState = ref.read(
+      itemIdentifyStateProvider(widget.scanItemId),
+    );
+    if (identifyState.isLoading) return null;
+    if (imagePath == null || imagePath.trim().isEmpty) {
+      return l10n.commonNoImage;
+    }
 
     final file = File(imagePath);
-    if (!await file.exists()) return 'No image.';
+    if (!await file.exists()) {
+      return l10n.commonNoImage;
+    }
 
     final modeKey = userId == null
         ? 'ai_accuracy_mode_guest'
@@ -251,8 +331,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final maxTokens = mode == 0 ? 384 : 1024;
 
     final token = AiCancelToken();
+    _setIdentifyState(const AsyncLoading());
     setState(() {
-      _identifying = true;
       _identifyCancel = token;
     });
 
@@ -280,17 +360,17 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           to: ScanItemStatus.pendingSync,
         );
       }
-      outcome = 'Keywords updated.';
+      outcome = l10n.itemDetailKeywordsUpdated;
     } on AiCancelledException {
-      outcome = 'Cancelled.';
+      outcome = l10n.itemDetailCancelled;
     } on ModelNotInstalledException {
-      outcome = 'Model not installed.';
+      outcome = l10n.itemDetailModelNotInstalled;
     } catch (e) {
-      outcome = 'Identify failed: $e';
+      outcome = l10n.itemDetailIdentifyFailed('$e');
     } finally {
+      _setIdentifyState(const AsyncData(null));
       if (mounted) {
         setState(() {
-          _identifying = false;
           _identifyCancel = null;
         });
       }
@@ -358,9 +438,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
-    final syncScheduler = ref.watch(syncSchedulerProvider);
     final userId = ref.watch(activeUserIdProvider);
     final config = ref.watch(appConfigProvider);
+    final identifyState = ref.watch(
+      itemIdentifyStateProvider(widget.scanItemId),
+    );
     final cloudIdentificationEnabled = ref
         .watch(cloudIdentificationEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
@@ -381,620 +463,728 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final compsActionsEnabled =
         compsEnabled && isOnlineForComps && hasTraderaProxy;
     final l10n = AppLocalizations.of(context)!;
+    final navigator = Navigator.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.itemDetailTitle)),
-      body: SafeArea(
-        child: StreamBuilder<ScanItem?>(
-          stream: db.scanItemsDao.watchById(widget.scanItemId, userId: userId),
-          builder: (context, snapshot) {
-            final item = snapshot.data;
-            if (item == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _flushAllDebouncedSaves();
+        if (!mounted) return;
+        navigator.pop(result);
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l10n.itemDetailTitle)),
+        body: SafeArea(
+          child: StreamBuilder<ScanItem?>(
+            stream: db.scanItemsDao.watchById(
+              widget.scanItemId,
+              userId: userId,
+            ),
+            builder: (context, snapshot) {
+              final item = snapshot.data;
+              if (item == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            final purchase = item.purchasePrice;
-            if (purchase != _lastPurchase) {
-              _lastPurchase = purchase;
-              _purchaseController.text = purchase == null
-                  ? ''
-                  : purchase.toStringAsFixed(purchase % 1 == 0 ? 0 : 2);
-            }
+              final purchase = item.purchasePrice;
+              if (purchase != _lastPurchase) {
+                _lastPurchase = purchase;
+                _purchaseController.text = purchase == null
+                    ? ''
+                    : purchase.toStringAsFixed(purchase % 1 == 0 ? 0 : 2);
+              }
 
-            final fixedFees = item.fixedFeesSek;
-            if (fixedFees != _lastFixedFees) {
-              _lastFixedFees = fixedFees;
-              _fixedFeesController.text = fixedFees == null
-                  ? ''
-                  : fixedFees.toStringAsFixed(fixedFees % 1 == 0 ? 0 : 2);
-            }
+              final fixedFees = item.fixedFeesSek;
+              if (fixedFees != _lastFixedFees) {
+                _lastFixedFees = fixedFees;
+                _fixedFeesController.text = fixedFees == null
+                    ? ''
+                    : fixedFees.toStringAsFixed(fixedFees % 1 == 0 ? 0 : 2);
+              }
 
-            final shipping = item.shippingPaidBySellerSek;
-            if (shipping != _lastShipping) {
-              _lastShipping = shipping;
-              _shippingController.text = shipping == null
-                  ? ''
-                  : shipping.toStringAsFixed(shipping % 1 == 0 ? 0 : 2);
-            }
+              final shipping = item.shippingPaidBySellerSek;
+              if (shipping != _lastShipping) {
+                _lastShipping = shipping;
+                _shippingController.text = shipping == null
+                    ? ''
+                    : shipping.toStringAsFixed(shipping % 1 == 0 ? 0 : 2);
+              }
 
-            final query = item.query;
-            if (query != _lastQuery) {
-              _lastQuery = query;
-              _queryController.text = query ?? '';
-            }
+              final query = item.query;
+              if (query != _lastQuery) {
+                _lastQuery = query;
+                _queryController.text = query ?? '';
+              }
 
-            final category = item.category;
-            if (category != _lastCategory) {
-              _lastCategory = category;
-              _categoryController.text = category ?? '';
-            }
+              final category = item.category;
+              if (category != _lastCategory) {
+                _lastCategory = category;
+                _categoryController.text = category ?? '';
+              }
 
-            final notes = item.notes;
-            if (notes != _lastNotes) {
-              _lastNotes = notes;
-              _notesController.text = notes ?? '';
-            }
+              final notes = item.notes;
+              if (notes != _lastNotes) {
+                _lastNotes = notes;
+                _notesController.text = notes ?? '';
+              }
 
-            final expected = item.medianPrice;
-            final adjustedExpected = expected == null
-                ? null
-                : expected * item.conditionMultiplier;
-            final profit = ProfitCalculator.grossProfit(
-              purchasePrice: purchase,
-              expectedSalePrice: adjustedExpected,
-            );
-            final netProfit = ProfitCalculator.netProfit(
-              purchasePrice: purchase,
-              expectedSalePrice: adjustedExpected,
-              fixedFeesSek: fixedFees ?? 0,
-              shippingPaidBySellerSek: shipping ?? 0,
-            );
-            final grade = (purchase != null && expected != null)
-                ? FlipFactor.grade(
-                    purchasePrice: purchase,
-                    expectedSalePrice: adjustedExpected ?? expected,
-                  )
-                : '—';
+              final expected = item.medianPrice;
+              final adjustedExpected = expected == null
+                  ? null
+                  : expected * item.conditionMultiplier;
+              final profit = ProfitCalculator.grossProfit(
+                purchasePrice: purchase,
+                expectedSalePrice: adjustedExpected,
+              );
+              final netProfit = ProfitCalculator.netProfit(
+                purchasePrice: purchase,
+                expectedSalePrice: adjustedExpected,
+                fixedFeesSek: fixedFees ?? 0,
+                shippingPaidBySellerSek: shipping ?? 0,
+              );
+              final grade = (purchase != null && expected != null)
+                  ? FlipFactor.grade(
+                      purchasePrice: purchase,
+                      expectedSalePrice: adjustedExpected ?? expected,
+                    )
+                  : '—';
+              final identifying =
+                  identifyState.isLoading ||
+                  _hasInFlightAiWork(
+                    item: item,
+                    cloudIdentificationEnabled: cloudIdentificationEnabled,
+                    hasCloudAiProxy: config.hasCloudAiProxy,
+                  );
 
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              children: [
-                BentoCard(
-                  onTap: () {},
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: item.thumbPath == null
-                            ? Container(
-                                width: 72,
-                                height: 72,
-                                color: AppColors.surface,
-                                alignment: Alignment.center,
-                                child: const Icon(Icons.image_rounded),
-                              )
-                            : Image.file(
-                                File(item.thumbPath!),
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
-                                cacheWidth: 144,
-                                cacheHeight: 144,
-                                errorBuilder: (context, _, _) {
-                                  return Container(
-                                    width: 72,
-                                    height: 72,
-                                    color: AppColors.surface,
-                                    alignment: Alignment.center,
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.desc ??
-                                  item.query ??
-                                  l10n.itemDetailUnnamedItem,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              l10n.itemDetailStatusValue(item.status.name),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
+              return ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                children: [
+                  BentoCard(
+                    onTap: () {},
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          child: item.thumbPath == null
+                              ? Container(
+                                  width: 72,
+                                  height: 72,
+                                  color: AppColors.surface,
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.image_rounded),
+                                )
+                              : Image.file(
+                                  File(item.thumbPath!),
+                                  width: 72,
+                                  height: 72,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 144,
+                                  cacheHeight: 144,
+                                  errorBuilder: (context, _, _) {
+                                    return Container(
+                                      width: 72,
+                                      height: 72,
+                                      color: AppColors.surface,
+                                      alignment: Alignment.center,
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                BentoCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.itemDetailMarketTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (item.confidence != null) ...[
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          l10n.itemDetailAiConfidence(
-                            (item.confidence! * 100).round(),
-                          ),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.sm),
-                      StreamBuilder(
-                        stream: db.scanItemCompsDao.watchByScanItemId(item.id),
-                        builder: (context, snapshot) {
-                          final comps = snapshot.data;
-                          final fetchedAt = comps?.fetchedAt;
-                          return Column(
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _PriceChart(
-                                min: item.minPrice,
-                                median: item.medianPrice,
-                                max: item.maxPrice,
-                                compsRawJson: comps?.rawJson,
+                              Text(
+                                item.desc ??
+                                    item.query ??
+                                    l10n.itemDetailUnnamedItem,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              if (fetchedAt != null) ...[
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  l10n.itemDetailLastUpdated(
-                                    _formatTimestamp(context, fetchedAt),
-                                  ),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                l10n.itemDetailStatusValue(item.status.name),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
                             ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _StatLine(
-                              label: l10n.itemDetailStatMin,
-                              value: _formatSek(item.minPrice),
-                            ),
                           ),
-                          Expanded(
-                            child: _StatLine(
-                              label: l10n.itemDetailStatMedian,
-                              value: _formatSek(item.medianPrice),
-                            ),
-                          ),
-                          Expanded(
-                            child: _StatLine(
-                              label: l10n.itemDetailStatMax,
-                              value: _formatSek(item.maxPrice),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GlassButton(
-                              label: l10n.itemDetailIdentifyNow,
-                              icon: const Icon(Icons.psychology_alt_rounded),
-                              onPressed: !cloudIdentificationEnabled
-                                  ? null
-                                  : () async {
-                                      await _handleCloudIdentifyTap(
-                                        item,
-                                        isOnline: isOnline,
-                                      );
-                                    },
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: GlassButton(
-                              label: l10n.offlineIdentifyTitle,
-                              tone: GlassButtonTone.neutral,
-                              icon: const Icon(Icons.offline_bolt_rounded),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  SpringRoute(
-                                    builder: (_) => OfflineDetectionScreen(
-                                      scanItemId: item.id,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (!cloudIdentificationEnabled) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          l10n.cloudIdentifyDisabledHint,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        GlassButton(
-                          label: l10n.commonOpenSettings,
-                          tone: GlassButtonTone.neutral,
-                          icon: const Icon(Icons.settings_rounded),
-                          onPressed: _openSettings,
                         ),
                       ],
-                      const SizedBox(height: AppSpacing.sm),
-                      GlassButton(
-                        label: l10n.itemDetailDraftListing,
-                        tone: GlassButtonTone.neutral,
-                        icon: const Icon(Icons.edit_note_rounded),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            SpringRoute(
-                              builder: (_) =>
-                                  DraftEditorScreen(scanItemId: item.id),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _KeywordChips(
-                        tokens: _tokensFromQuery(item.query),
-                        onAdd: () async {
-                          final v = await _promptForToken(context: context);
-                          if (v == null) return;
-                          final nextToken = v.trim();
-                          if (nextToken.isEmpty) return;
-                          final tokens = [..._tokensFromQuery(item.query)];
-                          if (tokens.length >= 5) return;
-                          tokens.add(nextToken);
-                          await _setQuery(db, tokens.join(' '));
-                        },
-                        onEdit: (index) async {
-                          final tokens = [..._tokensFromQuery(item.query)];
-                          if (index < 0 || index >= tokens.length) return;
-                          final v = await _promptForToken(
-                            context: context,
-                            initial: tokens[index],
-                          );
-                          if (v == null) return;
-                          final next = v.trim();
-                          if (next.isEmpty) return;
-                          tokens[index] = next;
-                          await _setQuery(db, tokens.join(' '));
-                        },
-                        onDelete: (index) async {
-                          final tokens = [..._tokensFromQuery(item.query)];
-                          if (index < 0 || index >= tokens.length) return;
-                          tokens.removeAt(index);
-                          await _setQuery(db, tokens.join(' '));
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextField(
-                        controller: _queryController,
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailTraderaQueryLabel,
-                          hintText: l10n.itemDetailTraderaQueryHint,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.itemDetailMarketTitle,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                        onSubmitted: (v) => _setQuery(db, v),
-                        onEditingComplete: () =>
-                            _setQuery(db, _queryController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GlassButton(
-                              label: l10n.itemDetailQueueSync,
-                              onPressed: !compsActionsEnabled
-                                  ? null
-                                  : () async {
-                                      final messenger = ScaffoldMessenger.of(
-                                        context,
-                                      );
-                                      await _queueSync(db);
-                                      if (!mounted) return;
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            l10n.itemDetailQueuedForSync,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                              icon: const Icon(Icons.cloud_upload_rounded),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: GlassButton(
-                              label: l10n.settingsSyncNow,
-                              tone: GlassButtonTone.neutral,
-                              onPressed: !compsActionsEnabled
-                                  ? null
-                                  : () async {
-                                      final messenger = ScaffoldMessenger.of(
-                                        context,
-                                      );
-                                      await _queueSync(db);
-                                      await syncScheduler.syncOnce();
-                                      if (!mounted) return;
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            l10n.itemDetailSyncCompleted,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                              icon: const Icon(Icons.sync_rounded),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (!compsActionsEnabled) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        if (!compsEnabled) ...[
-                          Text(
-                            l10n.itemDetailFeatureState(
-                              l10n.settingsFetchSoldPriceCompsToggleTitle,
-                              l10n.commonOff,
-                            ),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                        if (item.confidence != null) ...[
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
-                            l10n.settingsFetchSoldPriceCompsToggleSubtitle,
+                            l10n.itemDetailAiConfidence(
+                              (item.confidence! * 100).round(),
+                            ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          GlassButton(
-                            label: l10n.commonOpenSettings,
-                            tone: GlassButtonTone.neutral,
-                            icon: const Icon(Icons.settings_rounded),
-                            onPressed: _openSettings,
-                          ),
-                        ] else if (!isOnlineForComps) ...[
-                          Text(
-                            l10n.bannerOffline,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ] else if (!hasTraderaProxy) ...[
-                          Text(
-                            l10n.settingsTraderaProxyNotConfigured,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                        ],
+                        if (identifying) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.glassFill,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.borderSubtle),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    l10n.itemDetailIdentifying,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ],
-                      StreamBuilder(
-                        stream: db.scanItemSyncStatesDao.watchByScanItemId(
-                          item.id,
-                        ),
-                        builder: (context, snapshot) {
-                          final state = snapshot.data;
-                          final lastError = state?.lastError?.trim();
-                          if (!compsEnabled) return const SizedBox.shrink();
-                          if (lastError == null || lastError.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final nextAttemptAt = state?.nextAttemptAt;
-
-                          return Padding(
-                            padding: const EdgeInsets.only(top: AppSpacing.sm),
-                            child: Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: AppColors.dopamineRed.withValues(
-                                  alpha: 0.10,
+                        const SizedBox(height: AppSpacing.sm),
+                        StreamBuilder(
+                          stream: db.scanItemCompsDao.watchByScanItemId(
+                            item.id,
+                          ),
+                          builder: (context, snapshot) {
+                            final comps = snapshot.data;
+                            final fetchedAt = comps?.fetchedAt;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _PriceChart(
+                                  min: item.minPrice,
+                                  median: item.medianPrice,
+                                  max: item.maxPrice,
+                                  compsRawJson: comps?.rawJson,
                                 ),
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.md,
-                                ),
-                                border: Border.all(
-                                  color: AppColors.dopamineRed.withValues(
-                                    alpha: 0.35,
-                                  ),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.error_outline_rounded,
-                                        size: 18,
-                                        color: AppColors.dopamineRed,
-                                      ),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Expanded(
-                                        child: Text(
-                                          l10n.itemDetailLastSyncFailed,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.xxs),
+                                if (fetchedAt != null) ...[
+                                  const SizedBox(height: AppSpacing.xs),
                                   Text(
-                                    lastError,
+                                    l10n.itemDetailLastUpdated(
+                                      _formatTimestamp(context, fetchedAt),
+                                    ),
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodySmall,
                                   ),
-                                  if (nextAttemptAt != null) ...[
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.itemDetailStatMin,
+                                value: _formatSek(item.minPrice),
+                              ),
+                            ),
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.itemDetailStatMedian,
+                                value: _formatSek(item.medianPrice),
+                              ),
+                            ),
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.itemDetailStatMax,
+                                value: _formatSek(item.maxPrice),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GlassButton(
+                                label: l10n.itemDetailIdentifyNow,
+                                icon: const Icon(Icons.psychology_alt_rounded),
+                                onPressed:
+                                    !cloudIdentificationEnabled ||
+                                        !config.hasCloudAiProxy ||
+                                        identifying
+                                    ? null
+                                    : () async {
+                                        await _handleCloudIdentifyTap(
+                                          item,
+                                          isOnline: isOnline,
+                                          hasCloudAiProxy:
+                                              config.hasCloudAiProxy,
+                                        );
+                                      },
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: GlassButton(
+                                label: l10n.offlineIdentifyTitle,
+                                tone: GlassButtonTone.neutral,
+                                icon: const Icon(Icons.offline_bolt_rounded),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    SpringRoute(
+                                      builder: (_) => OfflineDetectionScreen(
+                                        scanItemId: item.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (!cloudIdentificationEnabled ||
+                            !config.hasCloudAiProxy) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            !cloudIdentificationEnabled
+                                ? l10n.cloudIdentifyDisabledHint
+                                : l10n.cloudIdentifyNotAvailableYet,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          if (!cloudIdentificationEnabled) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            GlassButton(
+                              label: l10n.commonOpenSettings,
+                              tone: GlassButtonTone.neutral,
+                              icon: const Icon(Icons.settings_rounded),
+                              onPressed: _openSettings,
+                            ),
+                          ],
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        GlassButton(
+                          label: l10n.itemDetailDraftListing,
+                          tone: GlassButtonTone.neutral,
+                          icon: const Icon(Icons.edit_note_rounded),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              SpringRoute(
+                                builder: (_) =>
+                                    DraftEditorScreen(scanItemId: item.id),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _KeywordChips(
+                          tokens: _tokensFromQuery(item.query),
+                          onAdd: () async {
+                            final v = await _promptForToken(context: context);
+                            if (v == null) return;
+                            final nextToken = v.trim();
+                            if (nextToken.isEmpty) return;
+                            final tokens = [..._tokensFromQuery(item.query)];
+                            if (tokens.length >= 5) return;
+                            tokens.add(nextToken);
+                            await _setQuery(db, tokens.join(' '));
+                          },
+                          onEdit: (index) async {
+                            final tokens = [..._tokensFromQuery(item.query)];
+                            if (index < 0 || index >= tokens.length) return;
+                            final v = await _promptForToken(
+                              context: context,
+                              initial: tokens[index],
+                            );
+                            if (v == null) return;
+                            final next = v.trim();
+                            if (next.isEmpty) return;
+                            tokens[index] = next;
+                            await _setQuery(db, tokens.join(' '));
+                          },
+                          onDelete: (index) async {
+                            final tokens = [..._tokensFromQuery(item.query)];
+                            if (index < 0 || index >= tokens.length) return;
+                            tokens.removeAt(index);
+                            await _setQuery(db, tokens.join(' '));
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextField(
+                          controller: _queryController,
+                          decoration: InputDecoration(
+                            labelText: l10n.itemDetailTraderaQueryLabel,
+                            hintText: l10n.itemDetailTraderaQueryHint,
+                          ),
+                          onChanged: (v) => _scheduleDebouncedSave(
+                            'query',
+                            () => _setQuery(db, v),
+                          ),
+                          onSubmitted: (v) => _flushDebouncedSave(
+                            'query',
+                            () => _setQuery(db, v),
+                          ),
+                          onEditingComplete: () => _flushDebouncedSave(
+                            'query',
+                            () => _setQuery(db, _queryController.text),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        GlassButton(
+                          label: l10n.itemDetailQueueSync,
+                          onPressed: !compsActionsEnabled
+                              ? null
+                              : () async {
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+                                  await _flushDebouncedSave(
+                                    'query',
+                                    () => _setQuery(db, _queryController.text),
+                                  );
+                                  final query = _queryController.text.trim();
+                                  if (query.isEmpty) return;
+                                  await db.scanItemsDao.transitionStatus(
+                                    id: widget.scanItemId,
+                                    to: ScanItemStatus.pendingSync,
+                                  );
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l10n.itemDetailQueuedForSync,
+                                      ),
+                                    ),
+                                  );
+                                },
+                          icon: const Icon(Icons.cloud_upload_rounded),
+                        ),
+                        if (!compsActionsEnabled) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          if (!compsEnabled) ...[
+                            Text(
+                              l10n.itemDetailFeatureState(
+                                l10n.settingsFetchSoldPriceCompsToggleTitle,
+                                l10n.commonOff,
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: AppSpacing.xxs),
+                            Text(
+                              l10n.settingsFetchSoldPriceCompsToggleSubtitle,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            GlassButton(
+                              label: l10n.commonOpenSettings,
+                              tone: GlassButtonTone.neutral,
+                              icon: const Icon(Icons.settings_rounded),
+                              onPressed: _openSettings,
+                            ),
+                          ] else if (!isOnlineForComps) ...[
+                            Text(
+                              l10n.bannerOffline,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ] else if (!hasTraderaProxy) ...[
+                            Text(
+                              l10n.settingsTraderaProxyNotConfigured,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ],
+                        StreamBuilder(
+                          stream: db.scanItemSyncStatesDao.watchByScanItemId(
+                            item.id,
+                          ),
+                          builder: (context, snapshot) {
+                            final state = snapshot.data;
+                            final lastError = state?.lastError?.trim();
+                            if (!compsEnabled) return const SizedBox.shrink();
+                            if (lastError == null || lastError.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            final nextAttemptAt = state?.nextAttemptAt;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSpacing.sm,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(AppSpacing.sm),
+                                decoration: BoxDecoration(
+                                  color: AppColors.dopamineRed.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.dopamineRed.withValues(
+                                      alpha: 0.35,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline_rounded,
+                                          size: 18,
+                                          color: AppColors.dopamineRed,
+                                        ),
+                                        const SizedBox(width: AppSpacing.xs),
+                                        Expanded(
+                                          child: Text(
+                                            l10n.itemDetailLastSyncFailed,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                     const SizedBox(height: AppSpacing.xxs),
                                     Text(
-                                      l10n.itemDetailNextAttempt(
-                                        _formatTimestamp(
-                                          context,
-                                          nextAttemptAt,
-                                        ),
-                                      ),
+                                      lastError,
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodySmall,
                                     ),
+                                    if (nextAttemptAt != null) ...[
+                                      const SizedBox(height: AppSpacing.xxs),
+                                      Text(
+                                        l10n.itemDetailNextAttempt(
+                                          _formatTimestamp(
+                                            context,
+                                            nextAttemptAt,
+                                          ),
+                                        ),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                BentoCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.itemDetailProfitTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                  const SizedBox(height: AppSpacing.lg),
+                  BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.itemDetailProfitTitle,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextField(
-                        controller: _purchaseController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
+                        const SizedBox(height: AppSpacing.sm),
+                        TextField(
+                          controller: _purchaseController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: l10n.itemDetailPurchasePriceLabel,
+                          ),
+                          onChanged: (v) => _scheduleDebouncedSave(
+                            'purchase',
+                            () => _savePurchasePrice(db, v),
+                          ),
+                          onSubmitted: (v) => _flushDebouncedSave(
+                            'purchase',
+                            () => _savePurchasePrice(db, v),
+                          ),
+                          onEditingComplete: () => _flushDebouncedSave(
+                            'purchase',
+                            () => _savePurchasePrice(
+                              db,
+                              _purchaseController.text,
+                            ),
+                          ),
                         ),
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailPurchasePriceLabel,
-                        ),
-                        onSubmitted: (v) => _savePurchasePrice(db, v),
-                        onEditingComplete: () =>
-                            _savePurchasePrice(db, _purchaseController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _fixedFeesController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: InputDecoration(
-                                labelText: l10n.itemDetailFixedFeesLabel,
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _fixedFeesController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                decoration: InputDecoration(
+                                  labelText: l10n.itemDetailFixedFeesLabel,
+                                ),
+                                onChanged: (_) => _scheduleDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
+                                onSubmitted: (_) => _flushDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
+                                onEditingComplete: () => _flushDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
                               ),
-                              onSubmitted: (_) => _saveFees(db),
-                              onEditingComplete: () => _saveFees(db),
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: TextField(
-                              controller: _shippingController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: InputDecoration(
-                                labelText: l10n.itemDetailShippingSellerLabel,
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: TextField(
+                                controller: _shippingController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                decoration: InputDecoration(
+                                  labelText: l10n.itemDetailShippingSellerLabel,
+                                ),
+                                onChanged: (_) => _scheduleDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
+                                onSubmitted: (_) => _flushDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
+                                onEditingComplete: () => _flushDebouncedSave(
+                                  'fees',
+                                  () => _saveFees(db),
+                                ),
                               ),
-                              onSubmitted: (_) => _saveFees(db),
-                              onEditingComplete: () => _saveFees(db),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _ConditionAdjuster(
-                        value: item.conditionMultiplier,
-                        onChanged: (v) async {
-                          await db.scanItemsDao.setConditionMultiplier(
-                            id: item.id,
-                            conditionMultiplier: v,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextField(
-                        controller: _categoryController,
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailCategoryLabel,
-                          hintText: l10n.itemDetailCategoryHint,
+                          ],
                         ),
-                        textInputAction: TextInputAction.next,
-                        onSubmitted: (v) => _saveCategory(db, v),
-                        onEditingComplete: () =>
-                            _saveCategory(db, _categoryController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailNotesLabel,
-                          hintText: l10n.itemDetailNotesHint,
+                        const SizedBox(height: AppSpacing.md),
+                        _ConditionAdjuster(
+                          value: item.conditionMultiplier,
+                          onChanged: (v) async {
+                            await db.scanItemsDao.setConditionMultiplier(
+                              id: item.id,
+                              conditionMultiplier: v,
+                            );
+                          },
                         ),
-                        onSubmitted: (v) => _saveNotes(db, v),
-                        onEditingComplete: () =>
-                            _saveNotes(db, _notesController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _StatLine(
-                              label: 'Expected',
-                              value: _formatSek(adjustedExpected),
+                        const SizedBox(height: AppSpacing.md),
+                        TextField(
+                          controller: _categoryController,
+                          decoration: InputDecoration(
+                            labelText: l10n.itemDetailCategoryLabel,
+                            hintText: l10n.itemDetailCategoryHint,
+                          ),
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => _scheduleDebouncedSave(
+                            'category',
+                            () => _saveCategory(db, v),
+                          ),
+                          onSubmitted: (v) => _flushDebouncedSave(
+                            'category',
+                            () => _saveCategory(db, v),
+                          ),
+                          onEditingComplete: () => _flushDebouncedSave(
+                            'category',
+                            () => _saveCategory(db, _categoryController.text),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextField(
+                          controller: _notesController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            labelText: l10n.itemDetailNotesLabel,
+                            hintText: l10n.itemDetailNotesHint,
+                          ),
+                          onChanged: (v) => _scheduleDebouncedSave(
+                            'notes',
+                            () => _saveNotes(db, v),
+                          ),
+                          onSubmitted: (v) => _flushDebouncedSave(
+                            'notes',
+                            () => _saveNotes(db, v),
+                          ),
+                          onEditingComplete: () => _flushDebouncedSave(
+                            'notes',
+                            () => _saveNotes(db, _notesController.text),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.haulExpected,
+                                value: _formatSek(adjustedExpected),
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: _StatLine(
-                              label: 'Gross',
-                              value: profit == null ? '—' : _formatSek(profit),
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.itemDetailStatGross,
+                                value: profit == null
+                                    ? '—'
+                                    : _formatSek(profit),
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: _StatLine(
-                              label: 'Net (est.)',
-                              value: netProfit == null
-                                  ? '—'
-                                  : _formatSek(netProfit),
-                              emphasize: true,
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.haulNetEst,
+                                value: netProfit == null
+                                    ? '—'
+                                    : _formatSek(netProfit),
+                                emphasize: true,
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: _StatLine(label: 'Flip', value: grade),
-                          ),
-                        ],
-                      ),
-                    ],
+                            Expanded(
+                              child: _StatLine(
+                                label: l10n.itemDetailFlipLabel,
+                                value: grade,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1274,10 +1464,11 @@ class _PriceChart extends StatelessWidget {
                 reservedSize: 24,
                 interval: 1,
                 getTitlesWidget: (value, meta) {
+                  final l10n = AppLocalizations.of(context)!;
                   final label = switch (value.toInt()) {
-                    0 => 'Min',
-                    1 => 'Median',
-                    2 => 'Max',
+                    0 => l10n.itemDetailStatMin,
+                    1 => l10n.itemDetailStatMedian,
+                    2 => l10n.itemDetailStatMax,
                     _ => '',
                   };
                   return Padding(
