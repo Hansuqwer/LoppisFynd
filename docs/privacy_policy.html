@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loppisfynd – Privacy Policy</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1e2b3c; }
+    h1 { font-size: 1.6rem; border-bottom: 2px solid #cb8573; padding-bottom: 0.5rem; }
+    h2 { font-size: 1.2rem; margin-top: 1.5rem; color: #935233; }
+    ul { padding-left: 1.2rem; }
+    li { margin-bottom: 0.3rem; }
+    .updated { font-size: 0.85rem; color: #5b6c8f; }
+  </style>
+</head>
+<body>
+  <h1>Loppisfynd – Privacy Policy</h1>
+  <p class="updated">Last updated: March 2026</p>
+
+  <p>Loppisfynd is designed to be <strong>offline-first</strong>. Your data stays on your device unless you explicitly enable cloud features.</p>
+
+  <h2>Data stored on your device</h2>
+  <p>Loppisfynd stores the following locally:</p>
+  <ul>
+    <li>Hauls (title, date, optional location you add)</li>
+    <li>Items (keywords, notes, prices, computed stats)</li>
+    <li>Draft listings (title, description, asking price)</li>
+    <li>Scan photos and thumbnails</li>
+    <li>App settings and preferences</li>
+  </ul>
+  <p>This data is <strong>never shared with third parties</strong>.</p>
+
+  <h2>Cloud sync (optional)</h2>
+  <p>If you sign in and enable cloud sync, Loppisfynd may upload:</p>
+  <ul>
+    <li>Haul and item metadata to a secure database (Supabase)</li>
+    <li>Scan photos to encrypted cloud storage</li>
+  </ul>
+  <p>Cloud sync is entirely optional. The app works fully without it. All cloud data is encrypted in transit (TLS). Your photos are stored in a private bucket accessible only to your account.</p>
+
+  <h2>Online requests</h2>
+  <p>When you are online and have enabled price comparisons, the app fetches sold-price data from Tradera via a proxy. These requests contain search keywords (derived from scanned items) but no personal information.</p>
+
+  <h2>AI identification</h2>
+  <p>If you enable cloud identification, photos of scanned items are sent to a secure AI proxy for object recognition. Photos are processed in real-time and not stored on the server. You can disable this in Settings at any time.</p>
+
+  <h2>Crash reporting</h2>
+  <p>If configured, the app sends anonymous crash reports via Sentry. These contain technical diagnostic data (device model, OS version, stack traces) but <strong>no personal information, photos, or scan data</strong>.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><strong>Camera:</strong> Used to capture photos of items for scanning. Photos stay on-device unless you enable cloud sync.</li>
+    <li><strong>Location:</strong> Optionally used to tag hauls with the flea market location. Never shared with third parties.</li>
+    <li><strong>Notifications:</strong> Used to inform you when background sync completes.</li>
+    <li><strong>Internet:</strong> Required for cloud sync, price comparisons, AI identification, and crash reporting.</li>
+  </ul>
+
+  <h2>Data export and deletion</h2>
+  <p>In the app you can:</p>
+  <ul>
+    <li>Export all your data as JSON or CSV</li>
+    <li>Delete all local data</li>
+    <li>Delete all cloud data (when signed in)</li>
+    <li>Request full account deletion</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Loppisfynd is not directed at children under 13 and does not knowingly collect data from children.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>We may update this policy from time to time. The latest version is always available at this URL.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this privacy policy? Contact us at <strong>privacy@fyndloppis.se</strong>.</p>
+
+</body>
+</html>
