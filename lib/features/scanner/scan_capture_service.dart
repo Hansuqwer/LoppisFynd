@@ -10,6 +10,7 @@ import '../../core/database/tables/scan_items.dart';
 import '../../core/settings/app_settings_keys.dart';
 import '../../core/storage/scan_image_storage.dart';
 import '../../core/utils/serial_task_queue.dart';
+import '../../services/ai/cloud_ai_proxy_client.dart';
 import '../../services/ai/inference/ai_types.dart';
 import '../../services/ai/inference/inference_isolate_service.dart';
 import '../../services/analytics/analytics_service.dart';
@@ -31,12 +32,14 @@ class ScanCaptureService {
     required AiInferenceIsolateService aiInference,
     required AnalyticsService analytics,
     Future<bool> Function()? isOnline,
+    Future<void> Function()? requestSync,
     Uuid? uuid,
   }) : _db = db,
        _imageStorage = imageStorage,
        _aiInference = aiInference,
        _analytics = analytics,
        _isOnline = isOnline ?? _defaultIsOnline,
+       _requestSync = requestSync,
        _uuid = uuid ?? const Uuid();
 
   final AppConfig config;
@@ -45,6 +48,7 @@ class ScanCaptureService {
   final AiInferenceIsolateService _aiInference;
   final AnalyticsService _analytics;
   final Future<bool> Function() _isOnline;
+  final Future<void> Function()? _requestSync;
   final Uuid _uuid;
 
   // Guardrail: if users capture rapidly, serialize follow-up work
@@ -103,6 +107,11 @@ class ScanCaptureService {
         _runOfflineDetectionBestEffort(id: id, imagePath: stored.imagePath),
       );
 
+      final online = await _safeIsOnline();
+      if (online) {
+        unawaited(_requestSync?.call() ?? Future<void>.value());
+      }
+
       try {
         int? privacyEnabled;
         int? disclosureChoice;
@@ -127,12 +136,6 @@ class ScanCaptureService {
           return;
         }
 
-        var online = false;
-        try {
-          online = await _isOnline();
-        } catch (_) {
-          online = false;
-        }
         if (!online) {
           return;
         }
@@ -168,17 +171,29 @@ class ScanCaptureService {
             to: ScanItemStatus.pendingSync,
           );
 
+          if (online) {
+            unawaited(_requestSync?.call() ?? Future<void>.value());
+          }
+
           _analytics.event(
             'keyword_ready',
             data: {'confidence': inference.value.confidence},
           );
         }
       } on ModelNotInstalledException {
-        // Keep status as pendingIdentify; user can install model later.
-      } catch (e) {
-        await _db.scanItemsDao.transitionStatus(
+        await _runOfflineDetectionBestEffort(
           id: id,
-          to: ScanItemStatus.failed,
+          imagePath: stored.imagePath,
+        );
+      } on CloudAiProxyException {
+        await _runOfflineDetectionBestEffort(
+          id: id,
+          imagePath: stored.imagePath,
+        );
+      } catch (_) {
+        await _runOfflineDetectionBestEffort(
+          id: id,
+          imagePath: stored.imagePath,
         );
       }
     });
@@ -187,7 +202,15 @@ class ScanCaptureService {
     return CapturedScan(id: id, backgroundWork: backgroundWork);
   }
 
-  Future<void> _runOfflineDetectionBestEffort({
+  Future<bool> _safeIsOnline() async {
+    try {
+      return await _isOnline();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _runOfflineDetectionBestEffort({
     required String id,
     required String imagePath,
   }) async {
@@ -195,14 +218,14 @@ class ScanCaptureService {
       final enabled = await _db.appSettingsDao.getInt(
         kOfflineIdentificationEnabledKeyV1,
       );
-      if ((enabled ?? 0) != 1) return;
+      if ((enabled ?? 0) != 1) return false;
 
       final file = File(imagePath);
-      if (!await file.exists()) return;
+      if (!await file.exists()) return false;
 
       final detector = OfflineDetector();
       final installState = await detector.installState();
-      if (!installState.installed) return;
+      if (!installState.installed) return false;
 
       final bytes = await file.readAsBytes();
       final detections = await detector
@@ -214,10 +237,11 @@ class ScanCaptureService {
         detectionsJson: offlineDetectionsToJson(detections),
         fetchedAt: DateTime.now(),
       );
+      return detections.isNotEmpty;
     } on TimeoutException {
-      // Best-effort only.
+      return false;
     } catch (_) {
-      // Best-effort only.
+      return false;
     }
   }
 

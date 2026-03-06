@@ -5,9 +5,11 @@ import 'package:image/image.dart' as img;
 
 import 'package:fynd_loppis/core/config/app_config.dart';
 import 'package:fynd_loppis/core/database/app_database.dart';
+import 'package:fynd_loppis/core/database/tables/scan_items.dart';
 import 'package:fynd_loppis/core/settings/app_settings_keys.dart';
 import 'package:fynd_loppis/core/storage/scan_image_storage.dart';
 import 'package:fynd_loppis/features/scanner/scan_capture_service.dart';
+import 'package:fynd_loppis/services/ai/cloud_ai_proxy_client.dart';
 import 'package:fynd_loppis/services/ai/inference/ai_types.dart';
 import 'package:fynd_loppis/services/analytics/analytics_service.dart';
 import 'package:fynd_loppis/services/ai/inference/inference_isolate_service.dart';
@@ -30,6 +32,20 @@ class _FakeAiInferenceIsolateService extends AiInferenceIsolateService {
         rawJson: '{"desc":"Test item"}',
       ),
     );
+  }
+}
+
+class _ThrowingAiInferenceIsolateService extends AiInferenceIsolateService {
+  _ThrowingAiInferenceIsolateService(this.error);
+
+  final Object error;
+
+  @override
+  Future<AiInferenceResult> run(
+    AiInferenceRequest request, {
+    AiCancelToken? cancelToken,
+  }) async {
+    throw error;
   }
 }
 
@@ -102,6 +118,53 @@ void main() {
     expect(scanAfterThumb, isNotNull);
     expect(scanAfterThumb!.thumbPath, isNot(scanAfterThumb.imagePath));
     expect(File(scanAfterThumb.thumbPath!).existsSync(), isTrue);
+  });
+
+  test('ScanCaptureService requests sync after save and AI result', () async {
+    final root = await Directory.systemTemp.createTemp('fynd_loppis_test_');
+    addTearDown(() async => root.delete(recursive: true));
+
+    final db = AppDatabase.inMemory();
+    addTearDown(db.close);
+
+    await db.haulsDao.upsert(id: 'haul-1', title: 'Test haul');
+    await db.appSettingsDao.setInt(kPrivacyCloudIdentificationEnabledKeyV1, 1);
+    await db.appSettingsDao.setInt(
+      kCloudIdentificationDisclosureChoiceKeyV1,
+      1,
+    );
+
+    final storage = ScanImageStorage(rootDir: root);
+    final ai = _FakeAiInferenceIsolateService();
+    var syncRequests = 0;
+    final service = ScanCaptureService(
+      config: _configProxyConfigured,
+      db: db,
+      imageStorage: storage,
+      aiInference: ai,
+      analytics: const NoopAnalyticsService(),
+      isOnline: () async => true,
+      requestSync: () async {
+        syncRequests += 1;
+      },
+    );
+
+    final sourceFile = await _createSourceJpg(root);
+    final captured = await service.persistCapturedImage(
+      haulId: 'haul-1',
+      userId: null,
+      sourceImage: sourceFile,
+      scanId: 'scan-1',
+    );
+
+    await captured.backgroundWork;
+
+    expect(ai.runCount, 1);
+    expect(syncRequests, 2);
+
+    final item = await db.scanItemsDao.getById('scan-1');
+    expect(item, isNotNull);
+    expect(item!.status, ScanItemStatus.pendingSync);
   });
 
   test(
@@ -308,4 +371,47 @@ void main() {
       expect(ai.runCount, 0);
     },
   );
+
+  test('Cloud proxy failure keeps saved item available locally', () async {
+    final root = await Directory.systemTemp.createTemp('fynd_loppis_test_');
+    addTearDown(() async => root.delete(recursive: true));
+
+    final db = AppDatabase.inMemory();
+    addTearDown(db.close);
+
+    await db.haulsDao.upsert(id: 'haul-1', title: 'Test haul');
+    await db.appSettingsDao.setInt(kPrivacyCloudIdentificationEnabledKeyV1, 1);
+    await db.appSettingsDao.setInt(
+      kCloudIdentificationDisclosureChoiceKeyV1,
+      1,
+    );
+
+    final storage = ScanImageStorage(rootDir: root);
+    final ai = _ThrowingAiInferenceIsolateService(
+      const CloudAiProxyException('proxy unavailable'),
+    );
+    final service = ScanCaptureService(
+      config: _configProxyConfigured,
+      db: db,
+      imageStorage: storage,
+      aiInference: ai,
+      analytics: const NoopAnalyticsService(),
+      isOnline: () async => true,
+    );
+
+    final sourceFile = await _createSourceJpg(root);
+    final captured = await service.persistCapturedImage(
+      haulId: 'haul-1',
+      userId: null,
+      sourceImage: sourceFile,
+      scanId: 'scan-1',
+    );
+
+    await captured.backgroundWork;
+
+    final item = await db.scanItemsDao.getById('scan-1');
+    expect(item, isNotNull);
+    expect(item!.status, ScanItemStatus.pendingIdentify);
+    expect(item.query, isNull);
+  });
 }
