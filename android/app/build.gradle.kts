@@ -26,7 +26,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "se.fyndloppis.fynd_loppis"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -57,15 +56,18 @@ android {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Loppisfynd DEV")
         }
         create("staging") {
             dimension = "env"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Loppisfynd STG")
         }
         create("prod") {
             dimension = "env"
             // No suffixes; prod uses the default applicationId and versionName.
+            // Prod app name comes from res/values/strings.xml ("Loppisfynd").
         }
     }
 
@@ -77,8 +79,8 @@ android {
                 "proguard-rules.pro",
             )
 
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Uses release signing config if key.properties exists; otherwise
+            // falls back to debug keystore for local --release runs.
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
