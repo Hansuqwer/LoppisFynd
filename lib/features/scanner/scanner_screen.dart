@@ -46,9 +46,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     with WidgetsBindingObserver {
   static const _overlayUpdateInterval = Duration(milliseconds: 80);
   static const _barcodeMinInterval = Duration(milliseconds: 250);
-  static const _autoCaptureDebounce = Duration(milliseconds: 550);
+  // Keep this short so users don't feel forced to tap Capture.
+  static const _autoCaptureDebounce = Duration(milliseconds: 350);
   static const _autoCaptureCooldown = Duration(seconds: 3);
-  static const _autoCaptureFreshnessWindow = Duration(milliseconds: 450);
+  // Allow for slower devices / MLKit latency; must be >= debounce.
+  static const _autoCaptureFreshnessWindow = Duration(milliseconds: 2000);
 
   CameraController? _controller;
   String? _error;
@@ -226,7 +228,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     final now = DateTime.now();
-    final value = detections.first.value;
+    final value = _selectAutoCaptureValue(detections);
+    if (value == null) return;
 
     // Prune stale cooldown entries.
     _autoCaptureRecent.removeWhere(
@@ -290,6 +293,38 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
+  String? _selectAutoCaptureValue(List<BarcodeDetection> detections) {
+    if (detections.isEmpty) return null;
+
+    // Prefer the largest barcode in view to avoid frame-to-frame reordering.
+    BarcodeDetection best = detections.first;
+    var bestArea = _rectArea(best.boundingBox);
+
+    for (var i = 1; i < detections.length; i++) {
+      final d = detections[i];
+      final area = _rectArea(d.boundingBox);
+      if (area > bestArea) {
+        best = d;
+        bestArea = area;
+        continue;
+      }
+      if (area == bestArea && d.value.compareTo(best.value) < 0) {
+        best = d;
+        bestArea = area;
+      }
+    }
+
+    final v = best.value.trim();
+    return v.isEmpty ? null : v;
+  }
+
+  static int _rectArea(Rect rect) {
+    final w = rect.width;
+    final h = rect.height;
+    if (w <= 0 || h <= 0) return 0;
+    return (w * h).round();
+  }
+
   Future<void> _initCameraIfNeeded() async {
     if (!widget.active) return;
     if (_controller != null) return;
@@ -313,7 +348,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         cameras.first,
         ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.yuv420,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
       );
 
       await controller.initialize();
@@ -429,6 +466,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final userId = ref.read(activeUserIdProvider);
     final aiInference = ref.read(aiInferenceProvider);
     final analytics = ref.read(analyticsProvider);
+    final cloudSyncCoordinator = ref.read(cloudSyncCoordinatorProvider);
+    final syncScheduler = ref.read(syncSchedulerProvider);
 
     final controller = _controller;
     final captureService = _captureService;
@@ -446,6 +485,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           imageStorage: imageStorage,
           aiInference: aiInference,
           analytics: analytics,
+          requestSync: () async {
+            await cloudSyncCoordinator.syncIfNeeded(
+              isOnline: true,
+              force: true,
+            );
+            await syncScheduler.syncOnce();
+          },
         );
     _captureService ??= service;
 
@@ -532,11 +578,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           for (final b in barcodes) {
             final value = (b.rawValue ?? b.displayValue)?.trim();
             if (value == null || value.isEmpty) continue;
-            if (b.boundingBox == Rect.zero) continue;
             detections.add(
               BarcodeDetection(value: value, boundingBox: b.boundingBox),
             );
           }
+
+          detections.sort((a, b) {
+            final areaB = _rectArea(b.boundingBox);
+            final areaA = _rectArea(a.boundingBox);
+            if (areaB != areaA) return areaB.compareTo(areaA);
+            return a.value.compareTo(b.value);
+          });
 
           _handleBarcodeDetectionsForAutoCapture(detections);
           _internalOverlay.value = BarcodeDetectionFrame(
@@ -563,29 +615,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(l10n.snackbarCopiedBarcode)));
-  }
-
-  Future<void> _doneScanning() async {
-    final db = ref.read(appDatabaseProvider);
-    final haulId = ref.read(defaultHaulIdProvider);
-    final userId = ref.read(activeUserIdProvider);
-    final l10n = AppLocalizations.of(context)!;
-
-    try {
-      final queued = await db.scanItemsDao.queueReadyToSyncInHaul(
-        haulId: haulId,
-        userId: userId,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.scannerQueuedItems(queued))));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.scannerQueueFailed('$e'))));
-    }
   }
 
   Future<void> _deleteScanItem(String scanItemId) async {
@@ -756,16 +785,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               label: _capturing ? l10n.scannerSaving : l10n.scannerCapture,
               icon: const Icon(Icons.camera_alt_rounded),
               onPressed: _capturing ? null : _capture,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Align(
-            alignment: Alignment.center,
-            child: GlassButton(
-              label: l10n.scannerDoneScanning,
-              tone: GlassButtonTone.neutral,
-              icon: const Icon(Icons.done_all_rounded),
-              onPressed: _doneScanning,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
