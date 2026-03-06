@@ -66,7 +66,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.inMemory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -138,9 +138,38 @@ class AppDatabase extends _$AppDatabase {
         await m.alterTable(TableMigration(scanItems));
         await m.alterTable(TableMigration(marketStatsCache));
       }
+      if (from < 17) {
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_user_haul '
+          'ON scan_items(user_id, haul_id)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_status '
+          'ON scan_items(status)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_user_updated '
+          'ON scan_items(user_id, updated_at DESC)',
+        );
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      // Ensure indexes exist regardless of migration path.
+      if (details.wasCreated) {
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_user_haul '
+          'ON scan_items(user_id, haul_id)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_status '
+          'ON scan_items(status)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_scan_items_user_updated '
+          'ON scan_items(user_id, updated_at DESC)',
+        );
+      }
     },
   );
 }
