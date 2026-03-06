@@ -200,7 +200,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('Assets/unnamed.jpg', fit: BoxFit.cover),
+            child: Image.asset(
+              AppAssets.backgroundMarketWarm1,
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned.fill(child: Container(color: AppColors.heroScrim)),
           const Positioned.fill(child: LoginMotifLayer()),
@@ -251,7 +254,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ),
                                     child: ClipOval(
                                       child: Image.asset(
-                                        'Assets/unnamed.jpg',
+                                        AppAssets.logoVariant1Photo,
                                         fit: BoxFit.cover,
                                         alignment: const Alignment(0.35, -0.25),
                                       ),
@@ -421,7 +424,7 @@ class _ModeChip extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: selected ? AppColors.textOnPrimary : AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),

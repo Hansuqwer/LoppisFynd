@@ -31,107 +31,98 @@ class DashboardScreen extends ConsumerWidget {
           AppSpacing.lg,
           0,
         ),
-        child: StackedBackplates(
-          child: GlassBoard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.dashboardTitle,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
+        child: GlassBoard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.dashboardTitle,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
-                    IconButton(
-                      onPressed: null,
-                      icon: const Icon(Icons.notifications_none_rounded),
-                      color: AppColors.inkDeep.withValues(alpha: 0.70),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _HeroCtaCard(
-                  title: l10n.homeHeroTitle,
-                  body: l10n.homeHeroBody,
-                  onTap: () {
-                    ref.read(deepLinkTabIndexProvider.notifier).state = 1;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                StreamBuilder<List<ScanItem>>(
-                  stream: db.scanItemsDao.watchByHaulId(
-                    defaultHaulId,
-                    userId: userId,
                   ),
-                  builder: (context, snapshot) {
-                    final items = snapshot.data ?? const <ScanItem>[];
-                    final profit = _estimateNetProfit(items);
-                    final profitText = profit == null
-                        ? '—'
-                        : '${_formatSek(profit, locale: intl.Intl.getCurrentLocale())} kr';
-
-                    final tileAspectRatio = _homeTileAspectRatio(context);
-
-                    return GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisSpacing: AppSpacing.md,
-                      childAspectRatio: tileAspectRatio,
-                      children: [
-                        _HomeTile(
-                          icon: Icons.shopping_bag_outlined,
-                          title: l10n.homeTileActiveFinds,
-                          value: '${items.length}',
-                          onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).state =
-                                2;
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.trending_up_rounded,
-                          title: l10n.homeTileProfitEst,
-                          value: profitText,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SpringRoute(
-                                builder: (_) =>
-                                    HaulSummaryScreen(haulId: defaultHaulId),
-                              ),
-                            );
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.bookmark_border_rounded,
-                          title: l10n.commonSave,
-                          subtitle: l10n.homeTileDrafts,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SpringRoute(builder: (_) => const DraftsScreen()),
-                            );
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.history_toggle_off_rounded,
-                          title: l10n.homeTileHistory,
-                          subtitle: l10n.homeTileCtaSeeAll,
-                          onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).state =
-                                3;
-                          },
-                        ),
-                      ],
-                    );
-                  },
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _HeroCtaCard(
+                title: l10n.homeHeroTitle,
+                body: l10n.homeHeroBody,
+                onTap: () {
+                  ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              StreamBuilder<List<ScanItem>>(
+                stream: db.scanItemsDao.watchByHaulId(
+                  defaultHaulId,
+                  userId: userId,
                 ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
+                builder: (context, snapshot) {
+                  final items = snapshot.data ?? const <ScanItem>[];
+                  final profit = _estimateNetProfit(items);
+                  final profitText = profit == null
+                      ? '—'
+                      : '${_formatSek(profit, locale: intl.Intl.getCurrentLocale())} kr';
+
+                  final tileAspectRatio = _homeTileAspectRatio(context);
+
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: tileAspectRatio,
+                    children: [
+                      _HomeTile(
+                        icon: Icons.shopping_bag_outlined,
+                        title: l10n.homeTileActiveFinds,
+                        value: '${items.length}',
+                        onTap: () {
+                          ref.read(deepLinkTabIndexProvider.notifier).state = 2;
+                        },
+                      ),
+                      _HomeTile(
+                        icon: Icons.trending_up_rounded,
+                        title: l10n.homeTileProfitEst,
+                        value: profitText,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            SpringRoute(
+                              builder: (_) =>
+                                  HaulSummaryScreen(haulId: defaultHaulId),
+                            ),
+                          );
+                        },
+                      ),
+                      _HomeTile(
+                        icon: Icons.bookmark_border_rounded,
+                        title: l10n.commonSave,
+                        subtitle: l10n.homeTileDrafts,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            SpringRoute(builder: (_) => const DraftsScreen()),
+                          );
+                        },
+                      ),
+                      _HomeTile(
+                        icon: Icons.history_toggle_off_rounded,
+                        title: l10n.homeTileHistory,
+                        subtitle: l10n.homeTileCtaSeeAll,
+                        onTap: () {
+                          ref.read(deepLinkTabIndexProvider.notifier).state = 3;
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
           ),
         ),
       ),
