@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/app/providers.dart';
@@ -55,7 +54,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   BarcodeDetectionFrame? _overlayFrame;
   Timer? _overlayTimer;
 
-  BarcodeScanner? _barcodeScanner;
+  dynamic _barcodeScanner;
 
   @override
   void initState() {
@@ -91,7 +90,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _overlayListenable?.removeListener(_handleOverlayInput);
     _overlayTimer?.cancel();
     _internalOverlay.dispose();
-    _barcodeScanner?.close();
     super.dispose();
   }
 
@@ -163,7 +161,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (!mounted || !widget.active) return;
 
     try {
-      _barcodeScanner ??= BarcodeScanner();
+      _barcodeScanner ??= _StubBarcodeScanner();
       if (!mounted || !widget.active) return;
 
       setState(() {
@@ -529,4 +527,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       ),
     );
   }
+}
+
+class _StubBarcodeScanner {
+  void close() {}
 }

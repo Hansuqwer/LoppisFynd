@@ -1,5 +1,3 @@
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-
 import '../../features/scanner/barcode/mlkit_book_isbn_adapter.dart';
 import 'book_barcode_isbn_handoff_service.dart';
 import 'book_isbn_draft_flow_controller.dart';
@@ -9,12 +7,12 @@ class BookScannerIsbnHandoffCoordinator {
     required MlKitBookIsbnAdapter isbnAdapter,
     required BookBarcodeIsbnHandoff handoff,
   }) : _isbnAdapter = isbnAdapter,
-       _handoff = handoff;
+        _handoff = handoff;
 
   final MlKitBookIsbnAdapter _isbnAdapter;
   final BookBarcodeIsbnHandoff _handoff;
 
-  ValidatedBookIsbn? firstValidatedBarcode(Iterable<Barcode> barcodes) {
+  ValidatedBookIsbn? firstValidatedBarcode(Iterable<dynamic> barcodes) {
     final isbns = _isbnAdapter.fromBarcodes(barcodes);
     return isbns.isEmpty ? null : isbns.first;
   }
@@ -33,7 +31,7 @@ class BookScannerIsbnHandoffCoordinator {
 
   Future<BookIsbnDraftFlowState?> handoffFirstBarcode({
     required String scanItemId,
-    required Iterable<Barcode> barcodes,
+    required Iterable<dynamic> barcodes,
     DateTime? now,
   }) {
     final isbn = firstValidatedBarcode(barcodes);

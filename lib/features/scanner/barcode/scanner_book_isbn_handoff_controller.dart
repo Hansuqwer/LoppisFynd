@@ -1,5 +1,3 @@
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-
 import '../../../services/books/book_isbn_draft_flow_controller.dart';
 import '../../../services/books/book_scanner_isbn_handoff_coordinator.dart';
 
@@ -8,7 +6,7 @@ class ScannerBookIsbnHandoffController {
     required BookScannerIsbnHandoffCoordinator coordinator,
     Duration cooldown = const Duration(seconds: 3),
   }) : _coordinator = coordinator,
-       _cooldown = cooldown;
+        _cooldown = cooldown;
 
   final BookScannerIsbnHandoffCoordinator _coordinator;
   final Duration _cooldown;
@@ -17,7 +15,7 @@ class ScannerBookIsbnHandoffController {
 
   Future<BookIsbnDraftFlowState?> maybeHandoffBarcodes({
     required String? scanItemId,
-    required Iterable<Barcode> barcodes,
+    required Iterable<dynamic> barcodes,
     DateTime? now,
   }) async {
     final targetScanItemId = scanItemId?.trim();

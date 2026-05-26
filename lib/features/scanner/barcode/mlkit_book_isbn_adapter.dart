@@ -1,11 +1,9 @@
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-
 import '../isbn/validated_book_isbn.dart';
 
 class MlKitBookIsbnAdapter {
   const MlKitBookIsbnAdapter();
 
-  ValidatedBookIsbn? fromBarcode(Barcode barcode) {
+  ValidatedBookIsbn? fromBarcode(dynamic barcode) {
     return fromRawValue(_barcodeRawValue(barcode));
   }
 
@@ -20,7 +18,7 @@ class MlKitBookIsbnAdapter {
     }
   }
 
-  List<ValidatedBookIsbn> fromBarcodes(Iterable<Barcode> barcodes) {
+  List<ValidatedBookIsbn> fromBarcodes(Iterable<dynamic> barcodes) {
     return _dedupe(barcodes.map(fromBarcode));
   }
 
@@ -28,7 +26,7 @@ class MlKitBookIsbnAdapter {
     return _dedupe(rawValues.map(fromRawValue));
   }
 
-  String? _barcodeRawValue(Barcode barcode) {
+  String? _barcodeRawValue(dynamic barcode) {
     final raw = barcode.rawValue?.trim();
     if (raw != null && raw.isNotEmpty) return raw;
 
