@@ -101,9 +101,6 @@ void main() {
       await tester.pumpWidget(_wrap(db: db));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      final context = tester.element(find.byType(InventoryScreen));
-      final l10n = AppLocalizations.of(context)!;
-
       expect(find.text('Pippi Långstrump'), findsOneWidget);
       expect(find.text('Astrid Lindgren'), findsOneWidget);
       expect(find.textContaining('50 kr'), findsWidgets);

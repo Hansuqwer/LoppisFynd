@@ -1,8 +1,7 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:fynd_loppis/features/scanner/barcode/mlkit_book_isbn_adapter.dart';
 import 'package:fynd_loppis/services/books/book_barcode_isbn_handoff_service.dart';
@@ -101,13 +100,11 @@ class _FakeHandoff implements BookBarcodeIsbnHandoff {
 
 Barcode _barcode({required String? rawValue, required String? displayValue}) {
   return Barcode(
-    type: BarcodeType.product,
-    format: BarcodeFormat.ean13,
-    displayValue: displayValue,
     rawValue: rawValue,
-    rawBytes: rawValue == null ? null : Uint8List.fromList(rawValue.codeUnits),
-    boundingBox: const Rect.fromLTWH(0, 0, 10, 10),
-    cornerPoints: const [],
-    value: null,
+    displayValue: displayValue,
+    format: BarcodeFormat.ean13,
+    type: BarcodeType.product,
+    corners: const [],
+    size: Size.zero,
   );
 }

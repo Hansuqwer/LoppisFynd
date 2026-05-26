@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/app/providers.dart';
@@ -54,7 +55,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   BarcodeDetectionFrame? _overlayFrame;
   Timer? _overlayTimer;
 
-  dynamic _barcodeScanner;
+  MobileScannerController? _barcodeScanner;
 
   @override
   void initState() {
@@ -90,6 +91,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _overlayListenable?.removeListener(_handleOverlayInput);
     _overlayTimer?.cancel();
     _internalOverlay.dispose();
+    _barcodeScanner?.dispose();
     super.dispose();
   }
 
@@ -140,6 +142,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   void _deactivateCamera() {
+    _barcodeScanner?.dispose();
+    _barcodeScanner = null;
     if (mounted) {
       setState(() {
         _error = null;
@@ -161,7 +165,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (!mounted || !widget.active) return;
 
     try {
-      _barcodeScanner ??= _StubBarcodeScanner();
+      _barcodeScanner ??= MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        facing: CameraFacing.back,
+      );
+      _barcodeScanner!.barcodes.listen(_handleBarcodes);
       if (!mounted || !widget.active) return;
 
       setState(() {
@@ -173,6 +181,40 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       if (!mounted) return;
       setState(() => _error = l10n.scannerCameraInitFailed('$e'));
     }
+  }
+
+  void _handleBarcodes(BarcodeCapture capture) {
+    if (!mounted) return;
+
+    final barcodes = capture.barcodes;
+    if (barcodes.isEmpty) return;
+
+    final detections = barcodes
+        .where((b) => b.rawValue != null && b.rawValue!.isNotEmpty)
+        .map((b) => BarcodeDetection(
+              value: b.rawValue!,
+              boundingBox: b.corners.isNotEmpty
+                  ? Rect.fromPoints(
+                      b.corners.first,
+                      b.corners.last,
+                    )
+                  : Rect.fromCenter(
+                      center: Offset.zero,
+                      width: 100,
+                      height: 100,
+                    ),
+            ))
+        .toList();
+
+    if (detections.isEmpty) return;
+
+    final frame = BarcodeDetectionFrame(
+      imageSize: capture.size,
+      detections: detections,
+      revision: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    _internalOverlay.value = frame;
   }
 
   Future<bool> _ensureCameraPermission() async {
@@ -430,16 +472,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Container(
-                            color: AppColors.inkDeep,
-                            child: const Center(
-                              child: Icon(
-                                Icons.camera_alt_rounded,
-                                color: AppColors.textOnDark,
-                                size: 64,
+                          if (_barcodeScanner != null)
+                            MobileScanner(
+                              controller: _barcodeScanner!,
+                              fit: BoxFit.cover,
+                            )
+                          else
+                            Container(
+                              color: AppColors.inkDeep,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: AppColors.textOnDark,
+                                  size: 64,
+                                ),
                               ),
                             ),
-                          ),
                           BarcodeArOverlay(
                             frame: _overlayFrame,
                             onBarcodeTap:
@@ -527,8 +575,4 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       ),
     );
   }
-}
-
-class _StubBarcodeScanner {
-  void close() {}
 }

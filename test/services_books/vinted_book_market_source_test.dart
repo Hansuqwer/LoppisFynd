@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:fynd_loppis/services/books/book_market_data_service.dart';
 import 'package:fynd_loppis/services/books/vinted_book_market_source.dart';
 import 'package:fynd_loppis/services/market/vinted_market_data_source.dart';
 import 'package:fynd_loppis/services/market/apify_client.dart';

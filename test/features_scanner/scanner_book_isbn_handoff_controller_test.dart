@@ -1,8 +1,7 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:fynd_loppis/features/scanner/barcode/mlkit_book_isbn_adapter.dart';
 import 'package:fynd_loppis/features/scanner/barcode/scanner_book_isbn_handoff_controller.dart';
@@ -205,13 +204,11 @@ BookIsbnDraftFlowState _successState(String scanItemId, String isbn) {
 
 Barcode _barcode({required String rawValue}) {
   return Barcode(
-    type: BarcodeType.product,
-    format: BarcodeFormat.ean13,
-    displayValue: rawValue,
     rawValue: rawValue,
-    rawBytes: Uint8List.fromList(rawValue.codeUnits),
-    boundingBox: const Rect.fromLTWH(0, 0, 10, 10),
-    cornerPoints: const [],
-    value: null,
+    displayValue: rawValue,
+    format: BarcodeFormat.ean13,
+    type: BarcodeType.product,
+    corners: const [],
+    size: Size.zero,
   );
 }
