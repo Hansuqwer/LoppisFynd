@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <SearchAdvancedResponse xmlns="http://api.tradera.com">
+      <SearchAdvancedResult>
+        <TotalNumberOfItems>2</TotalNumberOfItems>
+        <TotalNumberOfPages>1</TotalNumberOfPages>
+        <Items>
+          <Id>1001</Id>
+          <ShortDescription>Rorstrand Mon Amie tallrik</ShortDescription>
+          <EndDate>2026-02-01T12:00:00</EndDate>
+          <BidCount>12</BidCount>
+          <MaxBid>245</MaxBid>
+          <HasBids>true</HasBids>
+          <IsEnded>true</IsEnded>
+          <ItemUrl>https://www.tradera.com/item/1001</ItemUrl>
+          <ThumbnailLink>https://www.tradera.com/thumb/1001.jpg</ThumbnailLink>
+        </Items>
+        <Items>
+          <Id>1002</Id>
+          <ShortDescription>Glassvas</ShortDescription>
+          <EndDate>2026-02-02T12:00:00</EndDate>
+          <BidCount>0</BidCount>
+          <MaxBid>0</MaxBid>
+          <HasBids>false</HasBids>
+          <IsEnded>true</IsEnded>
+          <ItemUrl>https://www.tradera.com/item/1002</ItemUrl>
+          <ThumbnailLink>https://www.tradera.com/thumb/1002.jpg</ThumbnailLink>
+        </Items>
+      </SearchAdvancedResult>
+    </SearchAdvancedResponse>
+  </soap:Body>
+</soap:Envelope>

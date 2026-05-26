@@ -1,0 +1,137 @@
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'package:fynd_loppis/core/app/providers.dart';
+import 'package:fynd_loppis/core/config/app_config.dart';
+import 'package:fynd_loppis/core/database/app_database.dart';
+import 'package:fynd_loppis/core/theme/app_theme.dart';
+import 'package:fynd_loppis/features/drafts/draft_editor_screen.dart';
+import 'package:fynd_loppis/gen/app_localizations.dart';
+import 'package:fynd_loppis/main.dart';
+import 'package:fynd_loppis/services/market/market_data_source.dart';
+import 'package:fynd_loppis/services/sync/sync_scheduler.dart';
+
+void main() {
+  testWidgets('Core screens render and remain usable offline', (tester) async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final db = AppDatabase.inMemory();
+    addTearDown(db.close);
+    await db.haulsDao.upsert(id: 'haul_current_guest', title: 'Current haul');
+
+    const scanItemId = 'scan_item_offline_1';
+    await db
+        .into(db.scanItems)
+        .insert(
+          ScanItemsCompanion.insert(
+            id: scanItemId,
+            haulId: 'haul_current_guest',
+            query: const Value('keramik vas vintage'),
+            desc: const Value('Handmalad vas med fin glasyr'),
+            category: const Value('Keramik'),
+          ),
+        );
+    await db.draftListingsDao.upsert(
+      scanItemId: scanItemId,
+      title: 'Maffig vas',
+      description: 'Fin vas, retrokansla',
+      askingPriceSek: 150,
+    );
+
+    const config = AppConfig(
+      appEnv: 'test',
+      traderaProxyUrl: '',
+      cloudAiProxyUrl: '',
+      supabaseUrl: '',
+      supabaseAnonKey: '',
+      sentryDsn: '',
+    );
+
+    final syncScheduler = SyncScheduler(
+      db: db,
+      market: const NoopMarketDataSource(),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appConfigProvider.overrideWithValue(config),
+          syncSchedulerProvider.overrideWithValue(syncScheduler),
+          highContrastEnabledProvider.overrideWith(
+            (ref) => Stream.value(false),
+          ),
+          onboardingCompleteProvider.overrideWith((ref) => Stream.value(true)),
+          isOnlineProvider.overrideWith((ref) => Stream.value(false)),
+        ],
+        child: const BokfyndApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    // Dashboard
+    expect(find.text('Jagarens tavla'), findsWidgets);
+
+    // Inventory – verify tap works (screen uses stream builder)
+    await tester.tap(find.byKey(const Key('nav_inventory')));
+    await tester.pump(const Duration(milliseconds: 700));
+
+    // History
+    await tester.tap(find.byKey(const Key('nav_history')));
+    await tester.pumpAndSettle(const Duration(milliseconds: 900));
+    expect(find.text('Historik'), findsWidgets);
+
+    // Draft editor can render + save offline.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appConfigProvider.overrideWithValue(config),
+          syncSchedulerProvider.overrideWithValue(syncScheduler),
+          highContrastEnabledProvider.overrideWith(
+            (ref) => Stream.value(false),
+          ),
+          onboardingCompleteProvider.overrideWith((ref) => Stream.value(true)),
+          isOnlineProvider.overrideWith((ref) => Stream.value(false)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          locale: const Locale('sv'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: const SizedBox(
+            width: 390,
+            height: 844,
+            child: DraftEditorScreen(scanItemId: scanItemId),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    final priceField = find.byType(TextField).last;
+    await tester.enterText(priceField, '200');
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final saveInkWell = find
+        .ancestor(of: find.text('Spara'), matching: find.byType(InkWell))
+        .first;
+    await tester.ensureVisible(saveInkWell);
+    await tester.pumpAndSettle(const Duration(milliseconds: 300));
+    await tester.tap(saveInkWell);
+    await tester.pumpAndSettle(const Duration(milliseconds: 900));
+    expect(find.text('Utkast sparat.'), findsOneWidget);
+
+    // Dispose the widget tree and flush any pending Drift timers.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+}
