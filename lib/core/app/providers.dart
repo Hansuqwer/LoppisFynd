@@ -12,6 +12,8 @@ import '../../services/books/book_barcode_isbn_handoff_service.dart';
 import '../../services/books/book_isbn_draft_flow_controller.dart';
 import '../../services/books/book_market_service.dart';
 import '../../services/books/aggregated_book_market_service.dart';
+import '../../services/books/vinted_book_market_source.dart';
+import '../../services/books/bokborsen_book_market_source.dart';
 import '../../services/books/book_inventory_draft_application_service.dart';
 import '../../services/books/book_inventory_draft_mapper.dart';
 import '../../services/books/book_inventory_draft_orchestration_service.dart';
@@ -118,8 +120,14 @@ final aggregatedBookMarketServiceProvider =
       if (traderaService != null) {
         sources.add(TraderaBookMarketSource(service: traderaService));
       }
+      if (vintedSource != null) {
+        sources.add(VintedBookMarketSource(dataSource: vintedSource));
+      }
+      if (bokborsenSource != null) {
+        sources.add(BokborsenBookMarketSource(dataSource: bokborsenSource));
+      }
 
-      if (sources.isEmpty && vintedSource == null && bokborsenSource == null) {
+      if (sources.isEmpty) {
         return null;
       }
 
