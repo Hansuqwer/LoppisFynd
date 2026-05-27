@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/app/providers.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
-import '../../services/privacy/cloud_data_deletion_service.dart';
-import '../../services/privacy/local_data_deletion_service.dart';
 import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_button.dart';
+import 'settings_providers.dart';
 
 class AccountDeletionScreen extends ConsumerStatefulWidget {
   const AccountDeletionScreen({super.key});
@@ -19,9 +17,6 @@ class AccountDeletionScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
-  bool _deleting = false;
-  bool _deletingCloud = false;
-
   Future<bool> _confirm({required String title, required String body}) async {
     final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
@@ -47,12 +42,10 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   }
 
   Future<void> _deleteAccount() async {
-    if (_deleting) return;
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
-    final db = ref.read(appDatabaseProvider);
-    final userId = ref.read(activeUserIdProvider);
     final config = ref.read(appConfigProvider);
+    final userId = ref.read(activeUserIdProvider);
 
     if (!config.hasSupabase || userId == null) {
       messenger.showSnackBar(
@@ -67,70 +60,20 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
     );
     if (!ok) return;
 
-    setState(() => _deleting = true);
-    try {
-      await Supabase.instance.client.functions.invoke('account-delete');
-
-      try {
-        await Supabase.instance.client.auth.signOut();
-      } catch (_) {
-        // Expected: the server already deleted this user's account,
-        // so the local sign-out may fail with an invalid-session error.
-      }
-
-      await LocalDataDeletionService(db: db).deleteAllLocalData(userId: userId);
-
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.accountDeletionDone)));
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.accountDeletionFailed('$e'))),
-      );
-    } finally {
-      if (mounted) setState(() => _deleting = false);
-    }
+    ref.read(deleteAccountProvider.notifier).run();
   }
 
-  Future<void> _deleteCloudData() async {
-    if (_deletingCloud) return;
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
+  void _deleteCloudData() {
     final config = ref.read(appConfigProvider);
-
     if (!config.hasSupabase) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.accountDeletionNoCloud)),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.accountDeletionNoCloud),
+        ),
       );
       return;
     }
-
-    setState(() => _deletingCloud = true);
-    try {
-      final outcome = await CloudDataDeletionService(
-        config: config,
-      ).deleteAllCloudData();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.privacyDeleteCloudDone(
-              outcome.deletedScanItems,
-              outcome.deletedHauls,
-              outcome.deletedStorageObjects,
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.privacyDeleteFailed('$e'))),
-      );
-    } finally {
-      if (mounted) setState(() => _deletingCloud = false);
-    }
+    ref.read(deleteCloudDataProvider.notifier).run();
   }
 
   @override
@@ -141,6 +84,55 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
         .watch(authSessionProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
     final email = session?.user.email;
+    final deleteState = ref.watch(deleteAccountProvider);
+    final deleteCloudState = ref.watch(deleteCloudDataProvider);
+    final deleting = deleteState.isLoading;
+    final deletingCloud = deleteCloudState.isLoading;
+
+    ref.listen(deleteAccountProvider, (prev, next) {
+      if (prev?.isLoading ?? false) {
+        next.whenOrNull(
+          data: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.accountDeletionDone)),
+            );
+            Navigator.of(context).pop();
+          },
+          error: (e, _) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.accountDeletionFailed('$e'))),
+            );
+          },
+        );
+      }
+    });
+
+    ref.listen(deleteCloudDataProvider, (prev, next) {
+      if (prev?.isLoading ?? false) {
+        next.whenOrNull(
+          data: (outcome) {
+            if (outcome != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    l10n.privacyDeleteCloudDone(
+                      outcome.deletedScanItems,
+                      outcome.deletedHauls,
+                      outcome.deletedStorageObjects,
+                    ),
+                  ),
+                ),
+              );
+            }
+          },
+          error: (e, _) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.privacyDeleteFailed('$e'))),
+            );
+          },
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.accountDeletionTitle)),
@@ -182,20 +174,20 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     GlassButton(
-                      label: _deletingCloud
+                      label: deletingCloud
                           ? l10n.privacyDeleting
                           : l10n.privacyDeleteCloudCta,
                       tone: GlassButtonTone.neutral,
                       icon: const Icon(Icons.cloud_off_rounded),
-                      onPressed: _deletingCloud ? null : _deleteCloudData,
+                      onPressed: deletingCloud ? null : _deleteCloudData,
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     GlassButton(
-                      label: _deleting
+                      label: deleting
                           ? l10n.privacyDeleting
                           : l10n.accountDeletionConfirmCta,
                       icon: const Icon(Icons.person_off_rounded),
-                      onPressed: _deleting ? null : _deleteAccount,
+                      onPressed: deleting ? null : _deleteAccount,
                     ),
                   ],
                 ),

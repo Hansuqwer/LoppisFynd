@@ -162,30 +162,34 @@ class _BarcodeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface.withValues(alpha: 0.88),
-      borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      label: value,
+      child: Material(
+        color: AppColors.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 72, maxWidth: 190),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(color: AppColors.borderSubtle),
-            boxShadow: AppShadows.pressed,
-          ),
-          child: Text(
-            value,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 72, maxWidth: 190),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: AppColors.borderSubtle),
+              boxShadow: AppShadows.pressed,
+            ),
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ),

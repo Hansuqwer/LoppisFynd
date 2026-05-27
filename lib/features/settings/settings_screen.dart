@@ -8,19 +8,21 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/app/providers.dart';
 import '../../core/settings/app_settings_keys.dart';
 import '../../core/tokens/app_tokens.dart';
-import '../../shared/widgets/bento_card.dart';
 import '../../shared/widgets/glass_board.dart';
 import '../../shared/widgets/glass_button.dart';
-import '../../services/sync/cloud_metadata_sync_service.dart';
 import '../../services/sync/background/background_sync.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/navigation/spring_route.dart';
 import 'account_deletion_screen.dart';
 import 'legal_screen.dart';
 import 'privacy_screen.dart';
+import 'settings_providers.dart';
 import 'sync_status_screen.dart';
 
 import '../../gen/app_localizations.dart';
+import 'widgets/profile_header.dart';
+import 'widgets/profile_section.dart';
+import 'widgets/settings_module_card.dart';
+import 'widgets/settings_tile.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -30,17 +32,12 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _displayNameController = TextEditingController();
-  bool _syncing = false;
-  bool _cloudSyncing = false;
-  bool _signingOut = false;
-  String? _lastDisplayName;
-
   static const _kDevModeEnabled = 'dev_mode_enabled_v1';
   bool _devModeEnabled = false;
   int _devModeTaps = 0;
   Timer? _devModeTapTimer;
   PackageInfo? _packageInfo;
+  int _refreshTrigger = 0;
 
   static const _kSyncIntervalHours = 'market_sync_interval_hours';
   static const _kHighContrastEnabled = 'high_contrast_enabled';
@@ -72,7 +69,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _devModeTapTimer?.cancel();
-    _displayNameController.dispose();
     super.dispose();
   }
 
@@ -100,73 +96,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }();
   }
 
-  String _displayNameKey(String userId) => 'profile_display_name_$userId';
+  void _syncNow() => ref.read(syncNowProvider.notifier).run();
 
-  Future<void> _syncNow() async {
-    if (_syncing) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _syncing = true);
-    try {
-      final syncScheduler = ref.read(syncSchedulerProvider);
-      await syncScheduler.syncOnce();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.settingsMarketSyncCompleted)));
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.settingsMarketSyncFailed('$e'))),
-      );
-    } finally {
-      if (mounted) setState(() => _syncing = false);
-    }
-  }
+  void _cloudSyncNow() => ref.read(cloudSyncNowProvider.notifier).run();
 
-  Future<void> _cloudSyncNow() async {
-    if (_cloudSyncing) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _cloudSyncing = true);
-    try {
-      final db = ref.read(appDatabaseProvider);
-      final config = ref.read(appConfigProvider);
-      final service = CloudMetadataSyncService(db: db, config: config);
-      await service.syncBidirectional();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.settingsCloudSyncCompleted)));
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.settingsCloudSyncFailed('$e'))),
-      );
-    } finally {
-      if (mounted) setState(() => _cloudSyncing = false);
-    }
-  }
-
-  Future<void> _signOut() async {
-    if (_signingOut) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _signingOut = true);
-    try {
-      await Supabase.instance.client.auth.signOut();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.settingsSignedOut)));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.settingsSignOutFailed('$e'))));
-    } finally {
-      if (mounted) setState(() => _signingOut = false);
-    }
-  }
+  void _signOut() => ref.read(signOutProvider.notifier).run();
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +121,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         .maybeWhen(data: (v) => v, orElse: () => null);
     final email = session?.user.email;
     final userId = session?.user.id;
+    final syncing = ref.watch(syncNowProvider).isLoading;
+    final cloudSyncing = ref.watch(cloudSyncNowProvider).isLoading;
+    final signingOut = ref.watch(signOutProvider).isLoading;
+
+    ref.listen(syncNowProvider, (prev, next) {
+      if (prev?.isLoading ?? false) {
+        next.whenOrNull(
+          data: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsMarketSyncCompleted)),
+            );
+          },
+          error: (e, _) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsMarketSyncFailed('$e'))),
+            );
+          },
+        );
+      }
+    });
+
+    ref.listen(cloudSyncNowProvider, (prev, next) {
+      if (prev?.isLoading ?? false) {
+        next.whenOrNull(
+          data: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsCloudSyncCompleted)),
+            );
+          },
+          error: (e, _) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsCloudSyncFailed('$e'))),
+            );
+          },
+        );
+      }
+    });
+
+    ref.listen(signOutProvider, (prev, next) {
+      if (prev?.isLoading ?? false) {
+        next.whenOrNull(
+          data: (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsSignedOut)),
+            );
+          },
+          error: (e, _) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.settingsSignOutFailed('$e'))),
+            );
+          },
+        );
+      }
+    });
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -202,7 +190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ProfileHeader(
+                ProfileHeader(
                   title: l10n.settingsProfileTitle,
                   versionText: () {
                     final info = _packageInfo;
@@ -214,15 +202,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   }(),
                   devModeEnabled: _devModeEnabled,
                   onVersionTap: _handleVersionTap,
+                  devModeTapTargetKey: _kDevModeTapTargetKey,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                _SettingsModuleCard(
+                SettingsModuleCard(
                   icon: Icons.cloud_rounded,
                   title: l10n.settingsModuleSyncDataTitle,
-                  child: _buildSyncModule(context, l10n, db, config, email),
+                  child: _buildSyncModule(context, l10n, db, config, email, syncing, cloudSyncing),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _SettingsModuleCard(
+                SettingsModuleCard(
                   icon: Icons.shield_outlined,
                   title: l10n.settingsModulePrivacyTitle,
                   child: _buildPrivacyModule(
@@ -235,10 +224,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     fetchSoldPriceCompsEnabled,
                     email,
                     userId,
+                    signingOut,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _SettingsModuleCard(
+                SettingsModuleCard(
                   icon: Icons.gavel_rounded,
                   title: l10n.settingsModuleLegalTitle,
                   child: _buildLegalModule(context, l10n),
@@ -257,6 +247,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     dynamic db,
     dynamic config,
     String? email,
+    bool syncing,
+    bool cloudSyncing,
   ) {
     if (!_devModeEnabled) {
       return Text(
@@ -333,7 +325,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               content: Text(l10n.settingsSavedSyncInterval),
                             ),
                           );
-                          setState(() {});
+                          setState(() => _refreshTrigger++);
                         },
                 ),
               ],
@@ -355,8 +347,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         const SizedBox(height: AppSpacing.md),
         GlassButton(
-          label: _syncing ? l10n.settingsSyncing : l10n.settingsSyncNow,
-          onPressed: _syncing ? null : _syncNow,
+          label: syncing ? l10n.settingsSyncing : l10n.settingsSyncNow,
+          onPressed: syncing ? null : _syncNow,
           icon: const Icon(Icons.sync_rounded),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -382,10 +374,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         const SizedBox(height: AppSpacing.md),
         GlassButton(
-          label: _cloudSyncing
+          label: cloudSyncing
               ? l10n.settingsSyncing
               : l10n.settingsSyncMetadata,
-          onPressed: _cloudSyncing ? null : _cloudSyncNow,
+          onPressed: cloudSyncing ? null : _cloudSyncNow,
           icon: const Icon(Icons.cloud_done_rounded),
         ),
         if (config.hasSupabase)
@@ -434,6 +426,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     bool fetchSoldPriceCompsEnabled,
     String? email,
     String? userId,
+    bool signingOut,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,9 +438,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: AppSpacing.xs),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.settingsHighContrast),
+        SettingsTile(
+          title: l10n.settingsHighContrast,
           value: highContrast,
           onChanged: (v) async {
             final messenger = ScaffoldMessenger.of(context);
@@ -466,10 +458,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: AppSpacing.xs),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.settingsCloudIdentificationToggleTitle),
-          subtitle: Text(l10n.settingsCloudIdentificationToggleSubtitle),
+        SettingsTile(
+          title: l10n.settingsCloudIdentificationToggleTitle,
+          subtitle: l10n.settingsCloudIdentificationToggleSubtitle,
           value: cloudIdentificationEnabled,
           onChanged: (v) async {
             await db.appSettingsDao.setInt(
@@ -479,10 +470,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         const SizedBox(height: AppSpacing.xs),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.settingsFetchSoldPriceCompsToggleTitle),
-          subtitle: Text(l10n.settingsFetchSoldPriceCompsToggleSubtitle),
+        SettingsTile(
+          title: l10n.settingsFetchSoldPriceCompsToggleTitle,
+          subtitle: l10n.settingsFetchSoldPriceCompsToggleSubtitle,
           value: fetchSoldPriceCompsEnabled,
           onChanged: (v) async {
             await db.appSettingsDao.setInt(
@@ -531,57 +521,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           if (email != null && userId != null) ...[
             const SizedBox(height: AppSpacing.md),
-            FutureBuilder<String?>(
-              future: db.appSettingsDao.getString(_displayNameKey(userId)),
-              builder: (context, snapshot) {
-                final current = snapshot.data;
-                if (current != _lastDisplayName) {
-                  _lastDisplayName = current;
-                  _displayNameController.text = current ?? '';
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: _displayNameController,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: l10n.settingsDisplayNameLabel,
-                        hintText: l10n.settingsDisplayNameHint,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    GlassButton(
-                      label: l10n.settingsSaveProfile,
-                      icon: const Icon(Icons.save_rounded),
-                      onPressed: () async {
-                        final name = _displayNameController.text.trim();
-                        final messenger = ScaffoldMessenger.of(context);
-                        await db.appSettingsDao.setString(
-                          _displayNameKey(userId),
-                          name.isEmpty ? null : name,
-                        );
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(l10n.settingsProfileSaved)),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
+            ProfileSection(db: db, userId: userId),
           ],
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: GlassButton(
-                  label: _signingOut
+                  label: signingOut
                       ? l10n.settingsSigningOut
                       : l10n.settingsSignOut,
-                  onPressed: email == null || _signingOut ? null : _signOut,
+                  onPressed: email == null || signingOut ? null : _signOut,
                   icon: const Icon(Icons.logout_rounded),
                 ),
               ),
@@ -604,143 +554,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.title,
-    required this.versionText,
-    required this.devModeEnabled,
-    required this.onVersionTap,
-  });
-
-  final String title;
-  final String versionText;
-  final bool devModeEnabled;
-  final VoidCallback onVersionTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final titleStyle = Theme.of(
-      context,
-    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.borderSubtle),
-            boxShadow: AppShadows.bento,
-          ),
-          child: Icon(
-            Icons.person,
-            color: AppColors.inkDeep.withValues(alpha: 0.55),
-            size: 30,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(title, style: titleStyle, textAlign: TextAlign.center),
-        const SizedBox(height: AppSpacing.xs),
-        GestureDetector(
-          key: _SettingsScreenState._kDevModeTapTargetKey,
-          onTap: onVersionTap,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.inkDeep.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: AppColors.borderSubtle),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    versionText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.inkDeep.withValues(alpha: 0.70),
-                    ),
-                  ),
-                ),
-                if (devModeEnabled) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Icon(
-                    Icons.code_rounded,
-                    size: 16,
-                    color: AppColors.inkDeep.withValues(alpha: 0.75),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsModuleCard extends StatelessWidget {
-  const _SettingsModuleCard({
-    required this.icon,
-    required this.title,
-    required this.child,
-  });
-
-  final IconData icon;
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return BentoCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.deepSapphire.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: AppColors.borderSubtle),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppColors.deepSapphire.withValues(alpha: 0.75),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          child,
-        ],
-      ),
     );
   }
 }

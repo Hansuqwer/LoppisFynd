@@ -56,6 +56,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Timer? _overlayTimer;
 
   MobileScannerController? _barcodeScanner;
+  StreamSubscription<BarcodeCapture>? _barcodeStreamSub;
 
   @override
   void initState() {
@@ -91,6 +92,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _overlayListenable?.removeListener(_handleOverlayInput);
     _overlayTimer?.cancel();
     _internalOverlay.dispose();
+    _barcodeStreamSub?.cancel();
     _barcodeScanner?.dispose();
     super.dispose();
   }
@@ -169,7 +171,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         detectionSpeed: DetectionSpeed.noDuplicates,
         facing: CameraFacing.back,
       );
-      _barcodeScanner!.barcodes.listen(_handleBarcodes);
+      _barcodeStreamSub?.cancel();
+      _barcodeStreamSub = _barcodeScanner!.barcodes.listen(_handleBarcodes);
       if (!mounted || !widget.active) return;
 
       setState(() {
@@ -539,6 +542,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             alignment: Alignment.center,
             child: GlassButton(
               label: _capturing ? l10n.scannerSaving : l10n.scannerCapture,
+              semanticLabel: l10n.scannerCapture,
               icon: const Icon(Icons.camera_alt_rounded),
               onPressed: _capturing ? null : _capture,
             ),
@@ -548,6 +552,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             alignment: Alignment.center,
             child: GlassButton(
               label: l10n.scannerDoneScanning,
+              semanticLabel: l10n.scannerDoneScanning,
               tone: GlassButtonTone.neutral,
               icon: const Icon(Icons.done_all_rounded),
               onPressed: _doneScanning,

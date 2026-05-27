@@ -58,7 +58,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: l10n.homeHeroTitle,
                   body: l10n.homeHeroBody,
                   onTap: () {
-                    ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                    ref.read(deepLinkTabIndexProvider.notifier).set(1);
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -89,8 +89,8 @@ class DashboardScreen extends ConsumerWidget {
                           title: l10n.homeTileActiveFinds,
                           value: '${items.length}',
                           onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).state =
-                                2;
+                            ref.read(deepLinkTabIndexProvider.notifier).set(
+                                2);
                           },
                         ),
                         _HomeTile(
@@ -121,8 +121,8 @@ class DashboardScreen extends ConsumerWidget {
                           title: l10n.homeTileHistory,
                           subtitle: l10n.homeTileCtaSeeAll,
                           onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).state =
-                                3;
+                            ref.read(deepLinkTabIndexProvider.notifier).set(
+                                3);
                           },
                         ),
                       ],

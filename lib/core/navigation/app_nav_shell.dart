@@ -69,7 +69,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
         _builtTabs.add(next);
         _activeTab.value = _tab;
       });
-      ref.read(deepLinkTabIndexProvider.notifier).state = null;
+      ref.read(deepLinkTabIndexProvider.notifier).set(null);
     });
 
     _deepLinkItemSub = ref.listenManual<String?>(deepLinkScanItemIdProvider, (
@@ -85,7 +85,7 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
         Navigator.of(
           context,
         ).push(SpringRoute(builder: (_) => ItemDetailScreen(scanItemId: next)));
-        ref.read(deepLinkScanItemIdProvider.notifier).state = null;
+        ref.read(deepLinkScanItemIdProvider.notifier).set(null);
       });
     });
 

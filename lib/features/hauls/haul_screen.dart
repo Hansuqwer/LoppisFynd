@@ -111,7 +111,7 @@ class HaulScreen extends ConsumerWidget {
                       bottom: 0,
                       child: _CameraFab(
                         onPressed: () {
-                          ref.read(deepLinkTabIndexProvider.notifier).state = 1;
+                          ref.read(deepLinkTabIndexProvider.notifier).set(1);
                         },
                         semanticLabel: l10n.homeHeroTitle,
                       ),

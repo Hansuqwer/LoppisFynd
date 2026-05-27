@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app/providers.dart';
@@ -15,8 +12,10 @@ import '../../shared/widgets/empty_state.dart';
 import '../analyzer/item_detail_screen.dart';
 import '../analyzer/profit_calculator.dart';
 import '../drafts/draft_editor_screen.dart';
-import '../drafts/drafts_screen.dart';
 import '../../services/sync/cloud/entity_keys.dart';
+import 'widgets/haul_stats_widget.dart';
+import 'widgets/inventory_row.dart';
+import 'widgets/summary_card_widget.dart';
 
 enum _StatusFilter { all, complete, pending, failed }
 
@@ -310,81 +309,15 @@ class _HaulSummaryScreenState extends ConsumerState<HaulSummaryScreen> {
                 return ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
-                    BentoCard(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.haulSummaryTotalsTitle,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryItems,
-                                      value: '${items.length}',
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryInvested,
-                                      value: _sek(invested),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryValue,
-                                      value: _sek(expected),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: AnimatedSwitcher(
-                                      duration: AppMotion.fast,
-                                      switchInCurve: AppMotion.curve,
-                                      switchOutCurve: AppMotion.curve,
-                                      child: _Metric(
-                                        key: ValueKey(netProfit.round()),
-                                        label: l10n.haulSummaryNet,
-                                        value: _sek(netProfit),
-                                        emphasize: true,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryStatusComplete,
-                                      value: '${completed.length}',
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryStatusPending,
-                                      value: '$pending',
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _Metric(
-                                      label: l10n.haulSummaryStatusFailed,
-                                      value: '${failed.length}',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        )
-                        .animate()
-                        .fadeIn(duration: 220.ms)
-                        .slideY(begin: 0.04, end: 0),
+                    HaulStatsWidget(
+                      itemCount: items.length,
+                      invested: invested,
+                      expected: expected,
+                      netProfit: netProfit,
+                      completedCount: completed.length,
+                      pendingCount: pending,
+                      failedCount: failed.length,
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                     BentoCard(
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -539,85 +472,10 @@ class _HaulSummaryScreenState extends ConsumerState<HaulSummaryScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    BentoCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child:
-                          StreamBuilder<
-                            List<({DraftListing draft, ScanItem item})>
-                          >(
-                            stream: db.draftListingsDao.watchByHaulId(
-                              haulId: widget.haulId,
-                              userId: userId,
-                            ),
-                            builder: (context, draftSnapshot) {
-                              final drafts = draftSnapshot.data ?? const [];
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          l10n.haulSummaryDraftsTitle,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            SpringRoute(
-                                              builder: (_) =>
-                                                  const DraftsScreen(),
-                                            ),
-                                          );
-                                        },
-                                        child: Text(l10n.dashboardSeeAll),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  if (drafts.isEmpty)
-                                    Text(
-                                      l10n.haulSummaryNoDraftsYet,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    )
-                                  else
-                                    ...drafts.take(3).map((row) {
-                                      final title = row.draft.title?.trim();
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: AppSpacing.xs,
-                                        ),
-                                        child: _InlineRowButton(
-                                          icon: Icons.edit_note_rounded,
-                                          label:
-                                              (title == null || title.isEmpty)
-                                              ? l10n.dashboardUntitledDraft
-                                              : title,
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              SpringRoute(
-                                                builder: (_) =>
-                                                    DraftEditorScreen(
-                                                      scanItemId: row.item.id,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      );
-                                    }),
-                                ],
-                              );
-                            },
-                          ),
+                    DraftsSummaryCard(
+                      db: db,
+                      haulId: widget.haulId,
+                      userId: userId,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
@@ -687,7 +545,7 @@ class _HaulSummaryScreenState extends ConsumerState<HaulSummaryScreen> {
                                     padding: const EdgeInsets.all(
                                       AppSpacing.md,
                                     ),
-                                    child: _InventoryRow(
+                                    child: InventoryRow(
                                       item: pair.item,
                                       net: pair.net,
                                       cloudStatus: mergedStatusFor(
@@ -737,247 +595,4 @@ bool _isHighMargin(double? net, ScanItem it) {
   final p = it.purchasePrice;
   if (p == null || p <= 0) return net >= 200;
   return (net / p) >= 1.0;
-}
-
-String _sek(double value) => '${value.round()} SEK';
-
-class _Metric extends StatelessWidget {
-  const _Metric({
-    super.key,
-    required this.label,
-    required this.value,
-    this.emphasize = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasize;
-
-  @override
-  Widget build(BuildContext context) {
-    final valueBase =
-        (emphasize
-                ? Theme.of(context).textTheme.titleLarge
-                : Theme.of(context).textTheme.bodyLarge)
-            ?.copyWith(
-              fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
-            );
-    final valueStyle = valueBase == null
-        ? null
-        : AppTypography.metricsFrom(valueBase);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(value, style: valueStyle),
-      ],
-    );
-  }
-}
-
-class _InventoryRow extends StatelessWidget {
-  const _InventoryRow({
-    required this.item,
-    required this.net,
-    required this.cloudStatus,
-    required this.onOpenDraft,
-  });
-
-  final ScanItem item;
-  final double? net;
-  final String? cloudStatus;
-  final VoidCallback onOpenDraft;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final thumbPath = item.thumbPath;
-    final headline = (item.desc?.trim().isNotEmpty ?? false)
-        ? item.desc!.trim()
-        : (item.query?.trim().isNotEmpty ?? false)
-        ? item.query!.trim()
-        : l10n.haulSummaryUnnamedItem;
-
-    final netText = net == null ? '—' : _sek(net!);
-    final netBase = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.w800,
-      color: (net ?? 0) >= 0 ? AppColors.textPrimary : AppColors.primaryAction,
-    );
-    final netStyle = netBase == null
-        ? null
-        : AppTypography.metricsFrom(netBase);
-
-    final cloud = cloudStatus;
-    final cloudIcon = switch (cloud) {
-      'syncing' => Icons.cloud_upload_rounded,
-      'failed' => Icons.cloud_off_rounded,
-      'conflict' => Icons.warning_amber_rounded,
-      _ => null,
-    };
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 56,
-          height: 56,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            child: thumbPath == null
-                ? Container(
-                    color: AppColors.surface,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.image_rounded),
-                  )
-                : Image.file(
-                    File(thumbPath),
-                    fit: BoxFit.cover,
-                    cacheWidth: 112,
-                    cacheHeight: 112,
-                    errorBuilder: (context, _, _) {
-                      return Container(
-                        color: AppColors.surface,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported),
-                      );
-                    },
-                  ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                headline,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  _Badge(label: item.status.name),
-                  if (item.category?.trim().isNotEmpty ?? false)
-                    _Badge(label: item.category!.trim()),
-                  if (item.daysToSellEst != null)
-                    _Badge(
-                      label: l10n.haulSummaryDaysToSell(item.daysToSellEst!),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(netText, style: netStyle),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (cloudIcon != null)
-                  Icon(
-                    cloudIcon,
-                    size: 18,
-                    color: AppColors.textPrimary.withValues(alpha: 0.75),
-                  ),
-                IconButton(
-                  onPressed: onOpenDraft,
-                  tooltip: l10n.draftEditorTitle,
-                  icon: const Icon(Icons.edit_note_rounded),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textPrimary.withValues(alpha: 0.65),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.glassFill,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
-
-class _InlineRowButton extends StatelessWidget {
-  const _InlineRowButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppSpacing.xs,
-            horizontal: AppSpacing.xs,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 18),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

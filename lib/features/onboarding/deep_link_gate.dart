@@ -19,10 +19,10 @@ class _DeepLinkGateState extends ConsumerState<DeepLinkGate> {
   void initState() {
     super.initState();
     if (widget.tabIndex != null) {
-      ref.read(deepLinkTabIndexProvider.notifier).state = widget.tabIndex;
+      ref.read(deepLinkTabIndexProvider.notifier).set(widget.tabIndex);
     }
     if (widget.scanItemId != null) {
-      ref.read(deepLinkScanItemIdProvider.notifier).state = widget.scanItemId;
+      ref.read(deepLinkScanItemIdProvider.notifier).set(widget.scanItemId);
     }
   }
 

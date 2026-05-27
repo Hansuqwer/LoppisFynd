@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -113,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthException catch (e) {
       _showErrorSnackBar(messenger, _formatAuthError(l10n, e));
     } catch (e) {
-      debugPrint('Auth error: $e');
+      if (kDebugMode) debugPrint('Auth error: $e');
       _showErrorSnackBar(messenger, l10n.loginErrorGeneric);
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -503,7 +504,7 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
     } on EmailOtpAuthException {
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } catch (e) {
-      debugPrint('Auth OTP send error: $e');
+      if (kDebugMode) debugPrint('Auth OTP send error: $e');
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -535,7 +536,7 @@ class _TroubleOtpSheetState extends State<_TroubleOtpSheet> {
     } on EmailOtpAuthException {
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } catch (e) {
-      debugPrint('Auth OTP verify error: $e');
+      if (kDebugMode) debugPrint('Auth OTP verify error: $e');
       messenger.showSnackBar(SnackBar(content: Text(l10n.loginErrorGeneric)));
     } finally {
       if (mounted) setState(() => _busy = false);

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart' as legacy;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -256,8 +255,16 @@ final analyticsProvider = Provider<AnalyticsService>((ref) {
 
 final appStartAtProvider = Provider<DateTime>((ref) => DateTime.now());
 
-final startupMetricsReportedProvider = legacy.StateProvider<bool>(
-  (ref) => false,
+class StartupMetricsReportedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
+final startupMetricsReportedProvider =
+    NotifierProvider<StartupMetricsReportedNotifier, bool>(
+  StartupMetricsReportedNotifier.new,
 );
 
 final authSessionProvider = StreamProvider<Session?>((ref) async* {
@@ -289,8 +296,29 @@ final isOnlineProvider = StreamProvider<bool>((ref) async* {
 });
 
 // Deep-link skeleton: routes can set these before landing in the app shell.
-final deepLinkTabIndexProvider = legacy.StateProvider<int?>((ref) => null);
-final deepLinkScanItemIdProvider = legacy.StateProvider<String?>((ref) => null);
+class DeepLinkTabIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void set(int? value) => state = value;
+}
+
+final deepLinkTabIndexProvider =
+    NotifierProvider<DeepLinkTabIndexNotifier, int?>(
+  DeepLinkTabIndexNotifier.new,
+);
+
+class DeepLinkScanItemIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? value) => state = value;
+}
+
+final deepLinkScanItemIdProvider =
+    NotifierProvider<DeepLinkScanItemIdNotifier, String?>(
+  DeepLinkScanItemIdNotifier.new,
+);
 
 bool _isOfflineConnectivity(List<ConnectivityResult> results) {
   return results.length == 1 && results.single == ConnectivityResult.none;
