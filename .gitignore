@@ -95,3 +95,4 @@ node_modules/
 **/build/
 analyze*.txt
 supabase/.temp/
+scrape_output/

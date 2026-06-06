@@ -1,0 +1,49 @@
+name: scrape-books
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Download previous scrape artifact for dedup
+        id: download
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run list --workflow scrape-books.yml --branch main --status success --json databaseId --jq '.[0].databaseId' > /tmp/last_run_id.txt
+          RUN_ID=$(cat /tmp/last_run_id.txt)
+          if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "null" ]; then
+            gh run download "$RUN_ID" --dir /tmp/prev-scrape
+            PREV_FILE=$(find /tmp/prev-scrape -name "*.json" -type f | head -1)
+            if [ -n "$PREV_FILE" ]; then
+              echo "prev_path=$PREV_FILE" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run book scrape
+        env:
+          SCRAPE_OUTPUT_DIR: scrape_output
+        run: |
+          ARGS=""
+          if [ -n "${{ steps.download.outputs.prev_path }}" ]; then
+            ARGS="--prev ${{ steps.download.outputs.prev_path }}"
+          fi
+          deno run --allow-net --allow-read --allow-write --allow-env scripts/cron-scrape-books.ts $ARGS
+
+      - name: Upload scrape artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: book-scrape-${{ github.run_number }}
+          path: scrape_output/*.json
+          retention-days: 90
