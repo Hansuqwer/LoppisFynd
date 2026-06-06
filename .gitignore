@@ -90,3 +90,8 @@ test/**/failures/
 *.g.dart
 !lib/core/database/*.g.dart
 !lib/core/database/daos/*.g.dart
+node_modules/
+**/node_modules/
+**/build/
+analyze*.txt
+supabase/.temp/

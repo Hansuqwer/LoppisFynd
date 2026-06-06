@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../gen/app_localizations.dart';
 
 class ConditionAdjuster extends StatelessWidget {
-  const ConditionAdjuster({super.key, required this.value, required this.onChanged});
+  const ConditionAdjuster({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
 
   final double value;
   final ValueChanged<double> onChanged;
@@ -30,9 +34,9 @@ class ConditionAdjuster extends StatelessWidget {
             ),
             Text(
               l10n.itemDetailConditionValue(label, percentText),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),

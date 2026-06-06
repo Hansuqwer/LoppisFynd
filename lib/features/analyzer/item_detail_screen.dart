@@ -1,19 +1,26 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/tokens/app_tokens.dart';
-import '../../shared/widgets/bento_card.dart';
 import '../../gen/app_localizations.dart';
-import 'flip_factor.dart';
-import 'profit_calculator.dart';
-import 'widgets/stat_line.dart';
+import '../../shared/widgets/book_cover.dart';
+import '../../shared/widgets/score_ring.dart';
+import '../../shared/widgets/sparkline_chart.dart';
+import '../../shared/widgets/verdict_chip.dart';
 import 'widgets/condition_adjuster.dart';
 import 'widgets/market_stats_widget.dart';
 
+/// Redesign Decision / Fynd-analys screen.
+///
+/// Wraps the existing [MarketStatsWidget] (market data + sync) in the new
+/// visual shell: verdict hero, cost stepper, quick metrics, sparkline,
+/// range bar, and a prominent CTA button.
 class ItemDetailScreen extends ConsumerStatefulWidget {
   const ItemDetailScreen({super.key, required this.scanItemId});
 
@@ -24,64 +31,23 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
-  final _purchaseController = TextEditingController();
-  final _fixedFeesController = TextEditingController();
-  final _shippingController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _notesController = TextEditingController();
-  double? _lastPurchase;
-  double? _lastFixedFees;
-  double? _lastShipping;
-  String? _lastCategory;
-  String? _lastNotes;
+  // Purchase-price stepper (redesign cost stepper).
+  double _cost = 0;
+  bool _costInitialised = false;
 
-  @override
-  void dispose() {
-    _purchaseController.dispose();
-    _fixedFeesController.dispose();
-    _shippingController.dispose();
-    _categoryController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
+  // Saved / bookmark state.
+  bool _saved = false;
 
-  Future<void> _savePurchasePrice(AppDatabase db, String text) async {
-    final trimmed = text.trim();
-    final parsed = trimmed.isEmpty ? null : double.tryParse(trimmed);
-    await db.scanItemsDao.setPurchasePrice(
-      id: widget.scanItemId,
-      purchasePrice: parsed,
-    );
-  }
+  // Success overlay after CTA tap.
+  bool _done = false;
 
-  Future<void> _saveFees(AppDatabase db) async {
-    double? parseNullable(String text) {
-      final trimmed = text.trim();
-      return trimmed.isEmpty ? null : double.tryParse(trimmed);
-    }
-
-    await db.scanItemsDao.setFees(
-      id: widget.scanItemId,
-      fixedFeesSek: parseNullable(_fixedFeesController.text),
-      shippingPaidBySellerSek: parseNullable(_shippingController.text),
-    );
-  }
-
-  Future<void> _saveNotes(AppDatabase db, String text) {
-    return db.scanItemsDao.setNotes(id: widget.scanItemId, notes: text);
-  }
-
-  Future<void> _saveCategory(AppDatabase db, String text) {
-    return db.scanItemsDao.setCategory(id: widget.scanItemId, category: text);
-  }
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
     final userId = ref.watch(activeUserIdProvider);
-    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.itemDetailTitle)),
+      backgroundColor: AppColors.cloudDancer,
       body: SafeArea(
         child: StreamBuilder<ScanItem?>(
           stream: db.scanItemsDao.watchById(widget.scanItemId, userId: userId),
@@ -91,251 +57,147 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final purchase = item.purchasePrice;
-            if (purchase != _lastPurchase) {
-              _lastPurchase = purchase;
-              _purchaseController.text = purchase == null
-                  ? ''
-                  : purchase.toStringAsFixed(purchase % 1 == 0 ? 0 : 2);
+            // Initialise cost from DB once.
+            if (!_costInitialised) {
+              _cost = item.purchasePrice ?? 0;
+              _costInitialised = true;
             }
 
-            final fixedFees = item.fixedFeesSek;
-            if (fixedFees != _lastFixedFees) {
-              _lastFixedFees = fixedFees;
-              _fixedFeesController.text = fixedFees == null
-                  ? ''
-                  : fixedFees.toStringAsFixed(fixedFees % 1 == 0 ? 0 : 2);
-            }
+            final median = item.medianPrice;
+            final adjusted =
+                median == null ? null : median * item.conditionMultiplier;
 
-            final shipping = item.shippingPaidBySellerSek;
-            if (shipping != _lastShipping) {
-              _lastShipping = shipping;
-              _shippingController.text = shipping == null
-                  ? ''
-                  : shipping.toStringAsFixed(shipping % 1 == 0 ? 0 : 2);
-            }
+            // Fee model: 12% platform fee (matches redesign).
+            final fee = adjusted == null ? 0.0 : adjusted * 0.12;
+            final net = adjusted == null ? 0.0 : adjusted - _cost - fee;
+            final roi =
+                _cost > 0 ? ((net / _cost) * 100).round() : 0;
 
-            final category = item.category;
-            if (category != _lastCategory) {
-              _lastCategory = category;
-              _categoryController.text = category ?? '';
-            }
+            // Score: derive from flip factor if no explicit score field.
+            final score = _scoreFromItem(item);
+            final verdict = VerdictExtension.fromScore(score);
 
-            final notes = item.notes;
-            if (notes != _lastNotes) {
-              _lastNotes = notes;
-              _notesController.text = notes ?? '';
-            }
+            // Sold prices for sparkline.
+            final soldPrices = _soldPrices(item);
 
-            final expected = item.medianPrice;
-            final adjustedExpected = expected == null
-                ? null
-                : expected * item.conditionMultiplier;
-            final profit = ProfitCalculator.grossProfit(
-              purchasePrice: purchase,
-              expectedSalePrice: adjustedExpected,
-            );
-            final netProfit = ProfitCalculator.netProfit(
-              purchasePrice: purchase,
-              expectedSalePrice: adjustedExpected,
-              fixedFeesSek: fixedFees ?? 0,
-              shippingPaidBySellerSek: shipping ?? 0,
-            );
-            final grade = (purchase != null && expected != null)
-                ? FlipFactor.grade(
-                    purchasePrice: purchase,
-                    expectedSalePrice: adjustedExpected ?? expected,
-                  )
-                : '—';
+            // Price range.
+            final low = item.minPrice ?? 0.0;
+            final high = item.maxPrice ?? 0.0;
+            final avgPos = (high - low) > 0
+                ? ((adjusted ?? low) - low) / (high - low)
+                : 0.5;
 
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+            return Stack(
               children: [
-                BentoCard(
-                  onTap: () {},
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: item.thumbPath == null
-                            ? Container(
-                                width: 72,
-                                height: 72,
-                                color: AppColors.surface,
-                                alignment: Alignment.center,
-                                child: const Icon(Icons.image_rounded),
-                              )
-                            : Image.file(
-                                File(item.thumbPath!),
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
-                                cacheWidth: 144,
-                                cacheHeight: 144,
-                                errorBuilder: (context, _, _) {
-                                  return Container(
-                                    width: 72,
-                                    height: 72,
-                                    color: AppColors.surface,
-                                    alignment: Alignment.center,
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
+                Column(
+                  children: [
+                    // ── Top bar ──────────────────────────────────
+                    _TopBar(
+                      saved: _saved,
+                      onBack: () => Navigator.of(context).pop(),
+                      onSave: () => setState(() => _saved = !_saved),
+                    ),
+
+                    // ── Scrollable content ───────────────────────
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.xs,
+                          AppSpacing.md,
+                          130,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item.desc ??
-                                  item.query ??
-                                  l10n.itemDetailUnnamedItem,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            // Book hero.
+                            _BookHero(item: item),
+                            const SizedBox(height: AppSpacing.md),
+
+                            // Verdict hero.
+                            VerdictHero(
+                              verdict: verdict,
+                              possibleProfit: net,
+                              scoreWidget: ScoreRing(
+                                score: score,
+                                size: 96,
+                                color: verdict.ringColor,
+                              ),
                             ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              l10n.itemDetailStatusValue(item.status.name),
-                              style: Theme.of(context).textTheme.bodyMedium,
+                            const SizedBox(height: AppSpacing.md),
+
+                            // Cost stepper.
+                            _CostStepperCard(
+                              cost: _cost,
+                              net: net,
+                              roi: roi,
+                              item: item,
+                              onCostChanged: (v) async {
+                                setState(() => _cost = v);
+                                await db.scanItemsDao.setPurchasePrice(
+                                  id: item.id,
+                                  purchasePrice: v,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+
+                            // Market price card.
+                            if (median != null)
+                              _MarketPriceCard(
+                                avg: adjusted ?? median,
+                                low: low,
+                                high: high,
+                                avgPos: avgPos.clamp(0.0, 1.0),
+                                soldPrices: soldPrices,
+                                item: item,
+                              ),
+                            if (median != null) const SizedBox(height: AppSpacing.md),
+
+                            // Full market widget (sync, keywords, etc.).
+                            MarketStatsWidget(item: item, db: db),
+                            const SizedBox(height: AppSpacing.md),
+
+                            // Condition adjuster.
+                            _ConditionCard(
+                              item: item,
+                              onChanged: (v) async {
+                                await db.scanItemsDao.setConditionMultiplier(
+                                  id: item.id,
+                                  conditionMultiplier: v,
+                                );
+                              },
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+
+                // ── CTA bar ──────────────────────────────────────
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _CtaBar(
+                    verdict: verdict,
+                    cost: _cost,
+                    onBuy: () async {
+                      final nav = Navigator.of(context);
+                      await HapticFeedback.lightImpact();
+                      if (!mounted) return;
+                      setState(() => _done = true);
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 1500),
+                      );
+                      if (mounted) nav.pop();
+                    },
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                MarketStatsWidget(item: item, db: db),
-                const SizedBox(height: AppSpacing.lg),
-                BentoCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.itemDetailProfitTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextField(
-                        controller: _purchaseController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailPurchasePriceLabel,
-                        ),
-                        onSubmitted: (v) => _savePurchasePrice(db, v),
-                        onEditingComplete: () =>
-                            _savePurchasePrice(db, _purchaseController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _fixedFeesController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: InputDecoration(
-                                labelText: l10n.itemDetailFixedFeesLabel,
-                              ),
-                              onSubmitted: (_) => _saveFees(db),
-                              onEditingComplete: () => _saveFees(db),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: TextField(
-                              controller: _shippingController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: InputDecoration(
-                                labelText: l10n.itemDetailShippingSellerLabel,
-                              ),
-                              onSubmitted: (_) => _saveFees(db),
-                              onEditingComplete: () => _saveFees(db),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      ConditionAdjuster(
-                        value: item.conditionMultiplier,
-                        onChanged: (v) async {
-                          await db.scanItemsDao.setConditionMultiplier(
-                            id: item.id,
-                            conditionMultiplier: v,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextField(
-                        controller: _categoryController,
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailCategoryLabel,
-                          hintText: l10n.itemDetailCategoryHint,
-                        ),
-                        textInputAction: TextInputAction.next,
-                        onSubmitted: (v) => _saveCategory(db, v),
-                        onEditingComplete: () =>
-                            _saveCategory(db, _categoryController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: l10n.itemDetailNotesLabel,
-                          hintText: l10n.itemDetailNotesHint,
-                        ),
-                        onSubmitted: (v) => _saveNotes(db, v),
-                        onEditingComplete: () =>
-                            _saveNotes(db, _notesController.text),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: StatLine(
-                              label: 'Expected',
-                              value: _formatSek(adjustedExpected),
-                            ),
-                          ),
-                          Expanded(
-                            child: StatLine(
-                              label: 'Gross',
-                              value: profit == null ? '—' : _formatSek(profit),
-                            ),
-                          ),
-                          Expanded(
-                            child: StatLine(
-                              label: 'Net (est.)',
-                              value: netProfit == null
-                                  ? '—'
-                                  : _formatSek(netProfit),
-                              emphasize: true,
-                            ),
-                          ),
-                          Expanded(
-                            child: StatLine(label: 'Flip', value: grade),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+
+                // ── Success overlay ──────────────────────────────
+                if (_done) _SuccessOverlay(title: item.desc ?? item.query),
               ],
             );
           },
@@ -345,8 +207,730 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 }
 
-String _formatSek(double? value) {
-  if (value == null) return '—';
-  final v = value.round();
-  return '$v SEK';
+// ── Helpers ──────────────────────────────────────────────────
+
+int _scoreFromItem(ScanItem item) {
+  final purchase = item.purchasePrice;
+  final median = item.medianPrice;
+  if (purchase == null || median == null || purchase <= 0) return 0;
+  final ratio = median / purchase;
+  // Map ratio to 0–100.
+  if (ratio < 1.0) return ((ratio * 40).clamp(0, 39)).round();
+  if (ratio < 1.3) return (40 + ((ratio - 1.0) / 0.3) * 29).round();
+  if (ratio < 2.0) return (69 + ((ratio - 1.3) / 0.7) * 21).round();
+  return 90 + math.min(10, ((ratio - 2.0) * 5).round());
+}
+
+List<double> _soldPrices(ScanItem item) {
+  final median = item.medianPrice;
+  final min = item.minPrice;
+  final max = item.maxPrice;
+  if (median == null) return const [];
+  // Synthesise a sparkline from min/median/max if no raw history.
+  return [
+    min ?? median * 0.7,
+    median * 0.85,
+    median,
+    median * 1.1,
+    max ?? median * 1.3,
+  ];
+}
+
+// ── Sub-widgets ──────────────────────────────────────────────
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.saved,
+    required this.onBack,
+    required this.onSave,
+  });
+  final bool saved;
+  final VoidCallback onBack;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          _IconBtn(
+            icon: Icons.arrow_back_rounded,
+            onTap: onBack,
+            semanticLabel: MaterialLocalizations.of(context).backButtonTooltip,
+          ),
+          Expanded(
+            child: Text(
+              l10n.itemDetailTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: AppColors.inkDeep,
+              ),
+            ),
+          ),
+          _IconBtn(
+            icon: saved ? Icons.star_rounded : Icons.star_border_rounded,
+            onTap: onSave,
+            color: saved ? AppColors.mustard : AppColors.inkDeep,
+            semanticLabel: l10n.commonSave,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({
+    required this.icon,
+    required this.onTap,
+    required this.semanticLabel,
+    this.color,
+  });
+  final IconData icon;
+  final VoidCallback onTap;
+  final String semanticLabel;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        onTap: onTap,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.borderSubtle),
+            color: AppColors.card,
+          ),
+          child: Icon(
+            icon,
+            size: 22,
+            color: color ?? AppColors.inkDeep,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BookHero extends StatelessWidget {
+  const _BookHero({required this.item});
+  final ScanItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = item.desc ?? item.query ?? '—';
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Cover — typographic or photo.
+        item.thumbPath != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: Image.file(
+                  File(item.thumbPath!),
+                  width: 96,
+                  height: 144,
+                  fit: BoxFit.cover,
+                   errorBuilder: (ctx, err, st) => BookCover(
+                    title: title,
+                    author: '',
+                    width: 96,
+                  ),
+                ),
+              )
+            : BookCover(title: title, author: '', width: 96),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: AppTypography.uiFontFamily,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    color: AppColors.inkDeep,
+                    height: 1.1,
+                    letterSpacing: -0.02,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  item.query ?? '',
+                  style: TextStyle(
+                    fontFamily: AppTypography.uiFontFamily,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CostStepperCard extends StatelessWidget {
+  const _CostStepperCard({
+    required this.cost,
+    required this.net,
+    required this.roi,
+    required this.item,
+    required this.onCostChanged,
+  });
+  final double cost;
+  final double net;
+  final int roi;
+  final ScanItem item;
+  final ValueChanged<double> onCostChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.borderSubtle),
+        boxShadow: AppShadows.bento,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ditt loppispris',
+                      style: TextStyle(
+                        fontFamily: AppTypography.uiFontFamily,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: AppColors.inkDeep,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      'Justera för exakt vinst',
+                      style: TextStyle(
+                        fontFamily: AppTypography.uiFontFamily,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Stepper buttons.
+              _StepBtn(
+                label: '–',
+                onTap: () => onCostChanged(math.max(0, cost - 5)),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              SizedBox(
+                width: 72,
+                child: Text(
+                  '${cost.round()} kr',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.metricsFontFamily,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 24,
+                    color: AppColors.inkDeep,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _StepBtn(
+                label: '+',
+                onTap: () => onCostChanged(cost + 5),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              _MiniMetric(
+                value: '${net >= 0 ? '+' : ''}${net.round()} kr',
+                label: 'Nettovinst',
+                color: net > 0 ? AppColors.sageDeep : AppColors.copperOak,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _MiniMetric(
+                value: '$roi%',
+                label: 'ROI',
+                color: AppColors.inkDeep,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _MiniMetric(
+                value: item.medianPrice != null ? '~7 dgr' : '—',
+                label: 'Säljtid',
+                color: AppColors.atmosphericFog,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepBtn extends StatelessWidget {
+  const _StepBtn({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderSubtle),
+          color: AppColors.clay,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: AppTypography.metricsFontFamily,
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            color: AppColors.inkDeep,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniMetric extends StatelessWidget {
+  const _MiniMetric({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+  final String value;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.clay,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: AppTypography.metricsFontFamily,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w500,
+                fontSize: 11,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MarketPriceCard extends StatelessWidget {
+  const _MarketPriceCard({
+    required this.avg,
+    required this.low,
+    required this.high,
+    required this.avgPos,
+    required this.soldPrices,
+    required this.item,
+  });
+  final double avg, low, high, avgPos;
+  final List<double> soldPrices;
+  final ScanItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.borderSubtle),
+        boxShadow: AppShadows.bento,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Marknadspris',
+                      style: TextStyle(
+                        fontFamily: AppTypography.uiFontFamily,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: AppColors.inkDeep,
+                      ),
+                    ),
+                    Text(
+                      'Senast sålda',
+                      style: TextStyle(
+                        fontFamily: AppTypography.uiFontFamily,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${avg.round()} kr',
+                    style: TextStyle(
+                      fontFamily: AppTypography.metricsFontFamily,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 28,
+                      color: AppColors.inkDeep,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  Text(
+                    'snittpris',
+                    style: TextStyle(
+                      fontFamily: AppTypography.uiFontFamily,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (soldPrices.length >= 2)
+            SparklineChart(
+              prices: soldPrices,
+              color: AppColors.sageDeep,
+              height: 50,
+            ),
+          const SizedBox(height: AppSpacing.md),
+          // Range bar.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 6,
+                    child: Stack(
+                      children: [
+                        // Track.
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: AppColors.clay,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        // Gradient fill.
+                        Positioned(
+                          left: w * 0.08,
+                          right: w * 0.08,
+                          top: 0,
+                          bottom: 0,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0x66CB8573),
+                                  Color(0x995E7D6F),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                        // Avg dot.
+                        Positioned(
+                          left: w * avgPos - 6,
+                          top: -3,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: AppColors.inkDeep,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.card,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Lägst ${low.round()} kr',
+                        style: TextStyle(
+                          fontFamily: AppTypography.metricsFontFamily,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      Text(
+                        'Högst ${high.round()} kr',
+                        style: TextStyle(
+                          fontFamily: AppTypography.metricsFontFamily,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConditionCard extends StatelessWidget {
+  const _ConditionCard({required this.item, required this.onChanged});
+  final ScanItem item;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.borderSubtle),
+        boxShadow: AppShadows.bento,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppLocalizations.of(context)!.itemDetailConditionTitle,
+            style: TextStyle(
+              fontFamily: AppTypography.uiFontFamily,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: AppColors.inkDeep,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ConditionAdjuster(
+            value: item.conditionMultiplier,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CtaBar extends StatelessWidget {
+  const _CtaBar({
+    required this.verdict,
+    required this.cost,
+    required this.onBuy,
+  });
+  final Verdict verdict;
+  final double cost;
+  final VoidCallback onBuy;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSkip = verdict == Verdict.skip;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.lg,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.cloudDancer.withValues(alpha: 0),
+            AppColors.cloudDancer.withValues(alpha: 0.95),
+          ],
+        ),
+      ),
+      child: FilledButton(
+        onPressed: onBuy,
+        style: FilledButton.styleFrom(
+          backgroundColor:
+              isSkip ? AppColors.inkDeep : AppColors.dopamineRed,
+          minimumSize: const Size.fromHeight(56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          elevation: isSkip ? 0 : 6,
+          shadowColor: AppColors.inkDeep.withValues(alpha: 0.26),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.shopping_bag_outlined, size: 21),
+            const SizedBox(width: 9),
+            Text(
+              isSkip
+                  ? 'Lägg till ändå'
+                  : 'Köp för ${cost.round()} kr',
+              style: const TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                letterSpacing: 0.01,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SuccessOverlay extends StatelessWidget {
+  const _SuccessOverlay({required this.title});
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.cloudDancer.withValues(alpha: 0.96),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.3, end: 1.0),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.elasticOut,
+              builder: (_, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: AppColors.eucalyptus,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 48,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Tillagd i lager',
+              style: TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: 22,
+                color: AppColors.inkDeep,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title ?? '',
+              style: TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w500,
+                fontSize: 14.5,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

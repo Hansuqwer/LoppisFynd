@@ -109,6 +109,7 @@ Future<void> _bootstrapAndRun(AppConfig config) async {
       ? MarketBridge(
           tradera: TraderaClient(
             functionUrl: Uri.parse(config.traderaProxyUrl),
+            anonKey: config.hasSupabase ? config.supabaseAnonKey : null,
           ),
           db: db,
         )

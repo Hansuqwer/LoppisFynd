@@ -44,6 +44,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   static const _kDevModeTapTargetKey = Key('settings_dev_mode_tap_target');
 
+  bool _bulkEnriching = false;
+
   @override
   void initState() {
     super.initState();
@@ -99,6 +101,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _syncNow() => ref.read(syncNowProvider.notifier).run();
 
   void _cloudSyncNow() => ref.read(cloudSyncNowProvider.notifier).run();
+
+  Future<void> _bulkEnrich() async {
+    if (_bulkEnriching) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final service = ref.read(bulkIsbnEnrichmentServiceProvider);
+    setState(() => _bulkEnriching = true);
+    try {
+      final count = await service.enrichStale();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsBulkEnrichDone(count))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsBulkEnrichFailed('$e'))),
+      );
+    } finally {
+      if (mounted) setState(() => _bulkEnriching = false);
+    }
+  }
 
   void _signOut() => ref.read(signOutProvider.notifier).run();
 
@@ -163,9 +187,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (prev?.isLoading ?? false) {
         next.whenOrNull(
           data: (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.settingsSignedOut)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.settingsSignedOut)));
           },
           error: (e, _) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -208,7 +232,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SettingsModuleCard(
                   icon: Icons.cloud_rounded,
                   title: l10n.settingsModuleSyncDataTitle,
-                  child: _buildSyncModule(context, l10n, db, config, email, syncing, cloudSyncing),
+                  child: _buildSyncModule(
+                    context,
+                    l10n,
+                    db,
+                    config,
+                    email,
+                    syncing,
+                    cloudSyncing,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 SettingsModuleCard(
@@ -350,6 +382,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           label: syncing ? l10n.settingsSyncing : l10n.settingsSyncNow,
           onPressed: syncing ? null : _syncNow,
           icon: const Icon(Icons.sync_rounded),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        GlassButton(
+          label: _bulkEnriching
+              ? l10n.settingsBulkEnriching
+              : l10n.settingsBulkEnrichCta,
+          onPressed: _bulkEnriching ? null : _bulkEnrich,
+          tone: GlassButtonTone.neutral,
+          icon: const Icon(Icons.library_books_outlined),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(

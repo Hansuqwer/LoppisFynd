@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../../core/config/app_config.dart';
@@ -76,6 +77,9 @@ void callbackDispatcher() {
     if (!config.hasTraderaProxy) return true;
 
     final db = AppDatabase.open();
+    final traderaClient = TraderaClient(
+      functionUrl: Uri.parse(config.traderaProxyUrl),
+    );
     try {
       final enabled =
           (await db.appSettingsDao.getInt(
@@ -84,17 +88,18 @@ void callbackDispatcher() {
           1;
       if (enabled != 1) return true;
 
-      final market = MarketBridge(
-        tradera: TraderaClient(functionUrl: Uri.parse(config.traderaProxyUrl)),
-        db: db,
-      );
+      final market = MarketBridge(tradera: traderaClient, db: db);
       final scheduler = SyncScheduler(db: db, market: market);
 
       await scheduler.syncOnce();
       return true;
-    } catch (_) {
+    } catch (e, stack) {
+      try {
+        await Sentry.captureException(e, stackTrace: stack);
+      } catch (_) {}
       return true;
     } finally {
+      traderaClient.close();
       await db.close();
     }
   });

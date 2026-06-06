@@ -2,7 +2,9 @@ import { handleRequest } from "../index.ts";
 
 Deno.test("OPTIONS returns 204 with CORS headers", async () => {
   const resp = await handleRequest(
-    new Request("http://localhost/book-market-aggregator", { method: "OPTIONS" }),
+    new Request("http://localhost/book-market-aggregator", {
+      method: "OPTIONS",
+    }),
   );
 
   if (resp.status !== 204) throw new Error(`expected 204, got ${resp.status}`);
@@ -223,6 +225,140 @@ Deno.test("success path aggregates results from all sources", async () => {
   }
 });
 
+Deno.test("includes optional Adlibris and Blocket when explicitly configured", async () => {
+  const mockFetch = async (url: string | URL | Request) => {
+    const urlStr = typeof url === "string" ? url : url.toString();
+
+    if (urlStr.includes("/tradera-proxy")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              maxBid: 100,
+              isEnded: true,
+              hasBids: true,
+              endDate: "2024-01-15T10:00:00Z",
+              itemLink: "https://tradera.com/item/1",
+              title: "Tradera Book",
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
+
+    if (urlStr.includes("/vinted-scraper")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              platform: "vinted",
+              price: 150,
+              soldAt: "2024-01-16",
+              url: "https://vinted.se/item/1",
+              title: "Vinted Book",
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
+
+    if (urlStr.includes("/bokborsen-scraper")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              platform: "bokborsen",
+              price: 200,
+              soldAt: "2024-01-17",
+              url: "https://bokborsen.se/book/1",
+              title: "Bokbörsen Book",
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
+
+    if (urlStr.includes("/adlibris-scraper")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              platform: "adlibris",
+              price: 80,
+              soldAt: null,
+              url: "https://adlibris.com/item/1",
+              title: "Adlibris Book",
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
+
+    if (urlStr.includes("/blocket-scraper")) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              platform: "blocket",
+              price: 90,
+              soldAt: null,
+              url: "https://blocket.se/item/1",
+              title: "Blocket Book",
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }
+
+    throw new Error(`Unexpected URL: ${urlStr}`);
+  };
+
+  const resp = await handleRequest(
+    new Request("http://localhost/book-market-aggregator", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "test book" }),
+    }),
+    {
+      env: {
+        get: (k: string) => {
+          if (k === "SUPABASE_URL") return "https://test.supabase.co";
+          if (k === "SUPABASE_SERVICE_ROLE_KEY") return "test-key";
+          if (k === "ADLIBRIS_URL") return "https://edge/adlibris-scraper";
+          if (k === "BLOCKET_URL") return "https://edge/blocket-scraper";
+          return undefined;
+        },
+      },
+      fetch: mockFetch,
+    },
+  );
+
+  if (resp.status !== 200) throw new Error(`expected 200, got ${resp.status}`);
+
+  const body = await resp.json();
+  const root = body as Record<string, unknown>;
+  const items = root["items"] as Array<Record<string, unknown>>;
+  if (!Array.isArray(items) || items.length !== 5) {
+    throw new Error(`expected 5 items, got ${items?.length ?? 0}`);
+  }
+
+  const stats = root["stats"] as Record<string, unknown>;
+  if (stats["totalSales"] !== 5) throw new Error("wrong total sales");
+  const sourceCounts = stats["sourceCounts"] as Record<string, number>;
+  if (sourceCounts["adlibris"] !== 1) throw new Error("wrong adlibris count");
+  if (sourceCounts["blocket"] !== 1) throw new Error("wrong blocket count");
+
+  const sources = root["sources"] as Array<Record<string, unknown>>;
+  if (!Array.isArray(sources) || sources.length !== 5) {
+    throw new Error(`expected 5 sources, got ${sources?.length ?? 0}`);
+  }
+});
+
 Deno.test("handles partial source failures gracefully", async () => {
   const mockFetch = async (url: string | URL | Request) => {
     const urlStr = typeof url === "string" ? url : url.toString();
@@ -297,7 +433,9 @@ Deno.test("handles partial source failures gracefully", async () => {
 
   const items = root["items"] as Array<Record<string, unknown>>;
   if (!Array.isArray(items) || items.length !== 2) {
-    throw new Error(`expected 2 items (vinted failed), got ${items?.length ?? 0}`);
+    throw new Error(
+      `expected 2 items (vinted failed), got ${items?.length ?? 0}`,
+    );
   }
 
   // Check sources array shows error for vinted
@@ -308,7 +446,9 @@ Deno.test("handles partial source failures gracefully", async () => {
 
   const vintedSource = sources.find((s) => s["source"] === "vinted");
   if (!vintedSource) throw new Error("missing vinted source");
-  if (vintedSource["count"] !== 0) throw new Error("vinted should have 0 items");
+  if (vintedSource["count"] !== 0) {
+    throw new Error("vinted should have 0 items");
+  }
   if (!vintedSource["error"]) throw new Error("vinted should have error");
 });
 
@@ -404,5 +544,7 @@ Deno.test("deduplicates items with same price, date, and URL", async () => {
   }
 
   const stats = root["stats"] as Record<string, unknown>;
-  if (stats["totalSales"] !== 2) throw new Error("wrong total sales after dedup");
+  if (stats["totalSales"] !== 2) {
+    throw new Error("wrong total sales after dedup");
+  }
 });

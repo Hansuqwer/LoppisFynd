@@ -2959,6 +2959,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg sell'**
   String get inventoryAvgSell;
+
+  /// No description provided for @homeRecentScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent scans'**
+  String get homeRecentScans;
+
+  /// No description provided for @findsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot Finds'**
+  String get findsTitle;
+
+  /// No description provided for @findsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Items with high demand right now. Keep an eye out at the flea market.'**
+  String get findsSubtitle;
+
+  /// No description provided for @settingsAdlibrisScraperConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Adlibris scraper configured.'**
+  String get settingsAdlibrisScraperConfigured;
+
+  /// No description provided for @settingsAdlibrisScraperNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Adlibris scraper not configured.'**
+  String get settingsAdlibrisScraperNotConfigured;
+
+  /// No description provided for @settingsBulkEnrichCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch market data for all books'**
+  String get settingsBulkEnrichCta;
+
+  /// No description provided for @settingsBulkEnriching.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching…'**
+  String get settingsBulkEnriching;
+
+  /// No description provided for @settingsBulkEnrichDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {count} books.'**
+  String settingsBulkEnrichDone(int count);
+
+  /// No description provided for @settingsBulkEnrichFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String settingsBulkEnrichFailed(String error);
 }
 
 class _AppLocalizationsDelegate

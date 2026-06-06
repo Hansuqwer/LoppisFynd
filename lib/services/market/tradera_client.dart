@@ -25,6 +25,10 @@ class TraderaClient {
   final Duration _timeout;
   final int _maxAttempts;
 
+  void close() {
+    _httpClient.close();
+  }
+
   Future<TraderaProxyResponse> searchEnded({
     required String searchWords,
     int itemsPerPage = 50,

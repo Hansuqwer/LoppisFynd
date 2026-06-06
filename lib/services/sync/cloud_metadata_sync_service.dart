@@ -189,17 +189,25 @@ class CloudMetadataSyncService {
       throw const _CloudSyncNotSignedIn();
     }
 
-    final haulsResp = await client
-        .from('hauls')
-        .select()
-        .eq('user_id', user.id)
-        .order('updated_at', ascending: false);
+    var haulsQuery = client.from('hauls').select().eq('user_id', user.id);
 
-    final scanResp = await client
-        .from('scan_items')
-        .select()
-        .eq('user_id', user.id)
-        .order('updated_at', ascending: false);
+    if (lastSync != null) {
+      haulsQuery = haulsQuery.gte('updated_at', lastSync.toIso8601String());
+    }
+
+    final haulsResp = await haulsQuery
+        .order('updated_at', ascending: false)
+        .limit(100);
+
+    var scanQuery = client.from('scan_items').select().eq('user_id', user.id);
+
+    if (lastSync != null) {
+      scanQuery = scanQuery.gte('updated_at', lastSync.toIso8601String());
+    }
+
+    final scanResp = await scanQuery
+        .order('updated_at', ascending: false)
+        .limit(100);
 
     final hauls = _asList(haulsResp);
     for (final rowAny in hauls) {

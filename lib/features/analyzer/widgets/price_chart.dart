@@ -60,10 +60,8 @@ class PriceChart extends StatelessWidget {
         spots.add(FlSpot(i.toDouble(), sales[i].priceSek));
       }
 
-      final minY =
-          sales.map((p) => p.priceSek).reduce((a, b) => a < b ? a : b);
-      final maxY =
-          sales.map((p) => p.priceSek).reduce((a, b) => a > b ? a : b);
+      final minY = sales.map((p) => p.priceSek).reduce((a, b) => a < b ? a : b);
+      final maxY = sales.map((p) => p.priceSek).reduce((a, b) => a > b ? a : b);
 
       return SizedBox(
         height: 160,

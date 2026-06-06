@@ -6,7 +6,7 @@ class ScannerBookIsbnHandoffController {
     required BookScannerIsbnHandoffCoordinator coordinator,
     Duration cooldown = const Duration(seconds: 3),
   }) : _coordinator = coordinator,
-        _cooldown = cooldown;
+       _cooldown = cooldown;
 
   final BookScannerIsbnHandoffCoordinator _coordinator;
   final Duration _cooldown;

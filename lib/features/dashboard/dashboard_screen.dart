@@ -6,12 +6,14 @@ import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
-import '../../shared/widgets/bento_card.dart';
-import '../../shared/widgets/glass_board.dart';
 import '../../gen/app_localizations.dart';
-import '../summary/haul_summary_screen.dart';
-import '../drafts/drafts_screen.dart';
+import '../../shared/widgets/bars_chart.dart';
+import '../../shared/widgets/book_cover.dart';
+import '../../shared/widgets/stat_pill.dart';
+import '../../shared/widgets/verdict_chip.dart';
+import '../analyzer/item_detail_screen.dart';
 import '../analyzer/profit_calculator.dart';
+import '../summary/haul_summary_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -26,245 +28,113 @@ class DashboardScreen extends ConsumerWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
           AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          0,
+          AppSpacing.md,
+          AppSpacing.xxxl,
         ),
-        child: StackedBackplates(
-          child: GlassBoard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
+        child: StreamBuilder<List<ScanItem>>(
+          stream: db.scanItemsDao.watchByHaulId(
+            defaultHaulId,
+            userId: userId,
+          ),
+          builder: (context, snapshot) {
+            final items = snapshot.data ?? const <ScanItem>[];
+            final bought = items
+                .where((i) => i.purchasePrice != null)
+                .length;
+            final sold = 0; // Placeholder — add sold status when available.
+            final weekProfit = _estimateNetProfit(items) ?? 0.0;
+
+            // Weekly day distribution (mock until real per-day data lands).
+            final weekDaily = _weekDailyMock(weekProfit);
+
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.dashboardTitle,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: null,
-                      icon: const Icon(Icons.notifications_none_rounded),
-                      color: AppColors.inkDeep.withValues(alpha: 0.70),
-                    ),
-                  ],
-                ),
+                // ── Screen header ──────────────────────────────
+                _ScreenHeader(l10n: l10n),
                 const SizedBox(height: AppSpacing.md),
-                _HeroCtaCard(
-                  title: l10n.homeHeroTitle,
-                  body: l10n.homeHeroBody,
-                  onTap: () {
-                    ref.read(deepLinkTabIndexProvider.notifier).set(1);
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                StreamBuilder<List<ScanItem>>(
-                  stream: db.scanItemsDao.watchByHaulId(
-                    defaultHaulId,
-                    userId: userId,
+
+                // ── Hero profit card ───────────────────────────
+                _HeroCard(
+                  weekProfit: weekProfit,
+                  weekDaily: weekDaily,
+                  onTap: () => Navigator.of(context).push(
+                    SpringRoute(
+                      builder: (_) => HaulSummaryScreen(haulId: defaultHaulId),
+                    ),
                   ),
-                  builder: (context, snapshot) {
-                    final items = snapshot.data ?? const <ScanItem>[];
-                    final profit = _estimateNetProfit(items);
-                    final profitText = profit == null
-                        ? '—'
-                        : '${_formatSek(profit, locale: intl.Intl.getCurrentLocale())} kr';
+                ),
+                const SizedBox(height: AppSpacing.sm),
 
-                    final tileAspectRatio = _homeTileAspectRatio(context);
-
-                    return GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisSpacing: AppSpacing.md,
-                      childAspectRatio: tileAspectRatio,
-                      children: [
-                        _HomeTile(
-                          icon: Icons.shopping_bag_outlined,
-                          title: l10n.homeTileActiveFinds,
-                          value: '${items.length}',
-                          onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).set(
-                                2);
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.trending_up_rounded,
-                          title: l10n.homeTileProfitEst,
-                          value: profitText,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SpringRoute(
-                                builder: (_) =>
-                                    HaulSummaryScreen(haulId: defaultHaulId),
-                              ),
-                            );
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.bookmark_border_rounded,
-                          title: l10n.commonSave,
-                          subtitle: l10n.homeTileDrafts,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SpringRoute(builder: (_) => const DraftsScreen()),
-                            );
-                          },
-                        ),
-                        _HomeTile(
-                          icon: Icons.history_toggle_off_rounded,
-                          title: l10n.homeTileHistory,
-                          subtitle: l10n.homeTileCtaSeeAll,
-                          onTap: () {
-                            ref.read(deepLinkTabIndexProvider.notifier).set(
-                                3);
-                          },
-                        ),
-                      ],
-                    );
-                  },
+                // ── Quick stat pills ───────────────────────────
+                _StatRow(
+                  scanned: items.length,
+                  bought: bought,
+                  sold: sold,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _HeroCtaCard extends StatelessWidget {
-  const _HeroCtaCard({
-    required this.title,
-    required this.body,
-    required this.onTap,
-  });
-
-  final String title;
-  final String body;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.lg);
-
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.dopamineRed,
-              AppColors.terracottaClay.withValues(alpha: 0.96),
-            ],
-          ),
-          borderRadius: borderRadius,
-          border: Border.all(color: AppColors.borderSubtle),
-          boxShadow: AppShadows.bento,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: borderRadius,
-            onTap: onTap,
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -44,
-                  top: -44,
-                  child: Container(
-                    width: 180,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      color: AppColors.textOnPrimary.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
+                // ── Recent scans ───────────────────────────────
+                if (items.isNotEmpty) ...[
+                  Text(
+                    l10n.homeRecentScans,
+                    style: TextStyle(
+                      fontFamily: AppTypography.uiFontFamily,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.inkDeep,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.textOnPrimary,
-                                  ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              body,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: AppColors.textOnPrimary.withValues(
-                                      alpha: 0.88,
-                                    ),
-                                  ),
-                            ),
-                          ],
+                  const SizedBox(height: AppSpacing.xs),
+                  ...items.take(6).map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 9),
+                    child: _ScanRow(
+                      item: item,
+                      onTap: () => Navigator.of(context).push(
+                        SpringRoute(
+                          builder: (_) =>
+                              ItemDetailScreen(scanItemId: item.id),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: AppColors.textOnPrimary.withValues(
-                            alpha: 0.16,
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                          border: Border.all(
-                            color: AppColors.textOnPrimary.withValues(
-                              alpha: 0.22,
-                            ),
+                    ),
+                  )),
+                ] else ...[
+                  // Empty state.
+                  const SizedBox(height: AppSpacing.xl),
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner_rounded,
+                          size: 56,
+                          color: AppColors.inkDeep.withValues(alpha: 0.18),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          l10n.scannerNoScansYet,
+                          style: TextStyle(
+                            fontFamily: AppTypography.uiFontFamily,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: AppColors.textMuted,
                           ),
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          child: Icon(
-                            Icons.qr_code_scanner_rounded,
-                            size: 40,
-                            color: AppColors.textOnPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-String _formatSek(double value, {required String locale}) {
-  final f = intl.NumberFormat.decimalPattern(locale);
-  return f.format(value.round());
-}
-
-double _homeTileAspectRatio(BuildContext context) {
-  final scale = MediaQuery.textScalerOf(context).scale(1.0);
-
-  // Give tiles a bit more vertical room when users increase text size.
-  if (scale >= 1.25) return 0.88;
-  if (scale >= 1.15) return 0.93;
-  return 0.98;
-}
+// ── Helpers ──────────────────────────────────────────────────
 
 double? _estimateNetProfit(List<ScanItem> items) {
   var any = false;
@@ -286,111 +156,343 @@ double? _estimateNetProfit(List<ScanItem> items) {
   return any ? total : null;
 }
 
-class _HomeTile extends StatelessWidget {
-  const _HomeTile({
-    required this.icon,
-    required this.title,
-    this.value,
-    this.subtitle,
-    this.onTap,
-  });
+List<double> _weekDailyMock(double total) {
+  // Split total into 7 day-ish values for the bar chart.
+  if (total <= 0) return List.filled(7, 0);
+  final slice = total / 7;
+  return [
+    slice * 0.6,
+    0,
+    slice * 1.4,
+    slice * 0.8,
+    slice * 2.1,
+    slice * 1.2,
+    slice,
+  ];
+}
 
-  final IconData icon;
-  final String title;
-  final String? value;
-  final String? subtitle;
-  final VoidCallback? onTap;
+String _formatSek(double value) {
+  final f = intl.NumberFormat.decimalPattern(
+    intl.Intl.getCurrentLocale(),
+  );
+  return f.format(value.round());
+}
+
+// ── Sub-widgets ──────────────────────────────────────────────
+
+class _ScreenHeader extends StatelessWidget {
+  const _ScreenHeader({required this.l10n});
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    final valueText = value;
-
-    final mq = MediaQuery.of(context);
-    final textScale = mq.textScaler.scale(1.0);
-    final isCompact = mq.size.width < 380 || textScale >= 1.15;
-
-    final tilePadding = isCompact
-        ? const EdgeInsets.all(AppSpacing.md)
-        : const EdgeInsets.all(AppSpacing.lg);
-    final iconBox = isCompact ? 32.0 : 34.0;
-    final iconSize = isCompact ? 16.0 : 18.0;
-    final iconToTextGap = AppSpacing.sm;
-    final textGap = AppSpacing.xxs;
-
-    final titleStyle =
-        (isCompact
-                ? Theme.of(context).textTheme.bodyMedium
-                : Theme.of(context).textTheme.bodyLarge)
-            ?.copyWith(fontWeight: FontWeight.w800);
-
-    final valueBaseStyle =
-        (isCompact
-                ? Theme.of(context).textTheme.titleLarge
-                : Theme.of(context).textTheme.headlineSmall)
-            ?.copyWith(fontWeight: FontWeight.w900);
-
-    return BentoCard(
-      backgroundColor: AppColors.textOnPrimary.withValues(alpha: 0.34),
-      padding: tilePadding,
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: iconBox,
-            height: iconBox,
-            decoration: BoxDecoration(
-              color: AppColors.textOnPrimary.withValues(alpha: 0.52),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: AppColors.borderSubtle),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: iconSize,
-              color: AppColors.inkDeep.withValues(alpha: 0.82),
-            ),
-          ),
-          SizedBox(height: iconToTextGap),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: titleStyle,
-          ),
-          if (valueText != null) ...[
-            SizedBox(height: textGap),
-            Flexible(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    valueText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.metricsFrom(
-                      valueBaseStyle ?? const TextStyle(),
-                    ),
-                  ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'loppisfynd',
+                style: TextStyle(
+                  fontFamily: AppTypography.accentFontFamily,
+                  fontSize: 15,
+                  color: AppColors.terracottaClay,
+                  height: 1.0,
                 ),
               ),
-            ),
-          ] else if (subtitle != null) ...[
-            SizedBox(height: textGap),
-            Flexible(
-              child: Text(
-                subtitle!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+              const SizedBox(height: 6),
+              Text(
+                l10n.dashboardTitle,
+                style: const TextStyle(
+                  fontFamily: AppTypography.uiFontFamily,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 30,
+                  letterSpacing: -0.03,
+                  color: AppColors.inkDeep,
+                  height: 1.0,
+                ),
               ),
+            ],
+          ),
+        ),
+        // Avatar initial.
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.clay,
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            'E',
+            style: TextStyle(
+              fontFamily: AppTypography.uiFontFamily,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: AppColors.inkDeep,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.weekProfit,
+    required this.weekDaily,
+    required this.onTap,
+  });
+  final double weekProfit;
+  final List<double> weekDaily;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.inkDeep,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x471E2B3C),
+              blurRadius: 40,
+              offset: Offset(0, 18),
+              spreadRadius: -6,
             ),
           ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Veckans vinst',
+                        style: TextStyle(
+                          fontFamily: AppTypography.uiFontFamily,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: AppColors.cloudDancer.withValues(alpha: 0.60),
+                          letterSpacing: 0.02,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            _formatSek(weekProfit),
+                            style: const TextStyle(
+                              fontFamily: AppTypography.metricsFontFamily,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 40,
+                              color: AppColors.cloudDancer,
+                              letterSpacing: -0.02,
+                              height: 1.0,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'kr',
+                            style: TextStyle(
+                              fontFamily: AppTypography.metricsFontFamily,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 18,
+                              color: AppColors.cloudDancer.withValues(alpha: 0.60),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            BarsChart(
+              data: weekDaily,
+              color: AppColors.cloudDancer,
+              accentColor: AppColors.dopamineRed,
+              accentLast: true,
+              height: 44,
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: ['M', 'T', 'O', 'T', 'F', 'L', 'S']
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => Expanded(
+                      child: Text(
+                        e.value,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.uiFontFamily,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10.5,
+                          color: e.key == 6
+                              ? AppColors.terracottaClay
+                              : AppColors.cloudDancer.withValues(alpha: 0.40),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({
+    required this.scanned,
+    required this.bought,
+    required this.sold,
+  });
+  final int scanned, bought, sold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.xs,
+        horizontal: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.borderSubtle),
+        boxShadow: AppShadows.bento,
+      ),
+      child: Row(
+        children: [
+          StatPill(
+            value: '$scanned',
+            label: 'Skannade',
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: AppColors.borderSubtle,
+          ),
+          StatPill(
+            value: '$bought',
+            label: 'Köpta',
+            valueColor: AppColors.copperOak,
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: AppColors.borderSubtle,
+          ),
+          StatPill(
+            value: '$sold',
+            label: 'Sålda',
+            valueColor: AppColors.sageDeep,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ScanRow extends StatelessWidget {
+  const _ScanRow({required this.item, required this.onTap});
+  final ScanItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = (item.desc ?? item.query ?? '—').trim();
+    final median = item.medianPrice;
+    final purchase = item.purchasePrice;
+
+    // Derive verdict for the chip.
+    int score = 0;
+    if (purchase != null && median != null && purchase > 0) {
+      final ratio = median / purchase;
+      if (ratio >= 1.8) {
+        score = 80;
+      } else if (ratio >= 1.3) {
+        score = 60;
+      } else if (ratio >= 1.0) {
+        score = 45;
+      }
+    }
+    final verdict = VerdictExtension.fromScore(score);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.borderSubtle),
+          boxShadow: AppShadows.bento,
+        ),
+        child: Row(
+          children: [
+            BookCover(
+              title: title,
+              author: '',
+              width: 40,
+              style: BookCoverStyle.sapphire,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: AppTypography.uiFontFamily,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.5,
+                      color: AppColors.inkDeep,
+                    ),
+                  ),
+                  if (median != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Snitt ${median.round()} kr',
+                      style: TextStyle(
+                        fontFamily: AppTypography.metricsFontFamily,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12.5,
+                        color: AppColors.textMuted,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (purchase != null) VerdictChip(verdict: verdict),
+          ],
+        ),
       ),
     );
   }

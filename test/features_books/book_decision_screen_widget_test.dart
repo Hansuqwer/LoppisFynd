@@ -60,11 +60,7 @@ void main() {
         salesPerMonth: 1.5,
       );
 
-      await db.booksDao.setPurchasePrice(
-        id: bookId,
-        priceSek: 50,
-        saved: true,
-      );
+      await db.booksDao.setPurchasePrice(id: bookId, priceSek: 50, saved: true);
 
       await tester.pumpWidget(_wrap(db: db, bookId: bookId));
       await tester.pumpAndSettle(const Duration(seconds: 2));

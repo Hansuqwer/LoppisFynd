@@ -20,9 +20,9 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
-      fontWeight: FontWeight.w900,
-    );
+    final titleStyle = Theme.of(
+      context,
+    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,

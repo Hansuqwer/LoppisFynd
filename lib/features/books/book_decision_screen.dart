@@ -110,7 +110,8 @@ class _BookCoverSection extends StatelessWidget {
                     child: Image.network(
                       coverUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _BookPlaceholder(),
+                      errorBuilder: (context, error, stackTrace) =>
+                          _BookPlaceholder(),
                     ),
                   )
                 : _BookPlaceholder(),

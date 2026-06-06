@@ -11,6 +11,8 @@ class AppConfig {
     this.apifyApiToken = '',
     this.vintedScraperActorId = '',
     this.bokborsenScraperUrl = '',
+    this.adlibrisScraperUrl = '',
+    this.blocketScraperUrl = '',
     this.bookMarketAggregatorUrl = '',
   });
 
@@ -25,6 +27,8 @@ class AppConfig {
   final String apifyApiToken;
   final String vintedScraperActorId;
   final String bokborsenScraperUrl;
+  final String adlibrisScraperUrl;
+  final String blocketScraperUrl;
   final String bookMarketAggregatorUrl;
 
   factory AppConfig.fromEnvironment() {
@@ -64,6 +68,14 @@ class AppConfig {
         'BOKBORSEN_SCRAPER_URL',
         defaultValue: '',
       ),
+      adlibrisScraperUrl: String.fromEnvironment(
+        'ADLIBRIS_SCRAPER_URL',
+        defaultValue: '',
+      ),
+      blocketScraperUrl: String.fromEnvironment(
+        'BLOCKET_SCRAPER_URL',
+        defaultValue: '',
+      ),
       bookMarketAggregatorUrl: String.fromEnvironment(
         'BOOK_MARKET_AGGREGATOR_URL',
         defaultValue: '',
@@ -91,6 +103,10 @@ class AppConfig {
       hasApify && vintedScraperActorId.trim().isNotEmpty;
 
   bool get hasBokborsenScraper => bokborsenScraperUrl.trim().isNotEmpty;
+
+  bool get hasAdlibrisScraper => adlibrisScraperUrl.trim().isNotEmpty;
+
+  bool get hasBlocketScraper => blocketScraperUrl.trim().isNotEmpty;
 
   bool get hasBookMarketAggregator => bookMarketAggregatorUrl.trim().isNotEmpty;
 }

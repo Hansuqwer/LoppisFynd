@@ -23,8 +23,9 @@ class Metric extends StatelessWidget {
             ?.copyWith(
               fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
             );
-    final valueStyle =
-        valueBase == null ? null : AppTypography.metricsFrom(valueBase);
+    final valueStyle = valueBase == null
+        ? null
+        : AppTypography.metricsFrom(valueBase);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

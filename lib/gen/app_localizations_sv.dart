@@ -1591,4 +1591,38 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get inventoryAvgSell => 'Snitt sälj';
+
+  @override
+  String get homeRecentScans => 'Senaste skanningar';
+
+  @override
+  String get findsTitle => 'Heta fynd';
+
+  @override
+  String get findsSubtitle =>
+      'Titlar med hög efterfrågan just nu. Håll utkik på loppisen.';
+
+  @override
+  String get settingsAdlibrisScraperConfigured =>
+      'Adlibris-skrapare konfigurerad.';
+
+  @override
+  String get settingsAdlibrisScraperNotConfigured =>
+      'Adlibris-skrapare är inte konfigurerad.';
+
+  @override
+  String get settingsBulkEnrichCta => 'Hämta marknadsdata för alla böcker';
+
+  @override
+  String get settingsBulkEnriching => 'Hämtar…';
+
+  @override
+  String settingsBulkEnrichDone(int count) {
+    return 'Uppdaterade $count böcker.';
+  }
+
+  @override
+  String settingsBulkEnrichFailed(String error) {
+    return 'Misslyckades: $error';
+  }
 }

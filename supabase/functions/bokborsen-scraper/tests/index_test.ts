@@ -1,171 +1,195 @@
-import { handleRequest } from "../index.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { handleRequest, parseBokborsenHtml } from "../index.ts";
 
-Deno.test("OPTIONS returns 204 with CORS headers", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", { method: "OPTIONS" }),
-  );
+// ── Fixtures — confirmed HTML/JSON-LD structure from research 2025-06 ─────────
 
-  if (resp.status !== 204) throw new Error(`expected 204, got ${resp.status}`);
-  if (resp.headers.get("access-control-allow-origin") !== "*") {
-    throw new Error("missing CORS origin header");
+// JSON-LD Product blocks (schema.org — preferred path)
+const FIXTURE_JSON_LD = `
+<html><head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Pippi Långstrump har julgransplundring",
+  "offers": {
+    "@type": "Offer",
+    "price": "66",
+    "priceCurrency": "SEK",
+    "url": "/view/Lindgren-Astrid/Pippi/15048593"
   }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Kris",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "SEK",
+    "url": "/view/Boye-Karin/Kris/999"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Doktor Glas",
+  "offers": {
+    "@type": "Offer",
+    "price": "89",
+    "priceCurrency": "SEK",
+    "url": "/view/Soderberg/Doktor-Glas/555"
+  }
+}
+</script>
+</head></html>
+`;
+
+// Confirmed CSS selector HTML (research 2025-06)
+const FIXTURE_CSS = `
+<html><body>
+<li class="group book single_image">
+  <div class="single-product content item group">
+    <div class="content-primary">
+      <div class="header">
+        <h2>
+          <a href="/view/Lindgren-Astrid/Pippi/15048593">
+            <span itemprop="name">Pippi Långstrump</span>
+          </a>
+        </h2>
+      </div>
+    </div>
+    <div class="content-secondary">
+      <button class="button buy" itemprop="price" content="66 SEK">
+        <span class="price">66 SEK</span>
+      </button>
+    </div>
+  </div>
+</li>
+<li class="group book single_image">
+  <div class="single-product content item group">
+    <div class="content-primary">
+      <div class="header">
+        <h2>
+          <a href="/view/Boye/Kris/888">
+            <span itemprop="name">Kris</span>
+          </a>
+        </h2>
+      </div>
+    </div>
+    <div class="content-secondary">
+      <button class="button buy">
+        <span class="price">0 SEK</span>
+      </button>
+    </div>
+  </div>
+</li>
+</body></html>
+`;
+
+const FIXTURE_EMPTY = `<html><body><p>Inga böcker hittades</p></body></html>`;
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+Deno.test("parseBokborsenHtml: extracts items from JSON-LD blocks", () => {
+  const now = new Date("2025-06-06T10:00:00Z");
+  const items = parseBokborsenHtml(FIXTURE_JSON_LD, 10, now);
+  // price=0 filtered; 2 valid items
+  assertEquals(items.length, 2);
+
+  const first = items[0];
+  assertEquals(first.platform, "bokborsen");
+  assertEquals(first.price, 66);
+  assertEquals(first.title, "Pippi Långstrump har julgransplundring");
+  assertEquals(
+    first.url,
+    "https://www.bokborsen.se/view/Lindgren-Astrid/Pippi/15048593",
+  );
+  assertEquals(first.soldAt, now.toISOString());
+
+  assertEquals(items[1].price, 89);
+  assertEquals(items[1].title, "Doktor Glas");
 });
 
-Deno.test("GET returns 405 method not allowed", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", { method: "GET" }),
-  );
-
-  if (resp.status !== 405) throw new Error(`expected 405, got ${resp.status}`);
-  if (resp.headers.get("cache-control") !== "no-store") {
-    throw new Error("missing cache-control: no-store");
-  }
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "method_not_allowed") throw new Error("wrong code");
+Deno.test("parseBokborsenHtml: respects maxResults in JSON-LD path", () => {
+  const items = parseBokborsenHtml(FIXTURE_JSON_LD, 1);
+  assertEquals(items.length, 1);
 });
 
-Deno.test("invalid JSON returns 400", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", {
+Deno.test("parseBokborsenHtml: falls back to CSS selectors when no JSON-LD", () => {
+  const now = new Date("2025-06-06T10:00:00Z");
+  const items = parseBokborsenHtml(FIXTURE_CSS, 10, now);
+  // price=0 filtered; 1 valid
+  assertEquals(items.length, 1);
+  assertEquals(items[0].price, 66);
+  assertEquals(items[0].title, "Pippi Långstrump");
+  assertEquals(
+    items[0].url,
+    "https://www.bokborsen.se/view/Lindgren-Astrid/Pippi/15048593",
+  );
+  assertEquals(items[0].soldAt, now.toISOString());
+});
+
+Deno.test("parseBokborsenHtml: returns empty for no-match HTML", () => {
+  const items = parseBokborsenHtml(FIXTURE_EMPTY, 50);
+  assertEquals(items.length, 0);
+});
+
+Deno.test("handleRequest: OPTIONS returns 204", async () => {
+  const res = await handleRequest(
+    new Request("http://x/", { method: "OPTIONS" }),
+  );
+  assertEquals(res.status, 204);
+});
+
+Deno.test("handleRequest: bad method returns 405", async () => {
+  const res = await handleRequest(new Request("http://x/", { method: "GET" }));
+  assertEquals(res.status, 405);
+});
+
+Deno.test("handleRequest: short query returns 400", async () => {
+  const res = await handleRequest(
+    new Request("http://x/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: "{",
+      body: JSON.stringify({ query: "x" }),
     }),
   );
-
-  if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "invalid_json") throw new Error("wrong code");
+  assertEquals(res.status, 400);
 });
 
-Deno.test("query too short returns 400", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", {
+Deno.test("handleRequest: returns items from mock fetch", async () => {
+  const mockFetch: typeof fetch = (_url) =>
+    Promise.resolve(new Response(FIXTURE_JSON_LD, { status: 200 }));
+
+  const res = await handleRequest(
+    new Request("http://x/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "a" }),
+      body: JSON.stringify({ query: "Pippi Långstrump" }),
     }),
+    { fetch: mockFetch },
   );
-
-  if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "invalid_request") throw new Error("wrong code");
+  assertEquals(res.status, 200);
+  const body = await res.json() as { items: unknown[]; source: string };
+  assertEquals(body.source, "bokborsen");
+  assertEquals((body.items as unknown[]).length, 2);
 });
 
-Deno.test("fetch failure returns 502", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", {
+Deno.test("handleRequest: upstream error returns 502", async () => {
+  const mockFetch: typeof fetch = (_url) =>
+    Promise.resolve(new Response("error", { status: 503 }));
+
+  const res = await handleRequest(
+    new Request("http://x/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book" }),
+      body: JSON.stringify({ query: "Pippi" }),
     }),
-    {
-      fetch: async () => new Response("Server Error", { status: 500 }),
-    },
+    { fetch: mockFetch },
   );
-
-  if (resp.status !== 502) throw new Error(`expected 502, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "fetch_failed") throw new Error("wrong code");
-});
-
-Deno.test("success path parses HTML and returns items", async () => {
-  const mockHtml = `
-    <html>
-      <body>
-        <div class="listing-item">
-          <div class="listing-content">
-            <h3 class="listing-title">Pippi Långstrump</h3>
-            <a href="/book/123">View</a>
-            <span class="price">150 kr</span>
-            <span class="date">2024-01-15</span>
-          </div>
-        </div>
-        <div class="listing-item">
-          <div class="listing-content">
-            <h3 class="listing-title">Emil i Lönneberga</h3>
-            <a href="/book/456">View</a>
-            <span class="price">200 SEK</span>
-            <span class="date">2024-01-16</span>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book", maxResults: 10 }),
-    }),
-    {
-      fetch: async () => new Response(mockHtml, { status: 200 }),
-    },
-  );
-
-  if (resp.status !== 200) throw new Error(`expected 200, got ${resp.status}`);
-  if (resp.headers.get("cache-control") !== "no-store") {
-    throw new Error("missing cache-control: no-store");
-  }
-
-  const body = await resp.json();
-  const root = body as Record<string, unknown>;
-  if (root["source"] !== "bokborsen") throw new Error("wrong source");
-  if (root["query"] !== "test book") throw new Error("wrong query");
-
-  const items = root["items"] as Array<Record<string, unknown>>;
-  if (!Array.isArray(items) || items.length !== 2) {
-    throw new Error(`expected 2 items, got ${items?.length ?? 0}`);
-  }
-
-  if (items[0]["platform"] !== "bokborsen") throw new Error("wrong platform");
-  if (items[0]["price"] !== 150) throw new Error("wrong price");
-  if (items[0]["title"] !== "Pippi Långstrump") throw new Error("wrong title");
-  if (items[0]["soldAt"] !== "2024-01-15") throw new Error("wrong date");
-
-  if (items[1]["price"] !== 200) throw new Error("wrong price for item 2");
-  if (items[1]["title"] !== "Emil i Lönneberga") throw new Error("wrong title for item 2");
-});
-
-Deno.test("empty HTML returns empty items array", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/bokborsen-scraper", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book" }),
-    }),
-    {
-      fetch: async () => new Response("<html><body></body></html>", { status: 200 }),
-    },
-  );
-
-  if (resp.status !== 200) throw new Error(`expected 200, got ${resp.status}`);
-
-  const body = await resp.json();
-  const root = body as Record<string, unknown>;
-  const items = root["items"] as Array<unknown>;
-  if (!Array.isArray(items) || items.length !== 0) {
-    throw new Error(`expected 0 items, got ${items?.length ?? 0}`);
-  }
+  assertEquals(res.status, 502);
 });

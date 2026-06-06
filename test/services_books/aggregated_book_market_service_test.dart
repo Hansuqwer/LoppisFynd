@@ -58,11 +58,7 @@ void main() {
       expect(stats.lowestSoldPriceSek, 50);
       expect(stats.highestSoldPriceSek, 120);
       expect(stats.averageSoldPriceSek, 86);
-      expect(stats.sourceCounts, {
-        'tradera': 2,
-        'vinted': 1,
-        'bokborsen': 1,
-      });
+      expect(stats.sourceCounts, {'tradera': 2, 'vinted': 1, 'bokborsen': 1});
     });
 
     test('continues when one source throws', () async {
@@ -102,9 +98,7 @@ void main() {
     });
 
     test('returns null for blank query', () async {
-      final source = _FakeSource([
-        sale(platform: 'tradera', price: 100),
-      ]);
+      final source = _FakeSource([sale(platform: 'tradera', price: 100)]);
 
       final service = AggregatedBookMarketService(sources: [source]);
 

@@ -17,17 +17,16 @@ class StatLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final valueStyle = emphasize
-        ? Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(fontWeight: FontWeight.w800)
-        : Theme.of(context)
-            .textTheme
-            .bodyLarge
-            ?.copyWith(fontWeight: FontWeight.w700);
+        ? Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)
+        : Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700);
 
-    final valueStyleMetrics =
-        valueStyle == null ? null : AppTypography.metricsFrom(valueStyle);
+    final valueStyleMetrics = valueStyle == null
+        ? null
+        : AppTypography.metricsFrom(valueStyle);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

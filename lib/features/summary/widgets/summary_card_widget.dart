@@ -41,19 +41,16 @@ class DraftsSummaryCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n.haulSummaryDraftsTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        SpringRoute(
-                          builder: (_) => const DraftsScreen(),
-                        ),
-                      );
+                      Navigator.of(
+                        context,
+                      ).push(SpringRoute(builder: (_) => const DraftsScreen()));
                     },
                     child: Text(l10n.dashboardSeeAll),
                   ),

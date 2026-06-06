@@ -93,9 +93,9 @@ class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
       if (prev?.isLoading ?? false) {
         next.whenOrNull(
           data: (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.accountDeletionDone)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.accountDeletionDone)));
             Navigator.of(context).pop();
           },
           error: (e, _) {

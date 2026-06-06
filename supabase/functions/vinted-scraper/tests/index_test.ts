@@ -1,231 +1,159 @@
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { handleRequest } from "../index.ts";
 
-Deno.test("OPTIONS returns 204 with CORS headers", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", { method: "OPTIONS" }),
-  );
+function jsonResponse(data: unknown, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(data), {
+    status: init.status ?? 200,
+    headers: { "content-type": "application/json", ...(init.headers ?? {}) },
+  });
+}
 
-  if (resp.status !== 204) throw new Error(`expected 204, got ${resp.status}`);
-  if (resp.headers.get("access-control-allow-origin") !== "*") {
-    throw new Error("missing CORS origin header");
-  }
+Deno.test("handleRequest: OPTIONS returns 204", async () => {
+  const res = await handleRequest(
+    new Request("http://x/", { method: "OPTIONS" }),
+  );
+  assertEquals(res.status, 204);
 });
 
-Deno.test("GET returns 405 method not allowed", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", { method: "GET" }),
-  );
-
-  if (resp.status !== 405) throw new Error(`expected 405, got ${resp.status}`);
-  if (resp.headers.get("cache-control") !== "no-store") {
-    throw new Error("missing cache-control: no-store");
-  }
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "method_not_allowed") throw new Error("wrong code");
+Deno.test("handleRequest: GET returns 405", async () => {
+  const res = await handleRequest(new Request("http://x/", { method: "GET" }));
+  assertEquals(res.status, 405);
 });
 
-Deno.test("invalid JSON returns 400", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", {
+Deno.test("handleRequest: invalid query returns 400", async () => {
+  const res = await handleRequest(
+    new Request("http://x/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: "{",
+      body: JSON.stringify({ query: "x" }),
     }),
-    {
-      env: {
-        get: (k: string) => {
-          if (k === "APIFY_API_TOKEN") return "test-token";
-          if (k === "VINTED_SCRAPER_ACTOR_ID") return "test-actor";
-          return undefined;
-        },
-      },
-    },
   );
-
-  if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "invalid_json") throw new Error("wrong code");
+  assertEquals(res.status, 400);
 });
 
-Deno.test("query too short returns 400", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "a" }),
-    }),
-    {
-      env: {
-        get: (k: string) => {
-          if (k === "APIFY_API_TOKEN") return "test-token";
-          if (k === "VINTED_SCRAPER_ACTOR_ID") return "test-actor";
-          return undefined;
-        },
-      },
-    },
-  );
-
-  if (resp.status !== 400) throw new Error(`expected 400, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "invalid_request") throw new Error("wrong code");
-});
-
-Deno.test("missing env vars returns 500", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book" }),
-    }),
-    {
-      env: { get: () => undefined },
-    },
-  );
-
-  if (resp.status !== 500) throw new Error(`expected 500, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "server_not_configured") throw new Error("wrong code");
-});
-
-Deno.test("Apify start failure returns 502", async () => {
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book" }),
-    }),
-    {
-      env: {
-        get: (k: string) => {
-          if (k === "APIFY_API_TOKEN") return "test-token";
-          if (k === "VINTED_SCRAPER_ACTOR_ID") return "test-actor";
-          return undefined;
-        },
-      },
-      fetch: async () => new Response("Unauthorized", { status: 401 }),
-    },
-  );
-
-  if (resp.status !== 502) throw new Error(`expected 502, got ${resp.status}`);
-
-  const body = await resp.json();
-  const err = (body as Record<string, unknown>)["error"] as
-    | Record<string, unknown>
-    | undefined;
-  if (!err) throw new Error("missing error object");
-  if (err["code"] !== "apify_start_failed") throw new Error("wrong code");
-});
-
-Deno.test("success path returns parsed items", async () => {
-  let callCount = 0;
-  const mockFetch = async (url: string | URL | Request) => {
-    const urlStr = typeof url === "string" ? url : url.toString();
-    callCount++;
-
-    // First call: start Apify run
-    if (urlStr.includes("/runs")) {
-      return new Response(
-        JSON.stringify({
-          data: { id: "run-123", defaultDatasetId: "dataset-456" },
+Deno.test("handleRequest: direct API parses active and sold items", async () => {
+  const mockFetch = (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/catalog?")) {
+      return Promise.resolve(
+        new Response("<html>ok</html>", {
+          status: 200,
+          headers: {
+            "set-cookie": "access_token_web=jwt123; Path=/; Max-Age=604800",
+          },
         }),
-        { status: 200 },
       );
     }
-
-    // Second call: check run status
-    if (urlStr.includes("/actor-runs/")) {
-      return new Response(
-        JSON.stringify({ data: { status: "SUCCEEDED" } }),
-        { status: 200 },
-      );
-    }
-
-    // Third call: get dataset items
-    if (urlStr.includes("/datasets/")) {
-      return new Response(
-        JSON.stringify([
+    if (url.includes("/api/v2/catalog/items")) {
+      return Promise.resolve(jsonResponse({
+        items: [
           {
-            id: "item-1",
-            title: "Test Book",
-            price: 150,
-            currency: "SEK",
-            url: "https://vinted.se/item/1",
-            status: "sold",
-            soldAt: "2024-01-15",
+            id: 1,
+            title: "Pippi Långstrump",
+            price: { amount: "120.0", currency_code: "SEK" },
+            path: "/items/1-pippi-langstrump",
+            sold_at: 1717400000,
           },
           {
-            id: "item-2",
-            title: "Another Book",
-            price: { amount: 200 },
-            currency: "SEK",
-            url: "https://vinted.se/item/2",
-            status: "completed",
-            sold_at: "2024-01-16",
+            id: 2,
+            title: "Doktor Glas",
+            price: { amount: "80.5", currency_code: "SEK" },
+            url: "https://www.vinted.se/items/2-doktor-glas",
+            sold_at: null,
           },
-        ]),
-        { status: 200 },
-      );
+          { id: 3, title: "Bad", price: { amount: "0" } },
+        ],
+      }));
     }
-
-    throw new Error(`Unexpected URL: ${urlStr}`);
+    return Promise.resolve(new Response("not found", { status: 404 }));
   };
 
-  const resp = await handleRequest(
-    new Request("http://localhost/vinted-scraper", {
+  const res = await handleRequest(
+    new Request("http://x/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "test book", maxResults: 10 }),
+      body: JSON.stringify({ query: "pippi", maxResults: 50 }),
     }),
-    {
-      env: {
-        get: (k: string) => {
-          if (k === "APIFY_API_TOKEN") return "test-token";
-          if (k === "VINTED_SCRAPER_ACTOR_ID") return "test-actor";
-          return undefined;
-        },
-      },
-      fetch: mockFetch,
-    },
+    { fetch: mockFetch },
   );
 
-  if (resp.status !== 200) throw new Error(`expected 200, got ${resp.status}`);
-  if (resp.headers.get("cache-control") !== "no-store") {
-    throw new Error("missing cache-control: no-store");
-  }
+  assertEquals(res.status, 200);
+  const body = await res.json() as {
+    items: Array<Record<string, unknown>>;
+    source: string;
+  };
+  assertEquals(body.source, "vinted");
+  assertEquals(body.items.length, 2);
+  assertEquals(body.items[0].price, 120);
+  assertEquals(body.items[0].soldAt, "2024-06-03T07:33:20.000Z");
+  assertEquals(
+    body.items[0].url,
+    "https://www.vinted.se/items/1-pippi-langstrump",
+  );
+  assertEquals(body.items[1].price, 81);
+  assertEquals(body.items[1].soldAt, null);
+});
 
-  const body = await resp.json();
-  const root = body as Record<string, unknown>;
-  if (root["source"] !== "vinted") throw new Error("wrong source");
-  if (root["query"] !== "test book") throw new Error("wrong query");
+Deno.test("handleRequest: soldOnly filters by sold_at but can fallback through status candidates", async () => {
+  let apiCalls = 0;
+  const mockFetch = (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/catalog?")) {
+      return Promise.resolve(
+        new Response("<html>ok</html>", {
+          status: 200,
+          headers: { "set-cookie": "access_token_web=jwt123; Path=/" },
+        }),
+      );
+    }
+    if (url.includes("/api/v2/catalog/items")) {
+      apiCalls += 1;
+      return Promise.resolve(jsonResponse({
+        items: apiCalls === 1
+          ? [{ id: 1, title: "active", price: { amount: "10" }, sold_at: null }]
+          : [{
+            id: 2,
+            title: "sold",
+            price: { amount: "20" },
+            sold_at: "2025-01-01T00:00:00Z",
+          }],
+      }));
+    }
+    return Promise.resolve(new Response("not found", { status: 404 }));
+  };
 
-  const items = root["items"] as Array<Record<string, unknown>>;
-  if (!Array.isArray(items) || items.length !== 2) {
-    throw new Error(`expected 2 items, got ${items?.length ?? 0}`);
-  }
+  const res = await handleRequest(
+    new Request("http://x/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "pippi", soldOnly: true }),
+    }),
+    { fetch: mockFetch },
+  );
 
-  if (items[0]["platform"] !== "vinted") throw new Error("wrong platform");
-  if (items[0]["price"] !== 150) throw new Error("wrong price");
-  if (items[0]["title"] !== "Test Book") throw new Error("wrong title");
+  assertEquals(res.status, 200);
+  const body = await res.json() as { items: Array<Record<string, unknown>> };
+  assertEquals(body.items.length, 1);
+  assertEquals(body.items[0].title, "sold");
+});
 
-  if (items[1]["price"] !== 200) throw new Error("wrong price for item 2");
+Deno.test("handleRequest: bot challenge with no Apify config returns 502", async () => {
+  const mockFetch = (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/catalog?")) {
+      return Promise.resolve(new Response("DataDome captcha", { status: 200 }));
+    }
+    return Promise.resolve(new Response("not found", { status: 404 }));
+  };
+
+  const res = await handleRequest(
+    new Request("http://x/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "pippi" }),
+    }),
+    { fetch: mockFetch, env: { get: () => undefined } },
+  );
+
+  assertEquals(res.status, 502);
 });

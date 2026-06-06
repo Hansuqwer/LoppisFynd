@@ -609,5 +609,24 @@
   "inventoryEmpty": "No books saved yet",
   "inventoryEmptyHint": "Scan books and save them to your inventory.",
   "inventoryBoughtFor": "Bought",
-  "inventoryAvgSell": "Avg sell"
+  "inventoryAvgSell": "Avg sell",
+
+  "homeRecentScans": "Recent scans",
+
+  "findsTitle": "Hot Finds",
+  "findsSubtitle": "Items with high demand right now. Keep an eye out at the flea market.",
+
+  "settingsAdlibrisScraperConfigured": "Adlibris scraper configured.",
+  "settingsAdlibrisScraperNotConfigured": "Adlibris scraper not configured.",
+
+  "settingsBulkEnrichCta": "Fetch market data for all books",
+  "settingsBulkEnriching": "Fetching…",
+  "settingsBulkEnrichDone": "Updated {count} books.",
+  "@settingsBulkEnrichDone": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "settingsBulkEnrichFailed": "Failed: {error}",
+  "@settingsBulkEnrichFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  }
 }

@@ -97,4 +97,22 @@ class BooksDao extends DatabaseAccessor<AppDatabase> with _$BooksDaoMixin {
   Future<int> deleteById(String id) {
     return (delete(books)..where((t) => t.id.equals(id))).go();
   }
+
+  /// Saved books with no average sold price and not updated since [olderThan].
+  /// Used by [BulkIsbnEnrichmentService] to find stale rows to enrich.
+  Future<List<Book>> listStaleMarketStats({
+    int limit = 20,
+    required DateTime olderThan,
+  }) {
+    return (select(books)
+          ..where(
+            (t) =>
+                t.saved.equals(true) &
+                t.averageSoldPriceSek.isNull() &
+                t.updatedAt.isSmallerThanValue(olderThan),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.scannedAt)])
+          ..limit(limit))
+        .get();
+  }
 }

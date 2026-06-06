@@ -18,11 +18,7 @@ import 'price_chart.dart';
 import 'stat_line.dart';
 
 class MarketStatsWidget extends ConsumerStatefulWidget {
-  const MarketStatsWidget({
-    super.key,
-    required this.item,
-    required this.db,
-  });
+  const MarketStatsWidget({super.key, required this.item, required this.db});
 
   final ScanItem item;
   final AppDatabase db;
@@ -59,16 +55,15 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
   }
 
   void _openSettings() {
-    Navigator.of(context).push(SpringRoute(builder: (_) => const SettingsScreen()));
+    Navigator.of(
+      context,
+    ).push(SpringRoute(builder: (_) => const SettingsScreen()));
   }
 
   Future<void> _queueSync(AppDatabase db) async {
     final query = _queryController.text.trim();
     if (query.isEmpty) return;
-    await db.scanItemsDao.setQuery(
-      id: widget.item.id,
-      query: query,
-    );
+    await db.scanItemsDao.setQuery(id: widget.item.id, query: query);
     await db.scanItemsDao.transitionStatus(
       id: widget.item.id,
       to: ScanItemStatus.pendingSync,
@@ -91,10 +86,9 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
               children: [
                 Text(
                   l10n.cloudIdentifyOfflineTitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
@@ -136,8 +130,10 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
   Future<void> _handleCloudIdentifyTap({required bool isOnline}) async {
     final db = widget.db;
     final enabled =
-        (await db.appSettingsDao.getInt(kPrivacyCloudIdentificationEnabledKeyV1)) ??
-            1;
+        (await db.appSettingsDao.getInt(
+          kPrivacyCloudIdentificationEnabledKeyV1,
+        )) ??
+        1;
     if (enabled != 1) return;
 
     if (!isOnline) {
@@ -146,8 +142,10 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
     }
 
     final choice =
-        (await db.appSettingsDao.getInt(kCloudIdentificationDisclosureChoiceKeyV1)) ??
-            0;
+        (await db.appSettingsDao.getInt(
+          kCloudIdentificationDisclosureChoiceKeyV1,
+        )) ??
+        0;
     if (choice != 1) {
       if (!mounted) return;
 
@@ -264,17 +262,14 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
         children: [
           Text(
             l10n.itemDetailMarketTitle,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           if (item.confidence != null) ...[
             const SizedBox(height: AppSpacing.xxs),
             Text(
-              l10n.itemDetailAiConfidence(
-                (item.confidence! * 100).round(),
-              ),
+              l10n.itemDetailAiConfidence((item.confidence! * 100).round()),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -350,8 +345,7 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
                   onPressed: () {
                     Navigator.of(context).push(
                       SpringRoute(
-                        builder: (_) =>
-                            DraftEditorScreen(scanItemId: item.id),
+                        builder: (_) => DraftEditorScreen(scanItemId: item.id),
                       ),
                     );
                   },
@@ -381,8 +375,7 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
             onPressed: () {
               Navigator.of(context).push(
                 SpringRoute(
-                  builder: (_) =>
-                      DraftEditorScreen(scanItemId: item.id),
+                  builder: (_) => DraftEditorScreen(scanItemId: item.id),
                 ),
               );
             },
@@ -428,8 +421,7 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
               hintText: l10n.itemDetailTraderaQueryHint,
             ),
             onSubmitted: (v) => _setQuery(db, v),
-            onEditingComplete: () =>
-                _setQuery(db, _queryController.text),
+            onEditingComplete: () => _setQuery(db, _queryController.text),
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -440,15 +432,12 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
                   onPressed: !compsActionsEnabled
                       ? null
                       : () async {
-                          final messenger =
-                              ScaffoldMessenger.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           await _queueSync(db);
                           if (!mounted) return;
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text(
-                                l10n.itemDetailQueuedForSync,
-                              ),
+                              content: Text(l10n.itemDetailQueuedForSync),
                             ),
                           );
                         },
@@ -463,16 +452,13 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
                   onPressed: !compsActionsEnabled
                       ? null
                       : () async {
-                          final messenger =
-                              ScaffoldMessenger.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           await _queueSync(db);
                           await syncScheduler.syncOnce();
                           if (!mounted) return;
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text(
-                                l10n.itemDetailSyncCompleted,
-                              ),
+                              content: Text(l10n.itemDetailSyncCompleted),
                             ),
                           );
                         },
@@ -549,9 +535,7 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
                           Expanded(
                             child: Text(
                               'Last sync failed',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ),

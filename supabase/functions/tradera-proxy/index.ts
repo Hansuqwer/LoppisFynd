@@ -1,6 +1,13 @@
-import { buildSearchAdvancedEnvelope, buildSearchAdvancedRequestXml } from "./soap.ts";
+import {
+  buildSearchAdvancedEnvelope,
+  buildSearchAdvancedRequestXml,
+} from "./soap.ts";
 import { parseSearchAdvancedResponse } from "./parse.ts";
-import type { TraderaProxyRequest, TraderaProxyResponse } from "./types.ts";
+import type {
+  TraderaProxyItem,
+  TraderaProxyRequest,
+  TraderaProxyResponse,
+} from "./types.ts";
 import type { TraderaProxyErrorResponse } from "./types.ts";
 
 import { Ratelimit } from "npm:@upstash/ratelimit";
@@ -8,6 +15,7 @@ import { Redis } from "npm:@upstash/redis";
 
 const TRADERA_ENDPOINT = "https://api.tradera.com/v3/searchservice.asmx";
 const SOAP_ACTION = "http://api.tradera.com/SearchAdvanced";
+const APIFY_TRADERA_ACTOR_ID = "ecomscrape~tradera-product-search-scraper";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -17,7 +25,6 @@ const corsHeaders = {
 };
 
 export const LIMITS = {
-  // The Tradera proxy request is tiny; guard against abuse via oversized payloads.
   maxBodyChars: 50_000,
 } as const;
 
@@ -51,10 +58,7 @@ export async function handleRequest(
 
   if (req.method !== "POST") {
     return errorJson(
-      {
-        code: "method_not_allowed",
-        message: "Method not allowed",
-      },
+      { code: "method_not_allowed", message: "Method not allowed" },
       405,
     );
   }
@@ -79,7 +83,6 @@ export async function handleRequest(
         500,
       );
     }
-
     return errorJson(
       {
         code: "upstream_failed",
@@ -98,12 +101,11 @@ export async function handleRequest(
       },
       429,
       {
-        "retry-after":
-          typeof rl.retryAfterSeconds === "number" &&
+        "retry-after": typeof rl.retryAfterSeconds === "number" &&
             Number.isFinite(rl.retryAfterSeconds) &&
             rl.retryAfterSeconds > 0
-            ? String(Math.ceil(rl.retryAfterSeconds))
-            : undefined,
+          ? String(Math.ceil(rl.retryAfterSeconds))
+          : undefined,
       },
     );
   }
@@ -112,49 +114,222 @@ export async function handleRequest(
   try {
     bodyText = await req.text();
   } catch {
-    return errorJson(
-      {
-        code: "invalid_request",
-        message: "Invalid request body",
-      },
-      400,
-    );
+    return errorJson({
+      code: "invalid_request",
+      message: "Invalid request body",
+    }, 400);
   }
 
   if (bodyText.length > LIMITS.maxBodyChars) {
-    return errorJson(
-      {
-        code: "payload_too_large",
-        message: "Payload too large",
-      },
-      413,
-    );
+    return errorJson({
+      code: "payload_too_large",
+      message: "Payload too large",
+    }, 413);
   }
 
   let body: TraderaProxyRequest;
   try {
     body = JSON.parse(bodyText) as TraderaProxyRequest;
   } catch {
-    return errorJson(
-      {
-        code: "invalid_json",
-        message: "Invalid JSON",
-      },
-      400,
-    );
+    return errorJson({ code: "invalid_json", message: "Invalid JSON" }, 400);
   }
 
   const searchWords = (body?.searchWords ?? "").trim();
   if (searchWords.length < 2 || searchWords.length > 80) {
     return errorJson(
-      {
-        code: "invalid_request",
-        message: "searchWords must be 2..80 chars",
-      },
+      { code: "invalid_request", message: "searchWords must be 2..80 chars" },
       400,
     );
   }
 
+  const doFetch = deps.fetch ?? fetch;
+  const apifyToken = (env.get("APIFY_API_TOKEN") ?? "").trim();
+
+  if (apifyToken) {
+    return await handleApifyTradera(body, searchWords, apifyToken, doFetch);
+  }
+
+  return await handleSoapTradera(body, searchWords, env, doFetch);
+}
+
+async function handleApifyTradera(
+  body: TraderaProxyRequest,
+  searchWords: string,
+  apifyToken: string,
+  doFetch: FetchLike,
+): Promise<Response> {
+  const maxItems = body.itemsPerPage ?? 50;
+
+  let runResp: Response;
+  try {
+    runResp = await doFetch(
+      `https://api.apify.com/v2/acts/${APIFY_TRADERA_ACTOR_ID}/runs?memory=4096`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apifyToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          search: searchWords,
+          maxItems,
+        }),
+      },
+    );
+  } catch (e) {
+    return errorJson(
+      {
+        code: "upstream_failed",
+        message: `Apify run start failed: ${String(e)}`.slice(0, 2000),
+      },
+      502,
+    );
+  }
+
+  if (!runResp.ok) {
+    const text = await runResp.text();
+    return errorJson(
+      {
+        code: "apify_start_failed",
+        message: `Apify run start failed: ${runResp.status} ${
+          text.slice(0, 500)
+        }`,
+      },
+      502,
+    );
+  }
+
+  const runData = (await runResp.json()) as {
+    data?: { id?: string; status?: string; defaultDatasetId?: string };
+  };
+  const runId = runData.data?.id;
+  const datasetId = runData.data?.defaultDatasetId;
+  if (!runId || !datasetId) {
+    return errorJson({
+      code: "apify_no_run_id",
+      message: "No run ID from Apify",
+    }, 502);
+  }
+
+  const items = await pollApifyResults(runId, datasetId, apifyToken, doFetch);
+  const mapped = mapApifyItemsToTraderaProxy(items);
+
+  return json(
+    {
+      totalNumberOfItems: mapped.length,
+      totalNumberOfPages: 1,
+      items: mapped,
+    } satisfies TraderaProxyResponse,
+    200,
+  );
+}
+
+interface ApifyTraderaItem {
+  id?: string | number;
+  title?: string;
+  description?: string;
+  price?: number | { amount?: number; currency?: string };
+  currentBid?: number;
+  buyNowPrice?: number;
+  bidCount?: number;
+  numberOfBids?: number;
+  endDate?: string;
+  endTime?: string;
+  soldDate?: string;
+  isEnded?: boolean;
+  status?: string;
+  url?: string;
+  itemUrl?: string;
+  link?: string;
+  imageUrl?: string;
+  image?: string;
+  thumbnailUrl?: string;
+  seller?: { name?: string; rating?: number; id?: string };
+  category?: string;
+  condition?: string;
+}
+
+async function pollApifyResults(
+  runId: string,
+  datasetId: string,
+  apifyToken: string,
+  doFetch: FetchLike,
+  maxAttempts = 30,
+  pollIntervalMs = 3000,
+): Promise<ApifyTraderaItem[]> {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+
+    const statusResp = await doFetch(
+      `https://api.apify.com/v2/actor-runs/${runId}`,
+      { headers: { Authorization: `Bearer ${apifyToken}` } },
+    );
+    if (!statusResp.ok) continue;
+
+    const statusData = (await statusResp.json()) as {
+      data?: { status?: string };
+    };
+    const status = statusData.data?.status;
+
+    if (status === "SUCCEEDED") {
+      const itemsResp = await doFetch(
+        `https://api.apify.com/v2/datasets/${datasetId}/items?format=json`,
+        { headers: { Authorization: `Bearer ${apifyToken}` } },
+      );
+      if (!itemsResp.ok) return [];
+      const items = await itemsResp.json();
+      return Array.isArray(items) ? (items as ApifyTraderaItem[]) : [];
+    }
+
+    if (status === "FAILED" || status === "ABORTED" || status === "TIMED-OUT") {
+      return [];
+    }
+  }
+  return [];
+}
+
+function mapApifyItemsToTraderaProxy(
+  items: ApifyTraderaItem[],
+): TraderaProxyItem[] {
+  return items.map((item, index) => {
+    const price = typeof item.price === "number"
+      ? item.price
+      : typeof item.price === "object" && item.price?.amount != null
+      ? item.price.amount
+      : item.currentBid ?? item.buyNowPrice ?? null;
+
+    const bidCount = item.bidCount ?? item.numberOfBids ?? null;
+    const endDate = item.endDate ?? item.endTime ?? item.soldDate ?? null;
+    const url = item.url ?? item.itemUrl ?? item.link ?? null;
+    const thumbnail = item.imageUrl ?? item.image ?? item.thumbnailUrl ?? null;
+    const id = typeof item.id === "number"
+      ? item.id
+      : (typeof item.id === "string" ? parseInt(item.id, 10) || index : index);
+
+    return {
+      id,
+      shortDescription: (item.title ?? item.description ?? "").trim(),
+      endDate,
+      maxBid: price != null ? Math.round(Number(price)) : null,
+      totalBids: bidCount != null ? Number(bidCount) : null,
+      hasBids: bidCount != null ? bidCount > 0 : null,
+      isEnded: item.isEnded ??
+        (item.status?.toLowerCase() === "ended" ||
+            item.status?.toLowerCase() === "sold"
+          ? true
+          : null),
+      itemLink: url,
+      thumbnailLink: thumbnail,
+    };
+  }).filter((item) => item.maxBid != null && item.maxBid > 0);
+}
+
+async function handleSoapTradera(
+  body: TraderaProxyRequest,
+  searchWords: string,
+  env: EnvProvider,
+  doFetch: FetchLike,
+): Promise<Response> {
   const appIdStr = env.get("TRADERA_APP_ID") ?? "";
   const appKey = (env.get("TRADERA_APP_KEY") ?? "").trim();
   const sandboxStr = env.get("TRADERA_SANDBOX") ?? "0";
@@ -169,7 +344,7 @@ export async function handleRequest(
       {
         code: "server_not_configured",
         message:
-          "Server not configured. Set TRADERA_APP_ID and TRADERA_APP_KEY in Supabase secrets.",
+          "Server not configured. Set APIFY_API_TOKEN (preferred) or TRADERA_APP_ID and TRADERA_APP_KEY in Supabase secrets.",
       },
       500,
     );
@@ -184,7 +359,6 @@ export async function handleRequest(
     requestXml,
   });
 
-  const doFetch = deps.fetch ?? fetch;
   let traderaResp: Response;
   try {
     traderaResp = await doFetch(TRADERA_ENDPOINT, {
@@ -223,7 +397,10 @@ export async function handleRequest(
     return errorJson(
       {
         code: "parse_failed",
-        message: `Failed to parse Tradera SOAP response: ${String(e)}`.slice(0, 2000),
+        message: `Failed to parse Tradera SOAP response: ${String(e)}`.slice(
+          0,
+          2000,
+        ),
       },
       502,
     );
@@ -280,7 +457,9 @@ let upstashRateLimitOnce:
   | ((key: string) => Promise<RateLimitResult>)
   | null = null;
 
-function createUpstashRateLimit(env: EnvProvider): (key: string) => Promise<RateLimitResult> {
+function createUpstashRateLimit(
+  env: EnvProvider,
+): (key: string) => Promise<RateLimitResult> {
   if (upstashRateLimitOnce) return upstashRateLimitOnce;
 
   const url = (env.get("UPSTASH_REDIS_REST_URL") ?? "").trim();
@@ -348,7 +527,10 @@ function tryGetJwtSubWithoutVerify(token: string): string | null {
   const payload = parts[1] ?? "";
 
   try {
-    const json = JSON.parse(decodeBase64Url(payload)) as Record<string, unknown>;
+    const json = JSON.parse(decodeBase64Url(payload)) as Record<
+      string,
+      unknown
+    >;
     return typeof json["sub"] === "string" && json["sub"].trim()
       ? json["sub"].trim()
       : null;

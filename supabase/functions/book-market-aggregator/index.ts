@@ -37,20 +37,42 @@ export async function handleRequest(
   }
 
   if (req.method !== "POST") {
-    return errorJson({ code: "method_not_allowed", message: "Method not allowed" }, 405);
+    return errorJson({
+      code: "method_not_allowed",
+      message: "Method not allowed",
+    }, 405);
   }
 
   const env = deps.env ?? { get: (k: string) => Deno.env.get(k) };
   const doFetch = deps.fetch ?? fetch;
 
+  // Supports both Supabase Edge (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)
+  // and Deno Deploy (individual source URLs + optional FUNCTIONS_API_KEY)
   const supabaseUrl = (env.get("SUPABASE_URL") ?? "").trim();
-  const serviceKey = (env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
+  const serviceKey =
+    (env.get("SERVICE_ROLE_JWT") ?? env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+      .trim();
+  const functionsApiKey = (env.get("FUNCTIONS_API_KEY") ?? serviceKey).trim();
 
-  if (!supabaseUrl || !serviceKey) {
+  // Resolve individual function URLs — Deno Deploy URLs take precedence over Supabase pattern
+  const traderaUrl = (env.get("TRADERA_URL") ??
+    (supabaseUrl ? `${supabaseUrl}/functions/v1/tradera-proxy` : "")).trim();
+  const vintedUrl = (env.get("VINTED_URL") ??
+    (supabaseUrl ? `${supabaseUrl}/functions/v1/vinted-scraper` : "")).trim();
+  const bokborsenUrl = (env.get("BOKBORSEN_URL") ??
+    (supabaseUrl ? `${supabaseUrl}/functions/v1/bokborsen-scraper` : ""))
+    .trim();
+  // Optional sources require explicit URLs so SUPABASE_URL-only deploys keep
+  // their original 3-source behavior.
+  const adlibrisUrl = (env.get("ADLIBRIS_URL") ?? "").trim();
+  const blocketUrl = (env.get("BLOCKET_URL") ?? "").trim();
+
+  if (!traderaUrl || !vintedUrl || !bokborsenUrl) {
     return errorJson(
       {
         code: "server_not_configured",
-        message: "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Supabase secrets.",
+        message:
+          "Set TRADERA_URL, VINTED_URL, BOKBORSEN_URL (Deno Deploy) or SUPABASE_URL (Supabase).",
       },
       500,
     );
@@ -73,15 +95,16 @@ export async function handleRequest(
 
   const maxResults = Math.min(body.maxResults ?? 50, 100);
 
-  const edgeHeaders = {
-    Authorization: `Bearer ${serviceKey}`,
-    apikey: serviceKey,
+  const edgeHeaders: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(functionsApiKey
+      ? { Authorization: `Bearer ${functionsApiKey}`, apikey: functionsApiKey }
+      : {}),
   };
 
-  const sources = await Promise.allSettled([
+  const fanOut: Array<Promise<SourceResult>> = [
     callEdgeFunction(
-      `${supabaseUrl}/functions/v1/tradera-proxy`,
+      traderaUrl,
       {
         searchWords: query,
         itemStatus: "Ended",
@@ -94,23 +117,51 @@ export async function handleRequest(
       doFetch,
     ),
     callEdgeFunction(
-      `${supabaseUrl}/functions/v1/vinted-scraper`,
+      vintedUrl,
       { query, maxResults },
       edgeHeaders,
       "vinted",
       doFetch,
     ),
     callEdgeFunction(
-      `${supabaseUrl}/functions/v1/bokborsen-scraper`,
+      bokborsenUrl,
       { query, maxResults },
       edgeHeaders,
       "bokborsen",
       doFetch,
     ),
-  ]);
+  ];
+
+  // Optional asking-price sources - only include if URL is configured.
+  const sourceNames = ["tradera", "vinted", "bokborsen"];
+  if (adlibrisUrl) {
+    fanOut.push(
+      callEdgeFunction(
+        adlibrisUrl,
+        { query, maxResults },
+        edgeHeaders,
+        "adlibris",
+        doFetch,
+      ),
+    );
+    sourceNames.push("adlibris");
+  }
+  if (blocketUrl) {
+    fanOut.push(
+      callEdgeFunction(
+        blocketUrl,
+        { query, maxResults },
+        edgeHeaders,
+        "blocket",
+        doFetch,
+      ),
+    );
+    sourceNames.push("blocket");
+  }
+
+  const sources = await Promise.allSettled(fanOut);
 
   const results: SourceResult[] = sources.map((result, index) => {
-    const sourceNames = ["tradera", "vinted", "bokborsen"];
     if (result.status === "fulfilled") {
       return result.value;
     }
@@ -219,9 +270,11 @@ function deduplicateSales(items: SaleItem[]): SaleItem[] {
   const result: SaleItem[] = [];
 
   for (const item of items) {
+    // Adlibris has no soldAt — use platform+url as fallback dedup key
+    // so different Adlibris listings at the same price are not collapsed.
     const dateKey = item.soldAt
       ? item.soldAt.substring(0, 10)
-      : "unknown";
+      : `${item.platform}_${item.url ?? Math.random()}`;
     const key = `${item.price}|${dateKey}|${item.url ?? ""}`;
     if (!seen.has(key)) {
       seen.add(key);
@@ -265,7 +318,11 @@ if (import.meta.main) {
 function json(data: unknown, status: number): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "content-type": "application/json", "cache-control": "no-store" },
+    headers: {
+      ...corsHeaders,
+      "content-type": "application/json",
+      "cache-control": "no-store",
+    },
   });
 }
 
@@ -275,6 +332,10 @@ function errorJson(
 ): Response {
   return new Response(JSON.stringify({ error }), {
     status,
-    headers: { ...corsHeaders, "content-type": "application/json", "cache-control": "no-store" },
+    headers: {
+      ...corsHeaders,
+      "content-type": "application/json",
+      "cache-control": "no-store",
+    },
   });
 }

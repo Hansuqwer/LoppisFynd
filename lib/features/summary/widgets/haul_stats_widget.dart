@@ -37,10 +37,9 @@ class HaulStatsWidget extends StatelessWidget {
         children: [
           Text(
             l10n.haulSummaryTotalsTitle,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -103,9 +102,6 @@ class HaulStatsWidget extends StatelessWidget {
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 220.ms)
-        .slideY(begin: 0.04, end: 0);
+    ).animate().fadeIn(duration: 220.ms).slideY(begin: 0.04, end: 0);
   }
 }

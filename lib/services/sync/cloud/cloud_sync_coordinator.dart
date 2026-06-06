@@ -43,11 +43,6 @@ class CloudSyncCoordinator {
         }
       }
 
-      await _db.appSettingsDao.setInt(
-        _kAutoSyncLastMs,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-
       final meta = CloudMetadataSyncService(db: _db, config: _config);
 
       try {
@@ -74,6 +69,11 @@ class CloudSyncCoordinator {
           lastError: e.toString(),
         );
       }
+
+      await _db.appSettingsDao.setInt(
+        _kAutoSyncLastMs,
+        DateTime.now().millisecondsSinceEpoch,
+      );
     });
   }
 }

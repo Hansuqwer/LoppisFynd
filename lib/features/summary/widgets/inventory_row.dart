@@ -30,16 +30,17 @@ class InventoryRow extends StatelessWidget {
     final headline = (item.desc?.trim().isNotEmpty ?? false)
         ? item.desc!.trim()
         : (item.query?.trim().isNotEmpty ?? false)
-            ? item.query!.trim()
-            : l10n.haulSummaryUnnamedItem;
+        ? item.query!.trim()
+        : l10n.haulSummaryUnnamedItem;
 
     final netText = net == null ? '—' : formatSek(net!);
     final netBase = Theme.of(context).textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w800,
       color: (net ?? 0) >= 0 ? AppColors.textPrimary : AppColors.primaryAction,
     );
-    final netStyle =
-        netBase == null ? null : AppTypography.metricsFrom(netBase);
+    final netStyle = netBase == null
+        ? null
+        : AppTypography.metricsFrom(netBase);
 
     final cloud = cloudStatus;
     final cloudIcon = switch (cloud) {
@@ -87,9 +88,9 @@ class InventoryRow extends StatelessWidget {
                 headline,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.xxs),
               Wrap(

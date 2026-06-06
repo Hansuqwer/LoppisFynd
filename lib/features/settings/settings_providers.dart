@@ -101,8 +101,8 @@ class ExportDataNotifier extends AsyncNotifier<String> {
 
 final deleteLocalDataProvider =
     AsyncNotifierProvider<DeleteLocalDataNotifier, void>(
-  DeleteLocalDataNotifier.new,
-);
+      DeleteLocalDataNotifier.new,
+    );
 
 class DeleteLocalDataNotifier extends AsyncNotifier<void> {
   @override
@@ -114,9 +114,7 @@ class DeleteLocalDataNotifier extends AsyncNotifier<void> {
       final db = ref.read(appDatabaseProvider);
       final userId = ref.read(activeUserIdProvider);
       final haulId = ref.read(defaultHaulIdProvider);
-      await LocalDataDeletionService(db: db).deleteAllLocalData(
-        userId: userId,
-      );
+      await LocalDataDeletionService(db: db).deleteAllLocalData(userId: userId);
       await db.haulsDao.ensureCurrentHaul(
         id: haulId,
         title: '',
@@ -128,8 +126,8 @@ class DeleteLocalDataNotifier extends AsyncNotifier<void> {
 
 final deleteCloudDataProvider =
     AsyncNotifierProvider<DeleteCloudDataNotifier, CloudDeleteOutcome?>(
-  DeleteCloudDataNotifier.new,
-);
+      DeleteCloudDataNotifier.new,
+    );
 
 class DeleteCloudDataNotifier extends AsyncNotifier<CloudDeleteOutcome?> {
   @override
@@ -146,8 +144,8 @@ class DeleteCloudDataNotifier extends AsyncNotifier<CloudDeleteOutcome?> {
 
 final clearScanCacheProvider =
     AsyncNotifierProvider<ClearScanCacheNotifier, int>(
-  ClearScanCacheNotifier.new,
-);
+      ClearScanCacheNotifier.new,
+    );
 
 class ClearScanCacheNotifier extends AsyncNotifier<int> {
   @override
@@ -166,8 +164,8 @@ class ClearScanCacheNotifier extends AsyncNotifier<int> {
 
 final copyDiagnosticsProvider =
     AsyncNotifierProvider<CopyDiagnosticsNotifier, String>(
-  CopyDiagnosticsNotifier.new,
-);
+      CopyDiagnosticsNotifier.new,
+    );
 
 class CopyDiagnosticsNotifier extends AsyncNotifier<String> {
   @override
@@ -198,8 +196,8 @@ class CopyDiagnosticsNotifier extends AsyncNotifier<String> {
 
 final deleteAccountProvider =
     AsyncNotifierProvider<DeleteAccountNotifier, void>(
-  DeleteAccountNotifier.new,
-);
+      DeleteAccountNotifier.new,
+    );
 
 class DeleteAccountNotifier extends AsyncNotifier<void> {
   @override
@@ -215,9 +213,9 @@ class DeleteAccountNotifier extends AsyncNotifier<void> {
       final db = ref.read(appDatabaseProvider);
       final userId = ref.read(activeUserIdProvider);
       if (userId != null) {
-        await LocalDataDeletionService(db: db).deleteAllLocalData(
-          userId: userId,
-        );
+        await LocalDataDeletionService(
+          db: db,
+        ).deleteAllLocalData(userId: userId);
       }
     });
   }

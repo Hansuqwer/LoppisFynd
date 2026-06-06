@@ -194,19 +194,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     final detections = barcodes
         .where((b) => b.rawValue != null && b.rawValue!.isNotEmpty)
-        .map((b) => BarcodeDetection(
-              value: b.rawValue!,
-              boundingBox: b.corners.isNotEmpty
-                  ? Rect.fromPoints(
-                      b.corners.first,
-                      b.corners.last,
-                    )
-                  : Rect.fromCenter(
-                      center: Offset.zero,
-                      width: 100,
-                      height: 100,
-                    ),
-            ))
+        .map(
+          (b) => BarcodeDetection(
+            value: b.rawValue!,
+            boundingBox: b.corners.isNotEmpty
+                ? Rect.fromPoints(b.corners.first, b.corners.last)
+                : Rect.fromCenter(center: Offset.zero, width: 100, height: 100),
+          ),
+        )
         .toList();
 
     if (detections.isEmpty) return;

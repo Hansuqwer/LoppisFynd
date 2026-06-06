@@ -6,11 +6,7 @@ import '../../../gen/app_localizations.dart';
 import '../../../shared/widgets/glass_button.dart';
 
 class ProfileSection extends StatefulWidget {
-  const ProfileSection({
-    super.key,
-    required this.db,
-    required this.userId,
-  });
+  const ProfileSection({super.key, required this.db, required this.userId});
 
   final AppDatabase db;
   final String userId;

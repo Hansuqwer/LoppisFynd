@@ -1590,4 +1590,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inventoryAvgSell => 'Avg sell';
+
+  @override
+  String get homeRecentScans => 'Recent scans';
+
+  @override
+  String get findsTitle => 'Hot Finds';
+
+  @override
+  String get findsSubtitle =>
+      'Items with high demand right now. Keep an eye out at the flea market.';
+
+  @override
+  String get settingsAdlibrisScraperConfigured =>
+      'Adlibris scraper configured.';
+
+  @override
+  String get settingsAdlibrisScraperNotConfigured =>
+      'Adlibris scraper not configured.';
+
+  @override
+  String get settingsBulkEnrichCta => 'Fetch market data for all books';
+
+  @override
+  String get settingsBulkEnriching => 'Fetching…';
+
+  @override
+  String settingsBulkEnrichDone(int count) {
+    return 'Updated $count books.';
+  }
+
+  @override
+  String settingsBulkEnrichFailed(String error) {
+    return 'Failed: $error';
+  }
 }

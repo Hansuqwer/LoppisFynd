@@ -13,6 +13,11 @@ import '../../services/books/book_market_service.dart';
 import '../../services/books/aggregated_book_market_service.dart';
 import '../../services/books/vinted_book_market_source.dart';
 import '../../services/books/bokborsen_book_market_source.dart';
+import '../../services/books/adlibris_book_market_source.dart';
+import '../../services/books/blocket_book_market_source.dart';
+import '../../services/market/adlibris_market_data_source.dart';
+import '../../services/market/blocket_market_data_source.dart';
+import '../../services/books/bulk_isbn_enrichment_service.dart';
 import '../../services/books/book_inventory_draft_application_service.dart';
 import '../../services/books/book_inventory_draft_mapper.dart';
 import '../../services/books/book_inventory_draft_orchestration_service.dart';
@@ -109,11 +114,39 @@ final bokborsenMarketDataSourceProvider = Provider<BokborsenMarketDataSource?>((
   );
 });
 
+final adlibrisMarketDataSourceProvider = Provider<AdlibrisMarketDataSource?>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.hasAdlibrisScraper) return null;
+  return AdlibrisMarketDataSource(
+    functionUrl: Uri.parse(config.adlibrisScraperUrl),
+    anonKey: config.supabaseAnonKey.trim().isEmpty
+        ? null
+        : config.supabaseAnonKey,
+  );
+});
+
+final blocketMarketDataSourceProvider = Provider<BlocketMarketDataSource?>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.hasBlocketScraper) return null;
+  return BlocketMarketDataSource(
+    functionUrl: Uri.parse(config.blocketScraperUrl),
+    anonKey: config.supabaseAnonKey.trim().isEmpty
+        ? null
+        : config.supabaseAnonKey,
+  );
+});
+
 final aggregatedBookMarketServiceProvider =
     Provider<AggregatedBookMarketService?>((ref) {
       final traderaService = ref.watch(bookMarketServiceProvider);
       final vintedSource = ref.watch(vintedMarketDataSourceProvider);
       final bokborsenSource = ref.watch(bokborsenMarketDataSourceProvider);
+      final adlibrisSource = ref.watch(adlibrisMarketDataSourceProvider);
+      final blocketSource = ref.watch(blocketMarketDataSourceProvider);
 
       final sources = <BookMarketSource>[];
       if (traderaService != null) {
@@ -125,6 +158,12 @@ final aggregatedBookMarketServiceProvider =
       if (bokborsenSource != null) {
         sources.add(BokborsenBookMarketSource(dataSource: bokborsenSource));
       }
+      if (adlibrisSource != null) {
+        sources.add(AdlibrisBookMarketSource(dataSource: adlibrisSource));
+      }
+      if (blocketSource != null) {
+        sources.add(BlocketBookMarketSource(dataSource: blocketSource));
+      }
 
       if (sources.isEmpty) {
         return null;
@@ -132,6 +171,20 @@ final aggregatedBookMarketServiceProvider =
 
       return AggregatedBookMarketService(sources: sources);
     });
+
+final bulkIsbnEnrichmentServiceProvider = Provider<BulkIsbnEnrichmentService>((
+  ref,
+) {
+  final db = ref.watch(appDatabaseProvider);
+  final isbnLookup = ref.watch(isbnLookupServiceProvider);
+  final aggregated = ref.watch(aggregatedBookMarketServiceProvider);
+  final traderaOnly = ref.watch(bookMarketServiceProvider);
+  return BulkIsbnEnrichmentService(
+    db: db,
+    isbnLookup: isbnLookup,
+    market: aggregated ?? traderaOnly,
+  );
+});
 
 final bookPricingDraftServiceProvider = Provider<BookPricingDraftService>((
   ref,
@@ -264,8 +317,8 @@ class StartupMetricsReportedNotifier extends Notifier<bool> {
 
 final startupMetricsReportedProvider =
     NotifierProvider<StartupMetricsReportedNotifier, bool>(
-  StartupMetricsReportedNotifier.new,
-);
+      StartupMetricsReportedNotifier.new,
+    );
 
 final authSessionProvider = StreamProvider<Session?>((ref) async* {
   final config = ref.watch(appConfigProvider);
@@ -305,8 +358,8 @@ class DeepLinkTabIndexNotifier extends Notifier<int?> {
 
 final deepLinkTabIndexProvider =
     NotifierProvider<DeepLinkTabIndexNotifier, int?>(
-  DeepLinkTabIndexNotifier.new,
-);
+      DeepLinkTabIndexNotifier.new,
+    );
 
 class DeepLinkScanItemIdNotifier extends Notifier<String?> {
   @override
@@ -317,8 +370,8 @@ class DeepLinkScanItemIdNotifier extends Notifier<String?> {
 
 final deepLinkScanItemIdProvider =
     NotifierProvider<DeepLinkScanItemIdNotifier, String?>(
-  DeepLinkScanItemIdNotifier.new,
-);
+      DeepLinkScanItemIdNotifier.new,
+    );
 
 bool _isOfflineConnectivity(List<ConnectivityResult> results) {
   return results.length == 1 && results.single == ConnectivityResult.none;

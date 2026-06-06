@@ -610,5 +610,24 @@
   "inventoryEmpty": "Inga böcker sparade ännu",
   "inventoryEmptyHint": "Skanna böcker och spara dem i din samling.",
   "inventoryBoughtFor": "Köpt",
-  "inventoryAvgSell": "Snitt sälj"
+  "inventoryAvgSell": "Snitt sälj",
+
+  "homeRecentScans": "Senaste skanningar",
+
+  "findsTitle": "Heta fynd",
+  "findsSubtitle": "Titlar med hög efterfrågan just nu. Håll utkik på loppisen.",
+
+  "settingsAdlibrisScraperConfigured": "Adlibris-skrapare konfigurerad.",
+  "settingsAdlibrisScraperNotConfigured": "Adlibris-skrapare är inte konfigurerad.",
+
+  "settingsBulkEnrichCta": "Hämta marknadsdata för alla böcker",
+  "settingsBulkEnriching": "Hämtar…",
+  "settingsBulkEnrichDone": "Uppdaterade {count} böcker.",
+  "@settingsBulkEnrichDone": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "settingsBulkEnrichFailed": "Misslyckades: {error}",
+  "@settingsBulkEnrichFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  }
 }

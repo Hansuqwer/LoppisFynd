@@ -70,11 +70,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     ref.read(deleteCloudDataProvider.notifier).run();
   }
 
-  void _clearScanCache() =>
-      ref.read(clearScanCacheProvider.notifier).run();
+  void _clearScanCache() => ref.read(clearScanCacheProvider.notifier).run();
 
-  void _copyDiagnostics() =>
-      ref.read(copyDiagnosticsProvider.notifier).run();
+  void _copyDiagnostics() => ref.read(copyDiagnosticsProvider.notifier).run();
 
   @override
   Widget build(BuildContext context) {

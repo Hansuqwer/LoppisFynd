@@ -9,10 +9,7 @@ import 'package:fynd_loppis/core/theme/app_theme.dart';
 import 'package:fynd_loppis/features/books/inventory_screen.dart';
 import 'package:fynd_loppis/gen/app_localizations.dart';
 
-Widget _wrap({
-  required AppDatabase db,
-  Locale locale = const Locale('en'),
-}) {
+Widget _wrap({required AppDatabase db, Locale locale = const Locale('en')}) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
     child: MaterialApp(
@@ -93,10 +90,7 @@ void main() {
         saved: true,
       );
 
-      await db.booksDao.setMarketStats(
-        id: 'book_1',
-        averageSoldPriceSek: 150,
-      );
+      await db.booksDao.setMarketStats(id: 'book_1', averageSoldPriceSek: 150);
 
       await tester.pumpWidget(_wrap(db: db));
       await tester.pumpAndSettle(const Duration(seconds: 2));

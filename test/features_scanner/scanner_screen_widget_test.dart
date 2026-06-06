@@ -11,7 +11,9 @@ import 'package:fynd_loppis/core/theme/app_theme.dart';
 import 'package:fynd_loppis/features/scanner/scanner_screen.dart';
 import 'package:fynd_loppis/gen/app_localizations.dart';
 
-const _permissionChannel = MethodChannel('flutter.baseflow.com/permissions/methods');
+const _permissionChannel = MethodChannel(
+  'flutter.baseflow.com/permissions/methods',
+);
 
 const _testAppConfig = AppConfig(
   appEnv: 'test',
@@ -22,10 +24,7 @@ const _testAppConfig = AppConfig(
   sentryDsn: '',
 );
 
-Widget _wrap({
-  required AppDatabase db,
-  Locale locale = const Locale('en'),
-}) {
+Widget _wrap({required AppDatabase db, Locale locale = const Locale('en')}) {
   return ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
@@ -43,31 +42,30 @@ Widget _wrap({
 
 /// Returns [PermissionStatus.denied] (0) for all permission checks.
 void _mockPermissionDenied() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-    _permissionChannel,
-    (methodCall) async {
-      switch (methodCall.method) {
-        case 'checkPermissionStatus':
-          return 0; // PermissionStatus.denied
-        case 'requestPermissions':
-          return <int, int>{1: 0}; // Permission.camera (1) -> denied (0)
-        case 'shouldShowRequestRationale':
-          return false;
-        default:
-          return null;
-      }
-    },
-  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(_permissionChannel, (methodCall) async {
+        switch (methodCall.method) {
+          case 'checkPermissionStatus':
+            return 0; // PermissionStatus.denied
+          case 'requestPermissions':
+            return <int, int>{1: 0}; // Permission.camera (1) -> denied (0)
+          case 'shouldShowRequestRationale':
+            return false;
+          default:
+            return null;
+        }
+      });
 }
 
 /// Throws on any permission call to simulate a camera init failure.
 void _mockPermissionError() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-    _permissionChannel,
-    (methodCall) async {
-      throw PlatformException(code: 'camera_error', message: 'mock camera error');
-    },
-  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(_permissionChannel, (methodCall) async {
+        throw PlatformException(
+          code: 'camera_error',
+          message: 'mock camera error',
+        );
+      });
 }
 
 void main() {
@@ -76,10 +74,8 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      _permissionChannel,
-      null,
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_permissionChannel, null);
   });
 
   group('ScannerScreen', () {

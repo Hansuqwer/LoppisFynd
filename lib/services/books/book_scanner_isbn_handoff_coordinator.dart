@@ -7,7 +7,7 @@ class BookScannerIsbnHandoffCoordinator {
     required MlKitBookIsbnAdapter isbnAdapter,
     required BookBarcodeIsbnHandoff handoff,
   }) : _isbnAdapter = isbnAdapter,
-        _handoff = handoff;
+       _handoff = handoff;
 
   final MlKitBookIsbnAdapter _isbnAdapter;
   final BookBarcodeIsbnHandoff _handoff;

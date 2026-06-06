@@ -84,7 +84,8 @@ class _BookInventoryCard extends ConsumerWidget {
                       child: Image.network(
                         book.coverUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _MiniBookPlaceholder(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            _MiniBookPlaceholder(),
                       ),
                     )
                   : _MiniBookPlaceholder(),
