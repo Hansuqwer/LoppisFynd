@@ -145,3 +145,23 @@ Deno.test("handleRequest: upstream 503 returns 502", async () => {
   const res = await handleRequest(req, { fetch: mockFetch });
   assertEquals(res.status, 502);
 });
+
+Deno.test("handleRequest: anti-bot checkpoint returns explicit code", async () => {
+  const mockFetch: typeof fetch = (_url) =>
+    Promise.resolve(
+      new Response("<title>Vercel Security Checkpoint</title>", {
+        status: 429,
+      }),
+    );
+
+  const req = new Request("http://localhost/", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query: "Astrid Lindgren" }),
+  });
+
+  const res = await handleRequest(req, { fetch: mockFetch });
+  assertEquals(res.status, 502);
+  const body = await res.json() as { error: { code: string } };
+  assertEquals(body.error.code, "bot_challenge");
+});

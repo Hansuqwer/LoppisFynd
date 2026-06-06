@@ -148,6 +148,7 @@ async function fetchViaVintedApi(args: {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
 
   let cookie = "";
+  let pageHtml = "";
   try {
     const pageUrl = `https://www.vinted.se/catalog?search_text=${
       encodeURIComponent(query)
@@ -169,10 +170,10 @@ async function fetchViaVintedApi(args: {
     }
 
     cookie = extractSetCookieHeader(pageResp.headers);
+    pageHtml = await pageResp.text();
     if (!cookie.includes("access_token_web=")) {
       // Some Deno runtimes coalesce headers differently; still try API with all cookies.
-      const text = await pageResp.text();
-      if (isBotChallenge(text)) {
+      if (isBotChallenge(pageHtml)) {
         return { ok: false, error: "Vinted bot challenge / DataDome detected" };
       }
     }
@@ -242,7 +243,104 @@ async function fetchViaVintedApi(args: {
 
   // If soldOnly was requested but no sold results are discoverable, return active proxies.
   if (firstNonEmpty.length > 0) return { ok: true, items: firstNonEmpty };
+  const htmlItems = parseVintedCatalogHtml(pageHtml, maxResults);
+  if (htmlItems.length > 0) return { ok: true, items: htmlItems };
   return { ok: false, error: lastError || "No Vinted items returned" };
+}
+
+export function parseVintedCatalogHtml(
+  html: string,
+  maxResults: number,
+): ParsedVintedItem[] {
+  const items: ParsedVintedItem[] = [];
+  const seen = new Set<string>();
+  const blockRegex =
+    /<div[^>]+class="[^"]*new-item-box__container[^"]*"[^>]+data-testid="product-item-id-([^"-]+)"[^>]*>([\s\S]*?)(?=<div[^>]+class="[^"]*new-item-box__container[^"]*"[^>]+data-testid="product-item-id-|<\/body>)/gi;
+
+  let match: RegExpExecArray | null;
+  while (
+    (match = blockRegex.exec(html)) !== null && items.length < maxResults
+  ) {
+    const id = match[1];
+    const block = match[2];
+    const price = extractHtmlPrice(block, id);
+    if (price == null || price <= 0) continue;
+
+    const rawUrl = firstMatch(
+      block,
+      /href="(https:\/\/www\.vinted\.se\/items\/[^"]+)"/i,
+    ) ?? firstMatch(block, /href="(\/items\/[^"]+)"/i);
+    const url = rawUrl == null
+      ? null
+      : rawUrl.startsWith("http")
+      ? rawUrl
+      : `https://www.vinted.se${rawUrl}`;
+    const dedupKey = url ?? id;
+    if (seen.has(dedupKey)) continue;
+    seen.add(dedupKey);
+
+    const rawTitle = firstMatch(block, /title="([^"]{2,500})"/i) ??
+      firstMatch(block, /alt="([^"]{2,500})"/i);
+    const title = rawTitle == null ? null : cleanVintedTitle(rawTitle);
+    items.push({ platform: "vinted", price, soldAt: null, url, title });
+  }
+
+  return items;
+}
+
+function extractHtmlPrice(block: string, id: string): number | null {
+  const priceText = firstMatch(
+    block,
+    new RegExp(
+      `data-testid="product-item-id-${
+        escapeRegExp(id)
+      }--price-text"[^>]*>([^<]+)`,
+      "i",
+    ),
+  ) ?? firstMatch(block, /(\d+(?:[,.]\d{1,2})?)\s*(?:kr|SEK)/i);
+  if (priceText == null) return null;
+  const cleaned = priceText.replace(/\s|\u00a0/g, "").replace(",", ".");
+  const parsed = parseFloat(cleaned);
+  return Number.isFinite(parsed) ? Math.round(parsed) : null;
+}
+
+function cleanVintedTitle(value: string): string {
+  const text = decodeHtml(value).replace(/\s+/g, " ").trim();
+  const pricePart = text.search(/,\s*\d+(?:[,.]\d{1,2})?\s*kr\b/i);
+  const withoutPrice = pricePart >= 0 ? text.slice(0, pricePart) : text;
+  const parts = withoutPrice
+    .split(/,\s*/)
+    .filter((part) => !/^(varumärke|skick|storlek):/i.test(part));
+  return (parts[0] ?? withoutPrice).trim() || text;
+}
+
+function firstMatch(value: string, pattern: RegExp): string | null {
+  return pattern.exec(value)?.[1] ?? null;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&auml;/gi, "ä")
+    .replace(/&ouml;/gi, "ö")
+    .replace(/&aring;/gi, "å")
+    .replace(/&Auml;/g, "Ä")
+    .replace(/&Ouml;/g, "Ö")
+    .replace(/&Aring;/g, "Å")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (_, code) => String.fromCharCode(parseInt(code, 16)),
+    );
 }
 
 function parseVintedApiItem(item: VintedApiItem): ParsedVintedItem | null {

@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { handleRequest } from "../index.ts";
+import { handleRequest, parseVintedCatalogHtml } from "../index.ts";
 
 function jsonResponse(data: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(data), {
@@ -7,6 +7,20 @@ function jsonResponse(data: unknown, init: ResponseInit = {}) {
     headers: { "content-type": "application/json", ...(init.headers ?? {}) },
   });
 }
+
+const FIXTURE_CATALOG_HTML = `
+<html><body>
+<div class="new-item-box__container" data-testid="product-item-id-111">
+  <a href="https://www.vinted.se/items/111-pippi-langstrump?referrer=catalog" title="Pippi Långstrump, skick: Mycket bra, 170,00 kr"></a>
+  <p data-testid="product-item-id-111--price-text">170,00&nbsp;kr</p>
+</div>
+<div class="new-item-box__container" data-testid="product-item-id-222">
+  <img alt="Doktor Glas, skick: Bra, 80.00 kr" />
+  <a href="/items/222-doktor-glas?referrer=catalog"></a>
+  <p data-testid="product-item-id-222--price-text">80,00 kr</p>
+</div>
+</body></html>
+`;
 
 Deno.test("handleRequest: OPTIONS returns 204", async () => {
   const res = await handleRequest(
@@ -92,6 +106,56 @@ Deno.test("handleRequest: direct API parses active and sold items", async () => 
   );
   assertEquals(body.items[1].price, 81);
   assertEquals(body.items[1].soldAt, null);
+});
+
+Deno.test("parseVintedCatalogHtml: extracts active listing proxies", () => {
+  const items = parseVintedCatalogHtml(FIXTURE_CATALOG_HTML, 10);
+  assertEquals(items.length, 2);
+  assertEquals(items[0].platform, "vinted");
+  assertEquals(items[0].price, 170);
+  assertEquals(items[0].soldAt, null);
+  assertEquals(items[0].title, "Pippi Långstrump");
+  assertEquals(
+    items[0].url,
+    "https://www.vinted.se/items/111-pippi-langstrump?referrer=catalog",
+  );
+  assertEquals(items[1].price, 80);
+  assertEquals(
+    items[1].url,
+    "https://www.vinted.se/items/222-doktor-glas?referrer=catalog",
+  );
+});
+
+Deno.test("handleRequest: falls back to catalog HTML when API is 401", async () => {
+  const mockFetch = (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/catalog?")) {
+      return Promise.resolve(
+        new Response(FIXTURE_CATALOG_HTML, {
+          status: 200,
+          headers: { "set-cookie": "v_udt=session-cookie; Path=/" },
+        }),
+      );
+    }
+    if (url.includes("/api/v2/catalog/items")) {
+      return Promise.resolve(jsonResponse({ code: 100 }, { status: 401 }));
+    }
+    return Promise.resolve(new Response("not found", { status: 404 }));
+  };
+
+  const res = await handleRequest(
+    new Request("http://x/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "pippi", maxResults: 10 }),
+    }),
+    { fetch: mockFetch },
+  );
+
+  assertEquals(res.status, 200);
+  const body = await res.json() as { items: Array<Record<string, unknown>> };
+  assertEquals(body.items.length, 2);
+  assertEquals(body.items[0].price, 170);
 });
 
 Deno.test("handleRequest: soldOnly filters by sold_at but can fallback through status candidates", async () => {

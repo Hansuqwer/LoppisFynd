@@ -20,6 +20,15 @@ const corsHeaders = {
   "access-control-allow-methods": "POST, OPTIONS",
 };
 
+const browserHeaders = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7",
+  Referer: "https://www.adlibris.com/se",
+};
+
 export interface AdlibrisItem {
   platform: "adlibris";
   price: number;
@@ -70,19 +79,24 @@ export async function handleRequest(
 
   try {
     // Adlibris used-book search: filter=USED surfaces second-hand listings.
-    const searchUrl =
-      `https://www.adlibris.com/se/sok?query=${encodeURIComponent(query)}&filter=USED`;
+    const searchUrl = `https://www.adlibris.com/se/sok?query=${
+      encodeURIComponent(query)
+    }&filter=USED`;
 
-    const response = await doFetch(searchUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; BokfyndBot/1.0; +https://bokfynd.se)",
-        Accept: "text/html,application/xhtml+xml",
-        "Accept-Language": "sv-SE,sv;q=0.9",
-      },
-    });
+    const response = await doFetch(searchUrl, { headers: browserHeaders });
+    const html = await response.text();
 
     if (!response.ok) {
+      if (isBotChallenge(html)) {
+        return errorJson(
+          {
+            code: "bot_challenge",
+            message:
+              `Adlibris returned anti-bot checkpoint (${response.status}); use a browser/Firecrawl fallback for this source.`,
+          },
+          502,
+        );
+      }
       return errorJson(
         {
           code: "fetch_failed",
@@ -92,7 +106,6 @@ export async function handleRequest(
       );
     }
 
-    const html = await response.text();
     const items = parseAdlibrisHtml(html, maxResults);
 
     return json({ items, source: "adlibris", query }, 200);
@@ -102,6 +115,12 @@ export async function handleRequest(
       500,
     );
   }
+}
+
+function isBotChallenge(html: string): boolean {
+  const lower = html.toLowerCase();
+  return lower.includes("vercel security checkpoint") ||
+    lower.includes("security checkpoint") || lower.includes("captcha");
 }
 
 /**
@@ -154,8 +173,7 @@ export function parseAdlibrisHtml(
   const urlPattern = /href="(\/se\/(?:bok|begagnat)[^"]+)"/i;
 
   // Condition pattern
-  const conditionPattern =
-    /class="[^"]*condition[^"]*"[^>]*>([^<]{2,60})</i;
+  const conditionPattern = /class="[^"]*condition[^"]*"[^>]*>([^<]{2,60})</i;
 
   function parseBlock(block: string): AdlibrisItem | null {
     // Extract price.
@@ -186,9 +204,7 @@ export function parseAdlibrisHtml(
 
     // Extract URL.
     const urlMatch = urlPattern.exec(block);
-    const url = urlMatch
-      ? `https://www.adlibris.com${urlMatch[1]}`
-      : null;
+    const url = urlMatch ? `https://www.adlibris.com${urlMatch[1]}` : null;
 
     // Extract condition.
     const condMatch = conditionPattern.exec(block);
