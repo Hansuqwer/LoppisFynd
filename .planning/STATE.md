@@ -9,12 +9,13 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-**Phase:** 4 of 5 (Opt-In Offline Fallback)
-**Current Plan:** 4
-**Total Plans in Phase:** 4
-**Status:** Ready to execute
-**Last Activity:** 2026-02-24
-**Progress:** [█████████░] 93%
+**Phase:** 6 of 6 (Android Release — first Play Store release)
+**Phase 4 status:** In Progress — Plans 01-03 complete, Plan 04 (UX + device checkpoint) deferred (not blocking release)
+**Current Plan:** None started in Phase 6
+**Total Plans in Phase 6:** 6
+**Status:** Ready to execute Phase 6
+**Last Activity:** 2026-06-07
+**Progress:** [████████░░] 80% (Phases 1–3 complete, Phase 4 partial, Phase 6 queued)
 
 ## Performance Metrics
 
@@ -70,17 +71,30 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ### Pending Todos
 
+- **Phase 6 (execute in order):**
+  - [x] 06-01: Fix CI cloud-ai-proxy broken step + hardcoded English strings (REL-01, REL-02)
+  - 06-02: Android signing docs + ProGuard + adaptive icon (REL-03, REL-04)
+  - 06-03: Play Store metadata + privacy URL + dart-define CI injection (REL-05, REL-06, REL-07)
+  - 06-04: Dashboard real sold count + real weekly chart + Tradera noop rate-limit (REL-08, REL-09)
+  - 06-05: Swedish children's book seed (200+ titles) + Open Library ISBN fallback (REL-10, REL-11)
+  - 06-06: offlineDetectorProvider null guard + auth gate + PlatformDispatcher Sentry (REL-12, REL-13)
+- Phase 4 Plan 04: Offline detection UX + device checkpoint (deferred; not blocking release)
+- Phase 5: UI tokens + dark mode (deferred; not blocking release)
 - Run iOS build + launch validation when macOS access is available (or via CI `ios-build`).
-- Phase 3: On-device verify comps toggle OFF->ON immediately cancels/(re)schedules background work (03-03 checkpoint).
+- Phase 3: On-device verify comps toggle OFF→ON immediately reschedules background work (03-03 checkpoint).
 
 ### Blockers/Concerns
 
-- **Risk:** iOS runtime smoke test is unvalidated; validate on macOS before release.
-- **Note:** Phase 2 cloud Identify was verified end-to-end on Android with deployed Supabase proxy; run iOS smoke test when macOS access is available.
-- **Risk:** Phase 3 background Workmanager scheduling behavior is wired but needs device verification before marking Phase 3 fully verified.
+- **CI BROKEN (REL-01):** `cloud-ai-proxy/tests/` referenced in `ci.yml` but directory does not exist — CI fails on every run.
+- **Prod AAB offline-only (REL-07):** `--dart-define` not injected in CI prod build step — all Supabase/Tradera/Sentry features disabled in production binary.
+- **No adaptive icon (REL-04):** Play Store will warn/reject for Android 8.0+ — only legacy PNG icons present.
+- **Tradera proxy 500 (REL-09):** `UPSTASH_REDIS_REST_URL` + `TOKEN` not in `.env.example`; proxy returns `server_not_configured` 500 without them.
+- **Risk:** iOS runtime smoke test is unvalidated; validate on macOS before iOS release.
+- **Note:** Phase 2 cloud Identify verified end-to-end on Android with deployed Supabase proxy; run iOS smoke when macOS access is available.
+- **Risk:** Phase 3 background Workmanager scheduling behavior wired but needs device verification before marking Phase 3 fully verified.
 
 ## Session Continuity
 
-**Last session:** 2026-02-24T08:25:33.655Z
-**Stopped At:** Completed 04-opt-in-offline-fallback-03-PLAN.md
-**Resume File:** None
+**Last session:** 2026-06-07T00:00:00Z
+**Stopped At:** Added Phase 6 Android Release to roadmap; research complete; planning files updated.
+**Resume File:** `PRODUCTION_READINESS_PROMPT.md` — execute Phase 6 plans 06-01 through 06-06 in order.

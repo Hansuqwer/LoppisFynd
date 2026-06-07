@@ -81,6 +81,24 @@ Deferred (later 2026-2027): responsive layouts at scale, token governance toolin
 | New platforms (web/desktop) | Maintain iOS/Android support first |
 | Revenue model changes (subscriptions, etc.) | Not part of this technical roadmap |
 
+### Android Release (Phase 6 — First Play Store Release)
+
+Requirements REL-01..REL-13 map 1:1 to steps 0–13 in `PRODUCTION_READINESS_PROMPT.md`.
+
+- [x] **REL-01**: CI passes without broken test step references; cloud-ai-proxy stub or step removed
+- [x] **REL-02**: No hardcoded user-facing strings outside ARB files (`auth_gate.dart`, `market_stats_widget.dart`)
+- [ ] **REL-03**: Release signing documented in `key.properties`; ProGuard rules verified for Drift/Sentry/Supabase
+- [ ] **REL-04**: Adaptive launcher icon present (`mipmap-anydpi-v26/ic_launcher.xml` + round icon) — Play Store Android 8.0+ requirement
+- [ ] **REL-05**: Play Store metadata skeleton checked in (`fastlane/metadata/android/sv-SE/`: title ≤30, short ≤80, full ≤4000, changelog)
+- [ ] **REL-06**: Privacy policy public URL constant in `AppConfig`; linked from Play Store listing
+- [ ] **REL-07**: All `--dart-define` secrets injected in CI prod AAB build step; prod AAB not built offline-only
+- [ ] **REL-08**: Dashboard shows real sold count from DB + real per-day weekly chart data (no hardcoded 0 or mock)
+- [ ] **REL-09**: Tradera proxy noop rate-limit fallback when `UPSTASH_REDIS_REST_URL` absent; `UPSTASH_*` documented in `.env.example`
+- [ ] **REL-10**: Swedish children's book seed data (≥200 titles covering Astrid Lindgren, Mumin, Alfons Åberg, HP, Pettson, LasseMaja etc.) with ISBN + cover URLs
+- [ ] **REL-11**: `IsbnLookupService` uses Open Library as free fallback when `GOOGLE_BOOKS_API_KEY` absent; graceful degradation message in UI
+- [ ] **REL-12**: `offlineDetectorProvider` returns `null` gracefully instead of throwing `StateError`; no crash on Phase 4-incomplete code paths
+- [ ] **REL-13**: `PlatformDispatcher.onError` Sentry hook; auth gate error logging instead of silent swallow
+
 ## Traceability
 
 Which phases cover which requirements. Updated during roadmap creation.
@@ -112,12 +130,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-03 | Phase 5 | Pending |
 | UI-04 | Phase 5 | Pending |
 | UI-05 | Phase 5 | Pending |
+| REL-01 | Phase 6 | Pending |
+| REL-02 | Phase 6 | Pending |
+| REL-03 | Phase 6 | Pending |
+| REL-04 | Phase 6 | Pending |
+| REL-05 | Phase 6 | Pending |
+| REL-06 | Phase 6 | Pending |
+| REL-07 | Phase 6 | Pending |
+| REL-08 | Phase 6 | Pending |
+| REL-09 | Phase 6 | Pending |
+| REL-10 | Phase 6 | Pending |
+| REL-11 | Phase 6 | Pending |
+| REL-12 | Phase 6 | Pending |
+| REL-13 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 25
+- v1 Android Release requirements: 13 total (REL-01..REL-13)
+- Mapped to phases: 38
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-21*
-*Last updated: 2026-02-21 after roadmap creation*
+*Last updated: 2026-06-07 — added REL-01..REL-13 (Android Release / Phase 6)*

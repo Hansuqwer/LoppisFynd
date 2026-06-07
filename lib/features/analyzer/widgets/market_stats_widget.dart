@@ -169,8 +169,9 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
     }
 
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Cloud identification not available')),
+      SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)),
     );
   }
 

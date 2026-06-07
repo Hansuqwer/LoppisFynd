@@ -4,6 +4,8 @@
 
 This delivery cycle removes the first-run AI download blocker by making cloud-first identification the default (with explicit privacy controls), keeps a lightweight opt-in offline fallback, hardens sold-price comps behavior, modernizes core dependencies to current stable, and finishes UI System v2 token adoption with dark mode parity.
 
+**Release target added 2026-06-07:** Android first Play Store release (Phase 6) focusing on Swedish children's book coverage with enriched market data (ISBN, cover, sold prices).
+
 ## Phases
 
 **Phase Numbering:**
@@ -15,6 +17,7 @@ This delivery cycle removes the first-run AI download blocker by making cloud-fi
 - [x] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background comps with disable controls and proxy protection. (completed 2026-02-23)
 - [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification with evidence and safe licensing.
 - [ ] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across primitives plus golden coverage.
+- [ ] **Phase 6: Android Release** - First Play Store release with Swedish children's book coverage, CI fixes, release signing, and enriched market data.
 
 ## Phase Details
 
@@ -103,15 +106,48 @@ Plans:
 - [ ] 05-01: Finish token adoption in primitives; simplify card layering; improve typography weights/label contrast; wire dark mode toggle
 - [ ] 05-02: Add/maintain goldens + CI enforcement to prevent regressions
 
+### Phase 6: Android Release — First Play Store Release
+**Goal**: Ship a production-quality Android release to the Play Store with solid Swedish children's book coverage, no CI blockers, release signing, enriched market data (ISBN, cover, sold prices), and adaptive launcher icon.
+**Depends on**: Phase 3 (market data complete). Phase 4 + 5 can run in parallel or follow.
+**Release target**: Android first; iOS follows
+**Requirements**: REL-01 through REL-13
+**Success Criteria** (what must be TRUE):
+  1. CI passes end-to-end including all Deno Edge Function tests (no broken test step references).
+  2. Production AAB is built with all `--dart-define` secrets injected and signed with release keystore.
+  3. App has adaptive launcher icon and passes Play Store pre-launch checks.
+  4. First-launch experience shows real book price data for at least 200 Swedish children's titles.
+  5. ISBN and cover images are displayed for scraped book comps (Open Library enrichment).
+  6. No crash from unimplemented providers (`offlineDetectorProvider`, `cloudAiProxy`).
+  7. Privacy policy is accessible via a public URL from the Play Store listing.
+  8. `fvm dart analyze` passes with only known 9 `TableMigration` experimental warnings.
+
+**Package versions verified 2026-06-07 (update deps if needed before release):**
+| Package | Current | Latest stable |
+|---|---|---|
+| `flutter_riverpod` | 3.2.1 | **3.3.1** |
+| `drift` | 2.31.0 | **2.33.0** |
+| `supabase_flutter` | ^2.12.0 | **2.14.1** |
+| `sentry_flutter` | ^9.13.0 | **9.21.0** |
+| `mobile_scanner` | ^7.2.0 | 7.2.0 (current) |
+
+**Plans** (maps 1:1 to steps 0–13 in `PRODUCTION_READINESS_PROMPT.md`):
+- [x] 06-01-PLAN.md — CI fixes + hardcoded string cleanup (steps 0.1, 0.2)
+- [ ] 06-02-PLAN.md — Android release signing docs + ProGuard rules + adaptive icon (steps 1, 2)
+- [ ] 06-03-PLAN.md — Play Store metadata + privacy policy URL + dart-define CI injection (steps 3, 4, 5)
+- [ ] 06-04-PLAN.md — Dashboard real sold count + real weekly chart + Tradera noop rate-limit fallback (steps 6, 7)
+- [ ] 06-05-PLAN.md — Swedish children's book seed (200+ titles) + Open Library ISBN fallback in `IsbnLookupService` (steps 8, 9)
+- [ ] 06-06-PLAN.md — Crash guards: `offlineDetectorProvider` null stub + auth gate error logging + `PlatformDispatcher` Sentry hook (steps 10, 11, 12, 13)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases 1 → 2 → 3 complete. Phase 4 in progress (3/4 plans). Phase 6 (Android Release) is the immediate priority and can proceed without completing Phase 4 or 5. Phase 5 runs in parallel or after release.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Dependency Modernization Baseline | 2/2 | Complete    | 2026-02-22 |
 | 2. Cloud AI + Privacy Controls | 5/5 | Complete    | 2026-02-22 |
 | 3. Sold-Price Comps Hardening | 3/3 | Complete    | 2026-02-23 |
-| 4. Opt-In Offline Fallback | 0/TBD | Not started | - |
+| 4. Opt-In Offline Fallback | 3/4 | In Progress | - |
 | 5. UI Tokens + Dark Mode Parity | 0/TBD | Not started | - |
+| 6. Android Release | 0/6 | Not started | - |

@@ -82,8 +82,12 @@ jobs:
       - name: Test Supabase functions
         run: |
           deno test supabase/functions/tradera-proxy/tests/
-          deno test supabase/functions/cloud-ai-proxy/tests/
           deno test supabase/functions/account-delete/tests/
+          deno test --allow-net supabase/functions/book-market-aggregator/tests/
+          deno test --allow-net supabase/functions/bokborsen-scraper/tests/
+          deno test --allow-net supabase/functions/vinted-scraper/tests/
+          deno test --allow-net supabase/functions/blocket-scraper/tests/
+          deno test --allow-net supabase/functions/adlibris-scraper/tests/
 
 
       - name: Configure Android signing (optional)

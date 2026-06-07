@@ -5,19 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/app/providers.dart';
+import '../../gen/app_localizations.dart';
 import '../auth/login_screen.dart';
 import '../../core/navigation/app_nav_shell.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
-  Future<void> _ensureScopedData(WidgetRef ref, String? userId) async {
+  Future<void> _ensureScopedData(
+    WidgetRef ref,
+    String? userId,
+    String haulTitle,
+  ) async {
     final db = ref.read(appDatabaseProvider);
     final haulId = ref.read(defaultHaulIdProvider);
 
     await db.haulsDao.ensureCurrentHaul(
       id: haulId,
-      title: 'Current haul',
+      title: haulTitle,
       userId: userId,
     );
 
@@ -36,17 +41,19 @@ class AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final config = ref.watch(appConfigProvider);
     if (!config.hasSupabase) {
-      unawaited(_ensureScopedData(ref, null));
+      unawaited(_ensureScopedData(ref, null, l10n.commonHaul));
       return const AppNavShell();
     }
 
     return StreamBuilder(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
+        final l10n = AppLocalizations.of(context)!;
         final session = Supabase.instance.client.auth.currentSession;
-        unawaited(_ensureScopedData(ref, session?.user.id));
+        unawaited(_ensureScopedData(ref, session?.user.id, l10n.commonHaul));
         if (session != null) {
           return const AppNavShell();
         }
