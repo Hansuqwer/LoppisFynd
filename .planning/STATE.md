@@ -73,7 +73,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 - **Phase 6 (execute in order):**
   - [x] 06-01: Fix CI cloud-ai-proxy broken step + hardcoded English strings (REL-01, REL-02)
-  - 06-02: Android signing docs + ProGuard + adaptive icon (REL-03, REL-04)
+  - [x] 06-02: Android signing docs + ProGuard + adaptive icon (REL-03, REL-04)
   - 06-03: Play Store metadata + privacy URL + dart-define CI injection (REL-05, REL-06, REL-07)
   - 06-04: Dashboard real sold count + real weekly chart + Tradera noop rate-limit (REL-08, REL-09)
   - 06-05: Swedish children's book seed (200+ titles) + Open Library ISBN fallback (REL-10, REL-11)

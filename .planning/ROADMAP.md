@@ -132,7 +132,7 @@ Plans:
 
 **Plans** (maps 1:1 to steps 0–13 in `PRODUCTION_READINESS_PROMPT.md`):
 - [x] 06-01-PLAN.md — CI fixes + hardcoded string cleanup (steps 0.1, 0.2)
-- [ ] 06-02-PLAN.md — Android release signing docs + ProGuard rules + adaptive icon (steps 1, 2)
+- [x] 06-02-PLAN.md — Android release signing docs + ProGuard rules + adaptive icon (steps 1, 2)
 - [ ] 06-03-PLAN.md — Play Store metadata + privacy policy URL + dart-define CI injection (steps 3, 4, 5)
 - [ ] 06-04-PLAN.md — Dashboard real sold count + real weekly chart + Tradera noop rate-limit fallback (steps 6, 7)
 - [ ] 06-05-PLAN.md — Swedish children's book seed (200+ titles) + Open Library ISBN fallback in `IsbnLookupService` (steps 8, 9)
