@@ -798,6 +798,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOpenSyncStatus => 'Open sync status';
 
   @override
+  String get settingsDarkMode => 'Dark mode';
+
+  @override
   String get legalTitle => 'Legal';
 
   @override

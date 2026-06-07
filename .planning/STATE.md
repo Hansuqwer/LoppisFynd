@@ -6,16 +6,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** The app launches immediately (no multi-GB downloads) and helps a
 user quickly identify and price a secondhand item from a photo, even with
-unreliable connectivity. **Current focus:** Phase 4 - Opt-In Offline Fallback
+unreliable connectivity. **Current focus:** Phase 4 Plan 04 + Phase 5 (Offline detection UX + UI tokens + dark mode parity)
 
 ## Current Position
 
-**Phase:** 6 of 6 (Android Release — first Play Store release) **Phase 4
-status:** In Progress — Plans 01-03 complete, Plan 04 (UX + device checkpoint)
-deferred (not blocking release) **Current Plan:** Phase 6 complete
-**Total Plans in Phase 6:** 6 **Status:** Phase 6 complete **Last Activity:**
-2026-06-07 **Progress:** [██████████] 100% (Phases 1–3 complete, Phase 4 partial,
-Phase 6 6/6 complete)
+**Phase:** 4 (Opt-In Offline Fallback) — Plan 04 in progress; Phase 5 (UI tokens + dark mode) in progress **Phase 4 status:** Plans 01-03 complete, Plan 04 in progress **Current Plan:** Phase 4 Plan 04 + Phase 5 **Total Plans in Phase 4:** 4 **Status:** Phase 4 3/4, Phase 5 0/1 (in progress) **Last Activity:** 2026-06-07 **Progress:** [██████████] 100% (Phases 1–3 complete, Phase 4 partial, Phase 5 partial, Phase 6 6/6 complete)
 
 ## Performance Metrics
 
@@ -111,9 +106,8 @@ Phase 6 6/6 complete)
     fallback (REL-10, REL-11)
   - [x] 06-06: offlineDetectorProvider null guard + auth gate + PlatformDispatcher
     Sentry (REL-12, REL-13)
-- Phase 4 Plan 04: Offline detection UX + device checkpoint (deferred; not
-  blocking release)
-- Phase 5: UI tokens + dark mode (deferred; not blocking release)
+- Phase 4 Plan 04: Offline detection UX + device checkpoint (in progress)
+- Phase 5: UI tokens + dark mode (in progress)
 - Run iOS build + launch validation when macOS access is available (or via CI
   `ios-build`).
 - Phase 3: On-device verify comps toggle OFF→ON immediately reschedules

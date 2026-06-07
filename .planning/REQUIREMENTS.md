@@ -26,12 +26,12 @@ dark mode).
 
 ### Offline Fallback (Lightweight)
 
-- [ ] **OFF-01**: Offline fallback identification works without network
+- [x] **OFF-01**: Offline fallback identification works without network
       connectivity
-- [ ] **OFF-02**: Offline model size is under 10MB (excluding app bundle)
-- [ ] **OFF-03**: Offline results include evidence fields (e.g., bounding
+- [x] **OFF-02**: Offline model size is under 10MB (excluding app bundle)
+- [x] **OFF-03**: Offline results include evidence fields (e.g., bounding
       boxes + confidence) suitable for UI display
-- [ ] **OFF-04**: Offline ML stack and weights are commercially safe to
+- [x] **OFF-04**: Offline ML stack and weights are commercially safe to
       distribute (no AGPL licensing chain)
 
 ### Pricing Comps (Tradera)
@@ -65,13 +65,13 @@ dark mode).
 
 ### UI Tokens + Dark Mode (UI System v2 Adoption)
 
-- [ ] **UI-01**: Light and dark themes are wired to semantic + ramp tokens (no
+- [x] **UI-01**: Light and dark themes are wired to semantic + ramp tokens (no
       hardcoded UI colors/assets in migrated UI)
-- [ ] **UI-02**: System/manual dark mode toggle exists and persists user
+- [x] **UI-02**: System/manual dark mode toggle exists and persists user
       preference
 - [ ] **UI-03**: Shared primitives fully respect tokens (e.g.,
       GlassSurface/Overlay/Board, NatureBackground, LogoMotifOverlay, BentoCard)
-- [ ] **UI-04**: Dedicated dark hero background token is used (no hardcoded dark
+- [x] **UI-04**: Dedicated dark hero background token is used (no hardcoded dark
       images in hero contexts)
 - [ ] **UI-05**: Golden tests cover key primitives/screens for light/dark parity
       and pass in CI

@@ -487,17 +487,20 @@ class _StackLayout extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: AppTypography.uiFontFamily,
-              fontWeight: FontWeight.w700,
-              fontSize: w * 0.16,
-              color: style.ink,
-              height: 1.06,
-              letterSpacing: -0.02,
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontFamily: AppTypography.uiFontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: w * 0.16,
+                color: style.ink,
+                height: 1.06,
+                letterSpacing: -0.02,
+              ),
+              maxLines: 6,
+              overflow: TextOverflow.fade,
             ),
-            maxLines: 6,
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

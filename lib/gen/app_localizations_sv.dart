@@ -802,6 +802,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsOpenSyncStatus => 'Öppna synkstatus';
 
   @override
+  String get settingsDarkMode => 'Mörkt läge';
+
+  @override
   String get legalTitle => 'Juridik';
 
   @override

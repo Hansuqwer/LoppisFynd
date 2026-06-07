@@ -194,11 +194,19 @@ class _BokfyndAppState extends ConsumerState<BokfyndApp> {
   Widget build(BuildContext context) {
     final highContrast = ref
         .watch(highContrastEnabledProvider)
-        .maybeWhen(data: (v) => v, orElse: () => false);
+        .maybeWhen<bool>(data: (v) => v, orElse: () => false);
+    final themeMode = ref
+        .watch(themeModeProvider)
+        .maybeWhen<ThemeMode>(data: (v) => v, orElse: () => ThemeMode.system);
+
+    final light = highContrast ? AppTheme.highContrast() : AppTheme.light();
+    final dark = AppTheme.dark();
 
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      theme: highContrast ? AppTheme.highContrast() : AppTheme.light(),
+      theme: light,
+      darkTheme: highContrast ? light : dark,
+      themeMode: highContrast ? ThemeMode.light : themeMode,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

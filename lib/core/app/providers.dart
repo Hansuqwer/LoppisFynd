@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -292,6 +293,17 @@ final offlineIdentificationEnabledProvider = StreamProvider<bool>((ref) {
 final offlineDetectorProvider = Provider<dynamic>((ref) {
   // Phase 4 stub: gracefully return null instead of throwing until fully wired.
   return null;
+});
+
+final themeModeProvider = StreamProvider<ThemeMode>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.appSettingsDao.watchInt(kThemeModeKeyV1).map((v) {
+    return switch (v) {
+      1 => ThemeMode.light,
+      2 => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  });
 });
 
 final featureFlagsProvider = Provider<FeatureFlags>((ref) {

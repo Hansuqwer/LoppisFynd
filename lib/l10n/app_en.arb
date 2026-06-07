@@ -295,6 +295,7 @@
   "settingsSyncStatusTitle": "Sync status",
   "settingsSyncStatusSubtitle": "See sync health, errors, and conflicts.",
   "settingsOpenSyncStatus": "Open sync status",
+  "settingsDarkMode": "Dark mode",
 
   "legalTitle": "Legal",
   "legalLicensesTitle": "Licenses",

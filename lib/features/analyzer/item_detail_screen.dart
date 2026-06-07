@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -7,12 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
+import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
 import '../../shared/widgets/book_cover.dart';
+import '../../shared/widgets/glass_button.dart';
 import '../../shared/widgets/score_ring.dart';
 import '../../shared/widgets/sparkline_chart.dart';
 import '../../shared/widgets/verdict_chip.dart';
+import '../offline_detection/offline_detection_screen.dart';
 import 'widgets/condition_adjuster.dart';
 import 'widgets/market_stats_widget.dart';
 
@@ -45,6 +49,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   Widget build(BuildContext context) {
     final db = ref.watch(appDatabaseProvider);
     final userId = ref.watch(activeUserIdProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.cloudDancer,
@@ -64,14 +69,14 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             }
 
             final median = item.medianPrice;
-            final adjusted =
-                median == null ? null : median * item.conditionMultiplier;
+            final adjusted = median == null
+                ? null
+                : median * item.conditionMultiplier;
 
             // Fee model: 12% platform fee (matches redesign).
             final fee = adjusted == null ? 0.0 : adjusted * 0.12;
             final net = adjusted == null ? 0.0 : adjusted - _cost - fee;
-            final roi =
-                _cost > 0 ? ((net / _cost) * 100).round() : 0;
+            final roi = _cost > 0 ? ((net / _cost) * 100).round() : 0;
 
             // Score: derive from flip factor if no explicit score field.
             final score = _scoreFromItem(item);
@@ -152,7 +157,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                 soldPrices: soldPrices,
                                 item: item,
                               ),
-                            if (median != null) const SizedBox(height: AppSpacing.md),
+                            if (median != null)
+                              const SizedBox(height: AppSpacing.md),
 
                             // Full market widget (sync, keywords, etc.).
                             MarketStatsWidget(item: item, db: db),
@@ -165,6 +171,20 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                                 await db.scanItemsDao.setConditionMultiplier(
                                   id: item.id,
                                   conditionMultiplier: v,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            GlassButton(
+                              label: l10n.offlineIdentifyRunCta,
+                              icon: const Icon(Icons.document_scanner_outlined),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  SpringRoute(
+                                    builder: (_) => OfflineDetectionScreen(
+                                      scanItemId: item.id,
+                                    ),
+                                  ),
                                 );
                               },
                             ),
@@ -317,11 +337,7 @@ class _IconBtn extends StatelessWidget {
             border: Border.all(color: AppColors.borderSubtle),
             color: AppColors.card,
           ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: color ?? AppColors.inkDeep,
-          ),
+          child: Icon(icon, size: 22, color: color ?? AppColors.inkDeep),
         ),
       ),
     );
@@ -347,11 +363,8 @@ class _BookHero extends StatelessWidget {
                   width: 96,
                   height: 144,
                   fit: BoxFit.cover,
-                   errorBuilder: (ctx, err, st) => BookCover(
-                    title: title,
-                    author: '',
-                    width: 96,
-                  ),
+                  errorBuilder: (ctx, err, st) =>
+                      BookCover(title: title, author: '', width: 96),
                 ),
               )
             : BookCover(title: title, author: '', width: 96),
@@ -472,10 +485,7 @@ class _CostStepperCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              _StepBtn(
-                label: '+',
-                onTap: () => onCostChanged(cost + 5),
-              ),
+              _StepBtn(label: '+', onTap: () => onCostChanged(cost + 5)),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -706,10 +716,7 @@ class _MarketPriceCard extends StatelessWidget {
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0x66CB8573),
-                                  Color(0x995E7D6F),
-                                ],
+                                colors: [Color(0x66CB8573), Color(0x995E7D6F)],
                               ),
                               borderRadius: BorderRadius.circular(999),
                             ),
@@ -842,8 +849,7 @@ class _CtaBar extends StatelessWidget {
       child: FilledButton(
         onPressed: onBuy,
         style: FilledButton.styleFrom(
-          backgroundColor:
-              isSkip ? AppColors.inkDeep : AppColors.dopamineRed,
+          backgroundColor: isSkip ? AppColors.inkDeep : AppColors.dopamineRed,
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -857,9 +863,7 @@ class _CtaBar extends StatelessWidget {
             const Icon(Icons.shopping_bag_outlined, size: 21),
             const SizedBox(width: 9),
             Text(
-              isSkip
-                  ? 'Lägg till ändå'
-                  : 'Köp för ${cost.round()} kr',
+              isSkip ? 'Lägg till ändå' : 'Köp för ${cost.round()} kr',
               style: const TextStyle(
                 fontFamily: AppTypography.uiFontFamily,
                 fontWeight: FontWeight.w700,

@@ -54,6 +54,8 @@ class _BarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0 || data.isEmpty) return;
+
     final mx = data.reduce((a, b) => a > b ? a : b);
     final safeMx = mx == 0 ? 1.0 : mx;
     const gap = 6.0;
@@ -66,7 +68,7 @@ class _BarsPainter extends CustomPainter {
         ..color = isLast ? accentColor : color.withValues(alpha: 0.16)
         ..style = PaintingStyle.fill;
 
-      final rx = bw / 2.5;
+      final rx = (bw / 2.5).clamp(0.0, _mathMax(0.0, (bw / 2).clamp(0.0, bh / 2)));
       final left = i * (bw + gap);
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, size.height - bh, bw, bh),

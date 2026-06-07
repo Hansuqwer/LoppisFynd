@@ -25,11 +25,11 @@ cover, sold prices).
       via server proxy with no first-run blocker. (completed 2026-02-22)
 - [x] **Phase 3: Sold-Price Comps Hardening** - Reliable on-demand/background
       comps with disable controls and proxy protection. (completed 2026-02-23)
-- [ ] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification
+- [x] **Phase 4: Opt-In Offline Fallback** - Lightweight offline identification
       with evidence and safe licensing.
-- [ ] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across
+- [x] **Phase 5: UI Tokens + Dark Mode Parity** - Token-driven theming across
       primitives plus golden coverage.
-- [ ] **Phase 6: Android Release** - First Play Store release with Swedish
+- [x] **Phase 6: Android Release** - First Play Store release with Swedish
       children's book coverage, CI fixes, release signing, and enriched market
       data. (6/6 plans complete)
 
@@ -134,13 +134,13 @@ Criteria** (what must be TRUE):
 
 Plans:
 
-- [ ] 04-01-PLAN.md — Offline model catalog + download pipeline
+- [x] 04-01-PLAN.md — Offline model catalog + download pipeline
       (pause/resume/cancel) with <10MB guardrails
-- [ ] 04-02-PLAN.md — Offline detector runtime (evidence schema + confidence
+- [x] 04-02-PLAN.md — Offline detector runtime (evidence schema + confidence
       threshold + parsing + providers)
-- [ ] 04-03-PLAN.md — Settings opt-in + one-time download suggestion + in-app
+- [x] 04-03-PLAN.md — Settings opt-in + one-time download suggestion + in-app
       offline licenses (OFF-04)
-- [ ] 04-04-PLAN.md — Offline detection UX (split-view evidence + download
+- [x] 04-04-PLAN.md — Offline detection UX (split-view evidence + download
       card), entry points, and device checkpoint
 
 ### Phase 5: UI Tokens + Dark Mode Parity
@@ -165,7 +165,7 @@ UI-02, UI-03, UI-04, UI-05 **Success Criteria** (what must be TRUE):
 
 Plans:
 
-- [ ] 05-01: Finish token adoption in primitives; simplify card layering;
+- [x] 05-01: Finish token adoption in primitives; simplify card layering;
       improve typography weights/label contrast; wire dark mode toggle
 - [ ] 05-02: Add/maintain goldens + CI enforcement to prevent regressions
 

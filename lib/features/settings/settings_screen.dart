@@ -132,7 +132,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final config = ref.watch(appConfigProvider);
     final highContrast = ref
         .watch(highContrastEnabledProvider)
-        .maybeWhen(data: (v) => v, orElse: () => false);
+        .maybeWhen<bool>(data: (v) => v, orElse: () => false);
+    final themeMode = ref
+        .watch(themeModeProvider)
+        .maybeWhen<ThemeMode>(data: (v) => v, orElse: () => ThemeMode.system);
     final cloudIdentificationEnabled = ref
         .watch(cloudIdentificationEnabledProvider)
         .maybeWhen(data: (v) => v, orElse: () => true);
@@ -252,6 +255,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     db,
                     config,
                     highContrast,
+                    themeMode,
                     cloudIdentificationEnabled,
                     fetchSoldPriceCompsEnabled,
                     email,
@@ -463,6 +467,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     dynamic db,
     dynamic config,
     bool highContrast,
+    ThemeMode themeMode,
     bool cloudIdentificationEnabled,
     bool fetchSoldPriceCompsEnabled,
     String? email,
@@ -546,6 +551,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         if (config.hasSupabase) ...[
+          const SizedBox(height: AppSpacing.lg),
+          SettingsTile(
+            title: l10n.settingsDarkMode,
+            value: themeMode == ThemeMode.dark,
+            onChanged: (v) async {
+              final current =
+                  ref.read(themeModeProvider).asData?.value ?? ThemeMode.system;
+              if (current == ThemeMode.system && v) {
+                await db.appSettingsDao.setInt(kThemeModeKeyV1, 2);
+              } else if (current == ThemeMode.dark && !v) {
+                await db.appSettingsDao.setInt(kThemeModeKeyV1, 1);
+              } else if (current == ThemeMode.system) {
+                await db.appSettingsDao.setInt(kThemeModeKeyV1, 1);
+              } else {
+                await db.appSettingsDao.setInt(kThemeModeKeyV1, v ? 2 : 1);
+              }
+            },
+          ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.settingsAccountTitle,

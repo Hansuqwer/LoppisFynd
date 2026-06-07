@@ -72,12 +72,12 @@ class CapsuleNavBar extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, mb),
         child: Stack(
+          key: const Key('capsule_nav'),
           alignment: Alignment.bottomCenter,
           clipBehavior: Clip.none,
           children: [
             // ── Glass bar ──────────────────────────────────────
             Container(
-              key: const Key('capsule_nav'),
               height: AppCapsuleNav.barHeight,
               decoration: BoxDecoration(
                 borderRadius: barRadius,
@@ -113,6 +113,7 @@ class CapsuleNavBar extends StatelessWidget {
                         ...leftDests.map((d) {
                           final i = destinations.indexOf(d);
                           return _NavTab(
+                            key: d.key,
                             destination: d,
                             selected: selectedIndex == i,
                             onTap: () => onSelected(i),
@@ -125,6 +126,7 @@ class CapsuleNavBar extends StatelessWidget {
                         ...rightDests.map((d) {
                           final i = destinations.indexOf(d);
                           return _NavTab(
+                            key: d.key,
                             destination: d,
                             selected: selectedIndex == i,
                             onTap: () => onSelected(i),
@@ -146,6 +148,7 @@ class CapsuleNavBar extends StatelessWidget {
                   selected: selectedIndex == primaryIndex,
                   label: primaryDest.label,
                   child: GestureDetector(
+                    key: primaryDest.key,
                     onTap: () => onSelected(primaryIndex),
                     child: Container(
                       width: _fabSize,
@@ -184,6 +187,7 @@ class CapsuleNavBar extends StatelessWidget {
 
 class _NavTab extends StatelessWidget {
   const _NavTab({
+    super.key,
     required this.destination,
     required this.selected,
     required this.onTap,

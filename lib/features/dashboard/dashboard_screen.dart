@@ -45,6 +45,9 @@ class DashboardScreen extends ConsumerWidget {
                 userId: userId,
               ),
               builder: (context, compsSnapshot) {
+                if (compsSnapshot.hasError) {
+                  debugPrint('Dashboard stream error: ${compsSnapshot.error}\n${compsSnapshot.stackTrace}');
+                }
                 final market = _dashboardMarketSnapshot(
                   compsSnapshot.data ?? const <ScanItemComp>[],
                 );

@@ -1508,6 +1508,12 @@ abstract class AppLocalizations {
   /// **'Open sync status'**
   String get settingsOpenSyncStatus;
 
+  /// No description provided for @settingsDarkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get settingsDarkMode;
+
   /// No description provided for @legalTitle.
   ///
   /// In en, this message translates to:
