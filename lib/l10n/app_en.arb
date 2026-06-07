@@ -149,6 +149,7 @@
   "scannerBokFyndIsbnNotFound": "Scanned ISBN found, but no book metadata matched.",
   "scannerBokFyndDraftError": "Could not create BokFynd draft: {error}",
   "@scannerBokFyndDraftError": {"placeholders": {"error": {}}},
+  "scannerBokFyndOpenLibraryFallback": "Google Books unavailable. Using Open Library as fallback.",
   "scannerBokFyndReturnToDraft": "Back to draft",
   "scannerNoScansYet": "No scans yet.",
   "scannerBatchTrayTitle": "Batch tray",

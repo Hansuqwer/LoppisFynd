@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:sentry_flutter/sentry_flutter.dart';
+
 import '../../core/app/providers.dart';
 import '../../gen/app_localizations.dart';
 import '../auth/login_screen.dart';
@@ -44,7 +46,11 @@ class AuthGate extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final config = ref.watch(appConfigProvider);
     if (!config.hasSupabase) {
-      unawaited(_ensureScopedData(ref, null, l10n.commonHaul));
+      unawaited(
+        _ensureScopedData(ref, null, l10n.commonHaul).catchError((Object e, StackTrace s) {
+          if (config.hasSentry) Sentry.captureException(e, stackTrace: s);
+        }),
+      );
       return const AppNavShell();
     }
 
@@ -53,7 +59,11 @@ class AuthGate extends ConsumerWidget {
       builder: (context, snapshot) {
         final l10n = AppLocalizations.of(context)!;
         final session = Supabase.instance.client.auth.currentSession;
-        unawaited(_ensureScopedData(ref, session?.user.id, l10n.commonHaul));
+        unawaited(
+          _ensureScopedData(ref, session?.user.id, l10n.commonHaul).catchError((Object e, StackTrace s) {
+            if (config.hasSentry) Sentry.captureException(e, stackTrace: s);
+          }),
+        );
         if (session != null) {
           return const AppNavShell();
         }

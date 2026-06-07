@@ -290,7 +290,8 @@ final offlineIdentificationEnabledProvider = StreamProvider<bool>((ref) {
 });
 
 final offlineDetectorProvider = Provider<dynamic>((ref) {
-  return _uninitialized<dynamic>('offlineDetectorProvider');
+  // Phase 4 stub: gracefully return null instead of throwing until fully wired.
+  return null;
 });
 
 final featureFlagsProvider = Provider<FeatureFlags>((ref) {

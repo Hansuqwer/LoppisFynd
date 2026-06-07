@@ -445,6 +445,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get scannerBokFyndOpenLibraryFallback =>
+      'Google Books unavailable. Using Open Library as fallback.';
+
+  @override
   String get scannerBokFyndReturnToDraft => 'Back to draft';
 
   @override

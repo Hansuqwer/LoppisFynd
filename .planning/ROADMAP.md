@@ -31,7 +31,7 @@ cover, sold prices).
       primitives plus golden coverage.
 - [ ] **Phase 6: Android Release** - First Play Store release with Swedish
       children's book coverage, CI fixes, release signing, and enriched market
-      data. (4/6 plans complete)
+      data. (6/6 plans complete)
 
 ## Phase Details
 
@@ -212,9 +212,9 @@ REL-13 **Success Criteria** (what must be TRUE):
       injection (steps 3, 4, 5)
 - [x] 06-04-PLAN.md — Dashboard real sold count + real weekly chart + Tradera
       noop rate-limit fallback (steps 6, 7)
-- [ ] 06-05-PLAN.md — Swedish children's book seed (200+ titles) + Open Library
+- [x] 06-05-PLAN.md — Swedish children's book seed (200+ titles) + Open Library
       ISBN fallback in `IsbnLookupService` (steps 8, 9)
-- [ ] 06-06-PLAN.md — Crash guards: `offlineDetectorProvider` null stub + auth
+- [x] 06-06-PLAN.md — Crash guards: `offlineDetectorProvider` null stub + auth
       gate error logging + `PlatformDispatcher` Sentry hook (steps 10, 11,
       12, 13)
 
@@ -231,4 +231,4 @@ completing Phase 4 or 5. Phase 5 runs in parallel or after release.
 | 3. Sold-Price Comps Hardening        | 3/3            | Complete    | 2026-02-23 |
 | 4. Opt-In Offline Fallback           | 3/4            | In Progress | -          |
 | 5. UI Tokens + Dark Mode Parity      | 0/TBD          | Not started | -          |
-| 6. Android Release                   | 4/6            | In Progress | -          |
+| 6. Android Release                   | 6/6            | Complete    | 2026-06-07 |

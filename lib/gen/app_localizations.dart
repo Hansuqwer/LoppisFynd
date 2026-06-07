@@ -884,6 +884,12 @@ abstract class AppLocalizations {
   /// **'Could not create BokFynd draft: {error}'**
   String scannerBokFyndDraftError(Object error);
 
+  /// No description provided for @scannerBokFyndOpenLibraryFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Books unavailable. Using Open Library as fallback.'**
+  String get scannerBokFyndOpenLibraryFallback;
+
   /// No description provided for @scannerBokFyndReturnToDraft.
   ///
   /// In en, this message translates to:

@@ -448,6 +448,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get scannerBokFyndOpenLibraryFallback =>
+      'Google Books saknas. Använder Open Library som fallback.';
+
+  @override
   String get scannerBokFyndReturnToDraft => 'Tillbaka till utkast';
 
   @override

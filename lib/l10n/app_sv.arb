@@ -150,6 +150,7 @@
   "scannerBokFyndIsbnNotFound": "ISBN hittades, men ingen bokmetadata matchade.",
   "scannerBokFyndDraftError": "Kunde inte skapa BokFynd-utkast: {error}",
   "@scannerBokFyndDraftError": {"placeholders": {"error": {}}},
+  "scannerBokFyndOpenLibraryFallback": "Google Books saknas. Använder Open Library som fallback.",
   "scannerBokFyndReturnToDraft": "Tillbaka till utkast",
   "scannerNoScansYet": "Inga skanningar ännu.",
   "scannerBatchTrayTitle": "Skanningsbricka",

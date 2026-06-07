@@ -1,7 +1,7 @@
 import '../../../gen/app_localizations.dart';
 import '../../../services/books/book_isbn_draft_flow_controller.dart';
 
-enum ScannerBookIsbnHandoffFeedbackKind { success, notFound, error }
+enum ScannerBookIsbnHandoffFeedbackKind { success, successFallback, notFound, error }
 
 class ScannerBookIsbnHandoffFeedback {
   const ScannerBookIsbnHandoffFeedback({required this.kind, this.errorMessage});
@@ -13,6 +13,8 @@ class ScannerBookIsbnHandoffFeedback {
     return switch (kind) {
       ScannerBookIsbnHandoffFeedbackKind.success =>
         l10n.scannerBokFyndDraftReady,
+      ScannerBookIsbnHandoffFeedbackKind.successFallback =>
+        '${l10n.scannerBokFyndDraftReady} ${l10n.scannerBokFyndOpenLibraryFallback}',
       ScannerBookIsbnHandoffFeedbackKind.notFound =>
         l10n.scannerBokFyndIsbnNotFound,
       ScannerBookIsbnHandoffFeedbackKind.error => l10n.scannerBokFyndDraftError(
@@ -26,8 +28,10 @@ ScannerBookIsbnHandoffFeedback? scannerBookIsbnHandoffFeedbackFor(
   BookIsbnDraftFlowState? state,
 ) {
   return switch (state) {
-    BookIsbnDraftFlowSuccess() => const ScannerBookIsbnHandoffFeedback(
-      kind: ScannerBookIsbnHandoffFeedbackKind.success,
+    BookIsbnDraftFlowSuccess(:final appliedDraft) => ScannerBookIsbnHandoffFeedback(
+      kind: appliedDraft.pricingDraft.metadata.source == 'open_library'
+          ? ScannerBookIsbnHandoffFeedbackKind.successFallback
+          : ScannerBookIsbnHandoffFeedbackKind.success,
     ),
     BookIsbnDraftFlowNotFound() => const ScannerBookIsbnHandoffFeedback(
       kind: ScannerBookIsbnHandoffFeedbackKind.notFound,

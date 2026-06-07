@@ -135,14 +135,14 @@ Requirements REL-01..REL-13 map 1:1 to steps 0–13 in
       chart data (no hardcoded 0 or mock)
 - [x] **REL-09**: Tradera proxy noop rate-limit fallback when
       `UPSTASH_REDIS_REST_URL` absent; `UPSTASH_*` documented in `.env.example`
-- [ ] **REL-10**: Swedish children's book seed data (≥200 titles covering Astrid
+- [x] **REL-10**: Swedish children's book seed data (≥200 titles covering Astrid
       Lindgren, Mumin, Alfons Åberg, HP, Pettson, LasseMaja etc.) with ISBN +
       cover URLs
-- [ ] **REL-11**: `IsbnLookupService` uses Open Library as free fallback when
+- [x] **REL-11**: `IsbnLookupService` uses Open Library as free fallback when
       `GOOGLE_BOOKS_API_KEY` absent; graceful degradation message in UI
-- [ ] **REL-12**: `offlineDetectorProvider` returns `null` gracefully instead of
+- [x] **REL-12**: `offlineDetectorProvider` returns `null` gracefully instead of
       throwing `StateError`; no crash on Phase 4-incomplete code paths
-- [ ] **REL-13**: `PlatformDispatcher.onError` Sentry hook; auth gate error
+- [x] **REL-13**: `PlatformDispatcher.onError` Sentry hook; auth gate error
       logging instead of silent swallow
 
 ## Traceability
@@ -185,10 +185,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REL-07      | Phase 6 | Pending  |
 | REL-08      | Phase 6 | Complete |
 | REL-09      | Phase 6 | Complete |
-| REL-10      | Phase 6 | Pending  |
-| REL-11      | Phase 6 | Pending  |
-| REL-12      | Phase 6 | Pending  |
-| REL-13      | Phase 6 | Pending  |
+| REL-10      | Phase 6 | Complete |
+| REL-11      | Phase 6 | Complete |
+| REL-12      | Phase 6 | Complete |
+| REL-13      | Phase 6 | Complete |
 
 **Coverage:**
 
@@ -199,5 +199,5 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 
-_Requirements defined: 2026-02-21_ _Last updated: 2026-06-07 — REL-08..REL-09
-complete (Phase 6 Plan 06-04)_
+_Requirements defined: 2026-02-21_ _Last updated: 2026-06-07 — REL-10..REL-13
+complete (Phase 6 Plan 06-05, 06-06)_

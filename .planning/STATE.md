@@ -12,10 +12,10 @@ unreliable connectivity. **Current focus:** Phase 4 - Opt-In Offline Fallback
 
 **Phase:** 6 of 6 (Android Release — first Play Store release) **Phase 4
 status:** In Progress — Plans 01-03 complete, Plan 04 (UX + device checkpoint)
-deferred (not blocking release) **Current Plan:** Phase 6 Plan 06-05 next
-**Total Plans in Phase 6:** 6 **Status:** Phase 6 in progress **Last Activity:**
-2026-06-07 **Progress:** [█████████░] 90% (Phases 1–3 complete, Phase 4 partial,
-Phase 6 4/6 complete)
+deferred (not blocking release) **Current Plan:** Phase 6 complete
+**Total Plans in Phase 6:** 6 **Status:** Phase 6 complete **Last Activity:**
+2026-06-07 **Progress:** [██████████] 100% (Phases 1–3 complete, Phase 4 partial,
+Phase 6 6/6 complete)
 
 ## Performance Metrics
 
@@ -86,9 +86,10 @@ Phase 6 4/6 complete)
 - [Phase 06-android-release]: Dashboard market hero reads persisted scan-item
   comps from DB; weekly chart aggregates real sale rows by sale date, falling
   back to fetched stats for cached comps.
-- [Phase 06-android-release]: Tradera proxy allows local/dev traffic when
-  Upstash secrets are absent; production should still set `UPSTASH_*` for abuse
-  protection.
+- [Phase 06-android-release]: AppDatabase is seeded on startup with >200 Swedish children's books to guarantee a good first-launch experience.
+- [Phase 06-android-release]: Open Library is used as a free fallback for ISBN lookups if Google Books API key is absent.
+- [Phase 06-android-release]: offlineDetectorProvider gracefully returns null instead of throwing an exception since it's not fully wired yet.
+- [Phase 06-android-release]: Sentry catches uncaught asynchronous framework errors via PlatformDispatcher.onError.
 
 ### Roadmap Evolution
 
@@ -106,9 +107,9 @@ Phase 6 4/6 complete)
         (REL-05, REL-06, REL-07)
   - [x] 06-04: Dashboard real sold count + real weekly chart + Tradera noop
         rate-limit (REL-08, REL-09)
-  - 06-05: Swedish children's book seed (200+ titles) + Open Library ISBN
+  - [x] 06-05: Swedish children's book seed (200+ titles) + Open Library ISBN
     fallback (REL-10, REL-11)
-  - 06-06: offlineDetectorProvider null guard + auth gate + PlatformDispatcher
+  - [x] 06-06: offlineDetectorProvider null guard + auth gate + PlatformDispatcher
     Sentry (REL-12, REL-13)
 - Phase 4 Plan 04: Offline detection UX + device checkpoint (deferred; not
   blocking release)
@@ -138,6 +139,6 @@ Phase 6 4/6 complete)
 
 ## Session Continuity
 
-**Last session:** 2026-06-07T00:00:00Z **Stopped At:** Phase 6 Plan 06-04
-complete; REL-08 and REL-09 verified. **Resume File:**
-`PRODUCTION_READINESS_PROMPT.md` — execute Phase 6 Plan 06-05 next.
+**Last session:** 2026-06-07T00:00:00Z **Stopped At:** Phase 6 Plan 06-06
+complete; REL-10..13 verified. Phase 6 Android Release is complete. **Resume File:**
+N/A (Ready for release).

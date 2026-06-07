@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import 'core/database/app_database.dart';
 import 'core/tokens/app_tokens.dart';
 import 'core/theme/app_theme.dart';
 import 'shared/widgets/bento_card.dart';
+import 'services/books/book_database_seed_service.dart';
 import 'services/market/market_bridge.dart';
 import 'services/market/market_data_source.dart';
 import 'services/market/tradera_client.dart';
@@ -77,6 +79,11 @@ Future<void> main() async {
       options.tracesSampleRate = 0.0;
     },
     appRunner: () async {
+      PlatformDispatcher.instance.onError = (error, stack) {
+        unawaited(Sentry.captureException(error, stackTrace: stack));
+        return true;
+      };
+
       await runZonedGuarded(
         () async {
           await _bootstrapAndRun(config);
@@ -91,6 +98,8 @@ Future<void> main() async {
 
 Future<void> _bootstrapAndRun(AppConfig config) async {
   final db = AppDatabase.open();
+
+  await BookDatabaseSeedService(db: db).ensureSeeded();
 
   if (config.hasSupabase) {
     await Supabase.initialize(
