@@ -1250,6 +1250,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicyCopied => 'Privacy policy copied.';
 
   @override
+  String get privacyPolicyViewOnWeb => 'View online';
+
+  @override
   String get privacyPolicyBody =>
       'Loppisfynd stores your hauls, items, drafts, and scan photos on your device.\n\nIf you enable cloud sync, haul/item metadata and scan photos may be uploaded to your Supabase project so you can restore them after reinstall and use sync features.\n\nPrice comps are fetched from Tradera via a proxy when you are online.\n\nYou can export your data and delete local and cloud data from the Privacy & data screen.';
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
 import '../../shared/widgets/bento_card.dart';
@@ -45,6 +47,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
                           );
                         },
                         child: Text(l10n.privacyPolicyCopy),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final uri = Uri.parse(AppConfig.privacyPolicyUrl);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                        child: Text(l10n.privacyPolicyViewOnWeb),
                       ),
                     ],
                   ),

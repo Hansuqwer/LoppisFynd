@@ -109,7 +109,24 @@ jobs:
         run: flutter build appbundle --flavor staging --release --dart-define=APP_ENV=staging
 
       - name: Build AAB (prod)
-        run: flutter build appbundle --flavor prod --release --dart-define=APP_ENV=prod
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TRADERA_PROXY_URL: ${{ secrets.TRADERA_PROXY_URL }}
+          BOKBORSEN_SCRAPER_URL: ${{ secrets.BOKBORSEN_SCRAPER_URL }}
+          BOOK_MARKET_AGGREGATOR_URL: ${{ secrets.BOOK_MARKET_AGGREGATOR_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+        run: |
+          flutter build appbundle --flavor prod --release \
+            --dart-define=APP_ENV=prod \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=TRADERA_PROXY_URL="$TRADERA_PROXY_URL" \
+            --dart-define=BOKBORSEN_SCRAPER_URL="$BOKBORSEN_SCRAPER_URL" \
+            --dart-define=BOOK_MARKET_AGGREGATOR_URL="$BOOK_MARKET_AGGREGATOR_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=GOOGLE_BOOKS_API_KEY="$GOOGLE_BOOKS_API_KEY"
 
   ios-build:
     runs-on: macos-14

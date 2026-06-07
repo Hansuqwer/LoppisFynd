@@ -1,0 +1,7 @@
+Första versionen av Loppisfynd.
+
+• Skanna ISBN och få marknadspris från Tradera, Bokbörsen och Vinted
+• Offline-läge – fungerar utan internet
+• Svenska barnböcker med omslag och prisjämförelser
+• Personlig boksamling med lokal lagring
+• Valfri molnsynk

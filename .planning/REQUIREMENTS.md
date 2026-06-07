@@ -89,9 +89,9 @@ Requirements REL-01..REL-13 map 1:1 to steps 0–13 in `PRODUCTION_READINESS_PRO
 - [x] **REL-02**: No hardcoded user-facing strings outside ARB files (`auth_gate.dart`, `market_stats_widget.dart`)
 - [x] **REL-03**: Release signing documented in `key.properties`; ProGuard rules verified for Drift/Sentry/Supabase
 - [x] **REL-04**: Adaptive launcher icon present (`mipmap-anydpi-v26/ic_launcher.xml` + round icon) — Play Store Android 8.0+ requirement
-- [ ] **REL-05**: Play Store metadata skeleton checked in (`fastlane/metadata/android/sv-SE/`: title ≤30, short ≤80, full ≤4000, changelog)
-- [ ] **REL-06**: Privacy policy public URL constant in `AppConfig`; linked from Play Store listing
-- [ ] **REL-07**: All `--dart-define` secrets injected in CI prod AAB build step; prod AAB not built offline-only
+- [x] **REL-05**: Play Store metadata skeleton checked in (`fastlane/metadata/android/sv-SE/`: title ≤30, short ≤80, full ≤4000, changelog)
+- [x] **REL-06**: Privacy policy public URL constant in `AppConfig`; linked from Play Store listing
+- [x] **REL-07**: All `--dart-define` secrets injected in CI prod AAB build step; prod AAB not built offline-only
 - [ ] **REL-08**: Dashboard shows real sold count from DB + real per-day weekly chart data (no hardcoded 0 or mock)
 - [ ] **REL-09**: Tradera proxy noop rate-limit fallback when `UPSTASH_REDIS_REST_URL` absent; `UPSTASH_*` documented in `.env.example`
 - [ ] **REL-10**: Swedish children's book seed data (≥200 titles covering Astrid Lindgren, Mumin, Alfons Åberg, HP, Pettson, LasseMaja etc.) with ISBN + cover URLs

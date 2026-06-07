@@ -2318,6 +2318,12 @@ abstract class AppLocalizations {
   /// **'Privacy policy copied.'**
   String get privacyPolicyCopied;
 
+  /// No description provided for @privacyPolicyViewOnWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'View online'**
+  String get privacyPolicyViewOnWeb;
+
   /// No description provided for @privacyPolicyBody.
   ///
   /// In en, this message translates to:

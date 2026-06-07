@@ -1,4 +1,8 @@
 class AppConfig {
+  /// Public URL of the hosted privacy policy.
+  /// Required by Play Store and App Store store listing.
+  static const privacyPolicyUrl = 'https://bokfynd.se/privacy';
+
   const AppConfig({
     required this.appEnv,
     required this.traderaProxyUrl,

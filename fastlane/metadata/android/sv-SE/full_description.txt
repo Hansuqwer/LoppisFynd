@@ -1,0 +1,22 @@
+Loppisfynd är din smarta assistent på loppis och bokrea. Skanna streckkoden på vilken bok som helst och få ett omedelbart marknadspris baserat på riktiga försäljningar från Tradera, Bokbörsen och Vinted.
+
+Perfekt för dig som:
+• Letar efter fynd på loppis, secondhand och bokmarknader
+• Säljer begagnade böcker och vill prissätta rätt
+• Samlar på svenska barnböcker, klassiker eller deckare
+• Vill veta om en bok är värd att köpa för vidareförsäljning
+
+Funktioner:
+• Skanna ISBN med kameran – resultat på sekunder
+• Marknadspris från Tradera, Bokbörsen och Vinted
+• Offline-läge – fungerar utan internet
+• Sparar dina fynd lokalt i en personlig samling
+• Synkronisering till molnet med valfritt konto
+• Stöd för svenska barnböcker (Astrid Lindgren, Mumin, Alfons Åberg m.fl.)
+• Bokdetaljer med omslag och ISBN från Open Library
+• Bakgrundssynk – priser uppdateras automatiskt
+
+Integritet:
+Appen samlar inte in persondata utan ditt samtycke. All data lagras lokalt på din enhet. Molnsynk är helt valfritt och kräver inloggning.
+
+Loppisfynd är gratis att använda.

@@ -1251,6 +1251,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get privacyPolicyCopied => 'Integritetspolicy kopierad.';
 
   @override
+  String get privacyPolicyViewOnWeb => 'Visa online';
+
+  @override
   String get privacyPolicyBody =>
       'Loppisfynd sparar dina fynd, föremål, utkast och skanningsbilder på din enhet.\n\nOm du aktiverar molnsynk kan fynd/föremålsdata och skanningsbilder laddas upp till ditt Supabase-projekt så att du kan återställa dem efter ominstallation och använda synkfunktioner.\n\nPrishistorik hämtas från Tradera via en proxy när du är online.\n\nDu kan exportera din data och radera lokal och molndata från skärmen Integritet och data.';
 
