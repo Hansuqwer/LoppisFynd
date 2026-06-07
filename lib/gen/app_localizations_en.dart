@@ -35,6 +35,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get snackbarSavedScanAction => 'Identify offline';
+
+  @override
   String snackbarCaptureFailed(Object error) {
     return 'Capture failed: $error';
   }

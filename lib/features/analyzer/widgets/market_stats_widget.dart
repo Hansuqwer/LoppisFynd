@@ -170,9 +170,9 @@ class _MarketStatsWidgetState extends ConsumerState<MarketStatsWidget> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.cloudIdentifyNotAvailableYet)));
   }
 
   Future<void> _setQuery(AppDatabase db, String query) {

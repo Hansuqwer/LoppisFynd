@@ -11,6 +11,7 @@
   "@snackbarSavedScan": {
     "placeholders": {"id": {}}
   },
+  "snackbarSavedScanAction": "Identify offline",
   "snackbarCaptureFailed": "Capture failed: {error}",
   "@snackbarCaptureFailed": {
     "placeholders": {"error": {}}

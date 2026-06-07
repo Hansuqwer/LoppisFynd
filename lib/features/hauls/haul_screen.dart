@@ -29,8 +29,10 @@ class HaulScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final items = snapshot.data ?? const <ScanItem>[];
           final projected = _totalValue(items);
-          final spent =
-              items.fold<double>(0, (s, i) => s + (i.purchasePrice ?? 0));
+          final spent = items.fold<double>(
+            0,
+            (s, i) => s + (i.purchasePrice ?? 0),
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
@@ -57,8 +59,9 @@ class HaulScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 if (items.isEmpty)
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xl,
+                    ),
                     child: Center(
                       child: Text(
                         l10n.scannerNoScansYet,
@@ -111,8 +114,7 @@ String _statusLabel(AppLocalizations l10n, ScanItemStatus status) {
   return switch (status) {
     ScanItemStatus.pendingIdentify ||
     ScanItemStatus.pendingSync ||
-    ScanItemStatus.syncing =>
-      l10n.haulStatusIdentifying,
+    ScanItemStatus.syncing => l10n.haulStatusIdentifying,
     ScanItemStatus.complete => l10n.haulStatusSaved,
     ScanItemStatus.failed => l10n.itemDetailStatusValue(status.name),
   };
@@ -169,8 +171,7 @@ class _MonthSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final margin =
-        spent > 0 ? (projected / spent).toStringAsFixed(1) : '—';
+    final margin = spent > 0 ? (projected / spent).toStringAsFixed(1) : '—';
 
     return GestureDetector(
       onTap: onTap,
@@ -204,8 +205,7 @@ class _MonthSummaryCard extends StatelessWidget {
                           fontFamily: AppTypography.uiFontFamily,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color:
-                              AppColors.cloudDancer.withValues(alpha: 0.60),
+                          color: AppColors.cloudDancer.withValues(alpha: 0.60),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -232,8 +232,9 @@ class _MonthSummaryCard extends StatelessWidget {
                               fontFamily: AppTypography.metricsFontFamily,
                               fontWeight: FontWeight.w500,
                               fontSize: 16,
-                              color: AppColors.cloudDancer
-                                  .withValues(alpha: 0.60),
+                              color: AppColors.cloudDancer.withValues(
+                                alpha: 0.60,
+                              ),
                             ),
                           ),
                         ],
@@ -395,8 +396,9 @@ class _ActiveHaulCardState extends State<_ActiveHaulCard> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.dopamineRed
-                                        .withValues(alpha: 0.18),
+                                    color: AppColors.dopamineRed.withValues(
+                                      alpha: 0.18,
+                                    ),
                                     blurRadius: 0,
                                     spreadRadius: 3,
                                   ),
@@ -441,9 +443,7 @@ class _ActiveHaulCardState extends State<_ActiveHaulCard> {
                   bottomLeft: Radius.circular(AppRadius.lg),
                   bottomRight: Radius.circular(AppRadius.lg),
                 ),
-                border: Border(
-                  top: BorderSide(color: AppColors.borderSubtle),
-                ),
+                border: Border(top: BorderSide(color: AppColors.borderSubtle)),
               ),
               child: Column(
                 children: widget.items

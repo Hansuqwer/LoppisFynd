@@ -48,10 +48,7 @@ class BulkIsbnEnrichmentService {
     );
     if (stale.isEmpty) return 0;
 
-    return _enrichBooks(
-      stale.map((b) => b.isbn).toList(),
-      market: market,
-    );
+    return _enrichBooks(stale.map((b) => b.isbn).toList(), market: market);
   }
 
   /// Enrich a specific list of ISBNs regardless of their current staleness.

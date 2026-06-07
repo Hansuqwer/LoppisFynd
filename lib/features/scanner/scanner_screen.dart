@@ -16,6 +16,7 @@ import '../../shared/widgets/glass_button.dart';
 import '../../shared/widgets/glass_overlay.dart';
 import '../../core/navigation/spring_route.dart';
 import '../analyzer/item_detail_screen.dart';
+import '../offline_detection/offline_detection_screen.dart';
 import '../../gen/app_localizations.dart';
 import '../../services/sync/cloud/entity_keys.dart';
 import 'widgets/barcode_ar_overlay.dart';
@@ -306,12 +307,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       analytics.event('scan_started');
 
       await HapticFeedback.lightImpact();
+      if (!mounted) return;
+      final scanId = 'scan_${DateTime.now().millisecondsSinceEpoch}';
+      final navigator = Navigator.of(context);
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            l10n.snackbarSavedScan(
-              'scan_${DateTime.now().millisecondsSinceEpoch}',
-            ),
+          content: Text(l10n.snackbarSavedScan(scanId)),
+          action: SnackBarAction(
+            label: l10n.snackbarSavedScanAction,
+            onPressed: () {
+              navigator.push(
+                SpringRoute(
+                  builder: (_) => OfflineDetectionScreen(scanItemId: scanId),
+                ),
+              );
+            },
           ),
         ),
       );

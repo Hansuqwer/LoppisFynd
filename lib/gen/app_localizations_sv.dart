@@ -35,6 +35,9 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get snackbarSavedScanAction => 'Identifiera offline';
+
+  @override
   String snackbarCaptureFailed(Object error) {
     return 'Kunde inte spara: $error';
   }

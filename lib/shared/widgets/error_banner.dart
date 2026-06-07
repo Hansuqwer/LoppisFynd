@@ -21,6 +21,7 @@ class ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveRetryLabel =
         retryLabel ?? AppLocalizations.of(context)!.buttonRetry;
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -44,12 +45,18 @@ class ErrorBanner extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
-                Text(message, style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  message,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
                 if (onRetry != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Align(

@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'Saved scan {id}.'**
   String snackbarSavedScan(Object id);
 
+  /// No description provided for @snackbarSavedScanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Identify offline'**
+  String get snackbarSavedScanAction;
+
   /// No description provided for @snackbarCaptureFailed.
   ///
   /// In en, this message translates to:

@@ -7,34 +7,34 @@ enum Verdict { buy, maybe, skip }
 
 extension VerdictExtension on Verdict {
   String get label => switch (this) {
-        Verdict.buy => 'KÖP',
-        Verdict.maybe => 'KANSKE',
-        Verdict.skip => 'SKIPPA',
-      };
+    Verdict.buy => 'KÖP',
+    Verdict.maybe => 'KANSKE',
+    Verdict.skip => 'SKIPPA',
+  };
 
   String get subtitle => switch (this) {
-        Verdict.buy => 'Säkert fynd',
-        Verdict.maybe => 'Tveksamt',
-        Verdict.skip => 'Lägg tillbaka',
-      };
+    Verdict.buy => 'Säkert fynd',
+    Verdict.maybe => 'Tveksamt',
+    Verdict.skip => 'Lägg tillbaka',
+  };
 
   Color get textColor => switch (this) {
-        Verdict.buy => AppColors.verdictBuyText,
-        Verdict.maybe => AppColors.verdictMaybeText,
-        Verdict.skip => AppColors.verdictSkipText,
-      };
+    Verdict.buy => AppColors.verdictBuyText,
+    Verdict.maybe => AppColors.verdictMaybeText,
+    Verdict.skip => AppColors.verdictSkipText,
+  };
 
   Color get bgColor => switch (this) {
-        Verdict.buy => AppColors.verdictBuyBg,
-        Verdict.maybe => AppColors.verdictMaybeBg,
-        Verdict.skip => AppColors.verdictSkipBg,
-      };
+    Verdict.buy => AppColors.verdictBuyBg,
+    Verdict.maybe => AppColors.verdictMaybeBg,
+    Verdict.skip => AppColors.verdictSkipBg,
+  };
 
   Color get ringColor => switch (this) {
-        Verdict.buy => AppColors.sageDeep,
-        Verdict.maybe => AppColors.mustard,
-        Verdict.skip => AppColors.terracottaClay,
-      };
+    Verdict.buy => AppColors.sageDeep,
+    Verdict.maybe => AppColors.mustard,
+    Verdict.skip => AppColors.terracottaClay,
+  };
 
   /// Derive verdict from a 0–100 fyndfaktor score.
   static Verdict fromScore(int score) {

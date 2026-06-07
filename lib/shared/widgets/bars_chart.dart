@@ -10,14 +10,14 @@ class BarsChart extends StatelessWidget {
   const BarsChart({
     super.key,
     required this.data,
-    this.color = AppColors.cloudDancer,
+    this.color,
     this.accentColor,
     this.accentLast = false,
     this.height = 44,
   });
 
   final List<double> data;
-  final Color color;
+  final Color? color;
   final Color? accentColor;
   final bool accentLast;
   final double height;
@@ -25,12 +25,13 @@ class BarsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data.isEmpty) return SizedBox(height: height);
+    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: height,
       child: CustomPaint(
         painter: _BarsPainter(
           data: data,
-          color: color,
+          color: color ?? scheme.onSurface,
           accentColor: accentColor ?? AppColors.dopamineRed,
           accentLast: accentLast,
         ),
@@ -68,7 +69,10 @@ class _BarsPainter extends CustomPainter {
         ..color = isLast ? accentColor : color.withValues(alpha: 0.16)
         ..style = PaintingStyle.fill;
 
-      final rx = (bw / 2.5).clamp(0.0, _mathMax(0.0, (bw / 2).clamp(0.0, bh / 2)));
+      final rx = (bw / 2.5).clamp(
+        0.0,
+        _mathMax(0.0, (bw / 2).clamp(0.0, bh / 2)),
+      );
       final left = i * (bw + gap);
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, size.height - bh, bw, bh),

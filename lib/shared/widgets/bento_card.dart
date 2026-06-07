@@ -8,13 +8,13 @@ class BentoCard extends StatefulWidget {
     required this.child,
     this.onTap,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
-    this.backgroundColor = AppColors.surface,
+    this.backgroundColor,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsets padding;
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   @override
   State<BentoCard> createState() => _BentoCardState();
@@ -31,6 +31,8 @@ class _BentoCardState extends State<BentoCard> {
   @override
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null;
+    final scheme = Theme.of(context).colorScheme;
+    final bg = widget.backgroundColor ?? scheme.surface;
 
     return AnimatedScale(
       duration: AppMotion.fast,
@@ -42,9 +44,11 @@ class _BentoCardState extends State<BentoCard> {
         transform: Matrix4.identity()
           ..translateByDouble(0.0, _pressed ? 1.5 : 0.0, 0.0, 1.0),
         decoration: BoxDecoration(
-          color: widget.backgroundColor,
+          color: bg,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.40),
+          ),
           boxShadow: _pressed ? AppShadows.pressed : AppShadows.bento,
         ),
         child: Material(

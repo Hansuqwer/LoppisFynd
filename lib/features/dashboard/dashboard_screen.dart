@@ -25,6 +25,8 @@ class DashboardScreen extends ConsumerWidget {
     final userId = ref.watch(activeUserIdProvider);
     final defaultHaulId = ref.watch(defaultHaulIdProvider);
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -46,7 +48,9 @@ class DashboardScreen extends ConsumerWidget {
               ),
               builder: (context, compsSnapshot) {
                 if (compsSnapshot.hasError) {
-                  debugPrint('Dashboard stream error: ${compsSnapshot.error}\n${compsSnapshot.stackTrace}');
+                  debugPrint(
+                    'Dashboard stream error: ${compsSnapshot.error}\n${compsSnapshot.stackTrace}',
+                  );
                 }
                 final market = _dashboardMarketSnapshot(
                   compsSnapshot.data ?? const <ScanItemComp>[],
@@ -90,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
                           fontFamily: AppTypography.uiFontFamily,
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
-                          color: AppColors.inkDeep,
+                          color: isDark ? scheme.onSurface : AppColors.inkDeep,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -120,7 +124,9 @@ class DashboardScreen extends ConsumerWidget {
                             Icon(
                               Icons.qr_code_scanner_rounded,
                               size: 56,
-                              color: AppColors.inkDeep.withValues(alpha: 0.18),
+                              color: isDark
+                                  ? scheme.onSurface.withValues(alpha: 0.22)
+                                  : AppColors.inkDeep.withValues(alpha: 0.18),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             Text(
@@ -129,7 +135,9 @@ class DashboardScreen extends ConsumerWidget {
                                 fontFamily: AppTypography.uiFontFamily,
                                 fontWeight: FontWeight.w500,
                                 fontSize: 15,
-                                color: AppColors.textMuted,
+                                color: isDark
+                                    ? scheme.onSurface.withValues(alpha: 0.65)
+                                    : AppColors.textMuted,
                               ),
                             ),
                           ],
@@ -217,6 +225,8 @@ class _ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -236,12 +246,12 @@ class _ScreenHeader extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 l10n.dashboardTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.uiFontFamily,
                   fontWeight: FontWeight.w700,
                   fontSize: 30,
                   letterSpacing: -0.03,
-                  color: AppColors.inkDeep,
+                  color: isDark ? scheme.onSurface : AppColors.inkDeep,
                   height: 1.0,
                 ),
               ),
@@ -254,7 +264,7 @@ class _ScreenHeader extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.clay,
+            color: isDark ? scheme.surface : AppColors.clay,
             border: Border.all(color: AppColors.borderSubtle),
           ),
           alignment: Alignment.center,
@@ -264,7 +274,7 @@ class _ScreenHeader extends StatelessWidget {
               fontFamily: AppTypography.uiFontFamily,
               fontWeight: FontWeight.w700,
               fontSize: 16,
-              color: AppColors.inkDeep,
+              color: isDark ? scheme.onSurface : AppColors.inkDeep,
             ),
           ),
         ),
@@ -288,13 +298,16 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayLabels = _weekDayLabels(l10n.localeName);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+    final heroBg = isDark ? const Color(0xFF2A3548) : AppColors.inkDeep;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.inkDeep,
+          color: heroBg,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: const [
             BoxShadow(
@@ -411,13 +424,16 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+    final cardBg = isDark ? scheme.surface : AppColors.card;
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: AppSpacing.xs,
         horizontal: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: cardBg,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.borderSubtle),
         boxShadow: AppShadows.bento,
@@ -454,6 +470,8 @@ class _ScanRow extends StatelessWidget {
     final title = (item.desc ?? item.query ?? '—').trim();
     final median = item.medianPrice;
     final purchase = item.purchasePrice;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
 
     // Derive verdict for the chip.
     int score = 0;
@@ -474,7 +492,7 @@ class _ScanRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: isDark ? scheme.surface : AppColors.card,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.borderSubtle),
           boxShadow: AppShadows.bento,
@@ -496,11 +514,11 @@ class _ScanRow extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.uiFontFamily,
                       fontWeight: FontWeight.w600,
                       fontSize: 14.5,
-                      color: AppColors.inkDeep,
+                      color: isDark ? scheme.onSurface : AppColors.inkDeep,
                     ),
                   ),
                   if (median != null) ...[
@@ -511,7 +529,9 @@ class _ScanRow extends StatelessWidget {
                         fontFamily: AppTypography.metricsFontFamily,
                         fontWeight: FontWeight.w500,
                         fontSize: 12.5,
-                        color: AppColors.textMuted,
+                        color: isDark
+                            ? scheme.onSurface.withValues(alpha: 0.65)
+                            : AppColors.textMuted,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),

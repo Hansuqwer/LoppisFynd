@@ -32,7 +32,8 @@ class FindsScreen extends ConsumerWidget {
           final raw = snapshot.data ?? const <ScanItem>[];
 
           // Rank by fyndfaktor score descending.
-          final ranked = [...raw]..sort((a, b) {
+          final ranked = [...raw]
+            ..sort((a, b) {
               return _score(b).compareTo(_score(a));
             });
 
@@ -82,8 +83,9 @@ class FindsScreen extends ConsumerWidget {
 
                 if (ranked.isEmpty)
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xl,
+                    ),
                     child: Center(
                       child: Text(
                         l10n.scannerNoScansYet,
@@ -102,8 +104,7 @@ class FindsScreen extends ConsumerWidget {
                     final item = entry.value;
                     final score = _score(item);
                     final verdict = VerdictExtension.fromScore(score);
-                    final title =
-                        (item.desc ?? item.query ?? '—').trim();
+                    final title = (item.desc ?? item.query ?? '—').trim();
                     final median = item.medianPrice;
 
                     return Padding(
@@ -119,10 +120,8 @@ class FindsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: AppColors.card,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.lg),
-                            border: Border.all(
-                                color: AppColors.borderSubtle),
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            border: Border.all(color: AppColors.borderSubtle),
                             boxShadow: AppShadows.bento,
                           ),
                           child: Row(
@@ -134,8 +133,7 @@ class FindsScreen extends ConsumerWidget {
                                   '$rank',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontFamily:
-                                        AppTypography.metricsFontFamily,
+                                    fontFamily: AppTypography.metricsFontFamily,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 17,
                                     color: AppColors.textFaint,
@@ -155,16 +153,14 @@ class FindsScreen extends ConsumerWidget {
                               const SizedBox(width: 13),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontFamily:
-                                            AppTypography.uiFontFamily,
+                                        fontFamily: AppTypography.uiFontFamily,
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
                                         color: AppColors.inkDeep,

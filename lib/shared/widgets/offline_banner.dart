@@ -9,6 +9,9 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF2A3548) : AppColors.deepSapphire;
     return Container(
       margin: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -21,7 +24,7 @@ class OfflineBanner extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.deepSapphire,
+        color: bg,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.borderSubtle),
         boxShadow: AppShadows.bento,

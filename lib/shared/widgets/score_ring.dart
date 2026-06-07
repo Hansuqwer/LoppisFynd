@@ -77,7 +77,9 @@ class _ScoreRingState extends State<ScoreRing>
       child: AnimatedBuilder(
         animation: _anim,
         builder: (context, _) {
-          final sweepFraction = widget.animate ? _anim.value * fraction : fraction;
+          final sweepFraction = widget.animate
+              ? _anim.value * fraction
+              : fraction;
           return CustomPaint(
             painter: _ScoreRingPainter(
               fraction: sweepFraction,

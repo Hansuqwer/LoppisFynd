@@ -86,15 +86,45 @@ class BookCover extends StatelessWidget {
     Widget content;
     switch (template) {
       case BookCoverTemplate.playful:
-        content = _PlayfulLayout(title: title, author: author, w: width, style: style, u: u);
+        content = _PlayfulLayout(
+          title: title,
+          author: author,
+          w: width,
+          style: style,
+          u: u,
+        );
       case BookCoverTemplate.center:
-        content = _CenterLayout(title: title, author: author, w: width, style: style, u: u);
+        content = _CenterLayout(
+          title: title,
+          author: author,
+          w: width,
+          style: style,
+          u: u,
+        );
       case BookCoverTemplate.noir:
-        content = _NoirLayout(title: title, author: author, w: width, style: style, u: u);
+        content = _NoirLayout(
+          title: title,
+          author: author,
+          w: width,
+          style: style,
+          u: u,
+        );
       case BookCoverTemplate.band:
-        content = _BandLayout(title: title, author: author, w: width, style: style, u: u);
+        content = _BandLayout(
+          title: title,
+          author: author,
+          w: width,
+          style: style,
+          u: u,
+        );
       case BookCoverTemplate.stack:
-        content = _StackLayout(title: title, author: author, w: width, style: style, u: u);
+        content = _StackLayout(
+          title: title,
+          author: author,
+          w: width,
+          style: style,
+          u: u,
+        );
     }
 
     return SizedBox(
@@ -137,7 +167,11 @@ class _JacketChrome extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0x47000000), Color(0x0D000000), Color(0x0DFFFFFF)],
+                colors: [
+                  Color(0x47000000),
+                  Color(0x0D000000),
+                  Color(0x0DFFFFFF),
+                ],
               ),
             ),
           ),
@@ -149,7 +183,11 @@ class _JacketChrome extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment(-0.6, -1),
                 end: Alignment(1, 1),
-                colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF), Color(0x0D000000)],
+                colors: [
+                  Color(0x1AFFFFFF),
+                  Color(0x00FFFFFF),
+                  Color(0x0D000000),
+                ],
               ),
             ),
           ),
@@ -271,10 +309,7 @@ class _CenterLayout extends StatelessWidget {
       padding: EdgeInsets.all(w * 0.085),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(
-            color: style.rule,
-            width: 1.4 * u,
-          ),
+          border: Border.all(color: style.rule, width: 1.4 * u),
           borderRadius: BorderRadius.circular(2),
         ),
         child: Padding(
@@ -294,11 +329,7 @@ class _CenterLayout extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: w * 0.08),
-              Container(
-                width: w * 0.18,
-                height: 1.5 * u,
-                color: style.rule,
-              ),
+              Container(width: w * 0.18, height: 1.5 * u, color: style.rule),
               SizedBox(height: w * 0.06),
               Text(
                 title,
@@ -314,11 +345,7 @@ class _CenterLayout extends StatelessWidget {
                 maxLines: 5,
               ),
               SizedBox(height: w * 0.06),
-              Container(
-                width: w * 0.18,
-                height: 1.5 * u,
-                color: style.rule,
-              ),
+              Container(width: w * 0.18, height: 1.5 * u, color: style.rule),
               SizedBox(height: w * 0.08),
               Text(
                 'ROMAN',
@@ -370,10 +397,7 @@ class _NoirLayout extends StatelessWidget {
             ),
           ),
           SizedBox(height: w * 0.06),
-          Container(
-            height: 1.4 * u,
-            color: style.rule.withValues(alpha: 0.80),
-          ),
+          Container(height: 1.4 * u, color: style.rule.withValues(alpha: 0.80)),
           const Spacer(),
           Text(
             title.toUpperCase(),

@@ -30,10 +30,7 @@ class AdlibrisMarketDataSource {
   final String? _anonKey;
   final Duration _timeout;
 
-  Future<List<BookSale>> search({
-    required String query,
-    DateTime? now,
-  }) async {
+  Future<List<BookSale>> search({required String query, DateTime? now}) async {
     final normalized = query.trim();
     if (normalized.isEmpty) return const [];
 

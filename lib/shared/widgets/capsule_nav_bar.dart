@@ -53,10 +53,17 @@ class CapsuleNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final mb = marginBottom(context);
     final barRadius = BorderRadius.circular(AppRadius.capsule);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = scheme.brightness == Brightness.dark;
+    final glassFill = isDark
+        ? scheme.surface.withValues(alpha: AppOpacity.capsuleNavFill)
+        : AppColors.cloudDancer.withValues(alpha: AppOpacity.capsuleNavFill);
+    final glassBorder = isDark
+        ? scheme.outlineVariant.withValues(alpha: 0.40)
+        : AppColors.cloudDancer.withValues(alpha: 0.65);
 
     // Split destinations into left / primary / right.
-    final primaryIndex =
-        destinations.indexWhere((d) => d.isPrimary);
+    final primaryIndex = destinations.indexWhere((d) => d.isPrimary);
     final hasPrimary = primaryIndex >= 0;
 
     final leftDests = hasPrimary
@@ -92,12 +99,8 @@ class CapsuleNavBar extends StatelessWidget {
                   ),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppColors.cloudDancer.withValues(
-                        alpha: AppOpacity.capsuleNavFill,
-                      ),
-                      border: Border.all(
-                        color: AppColors.cloudDancer.withValues(alpha: 0.65),
-                      ),
+                      color: glassFill,
+                      border: Border.all(color: glassBorder),
                       borderRadius: barRadius,
                       boxShadow: const [
                         BoxShadow(
@@ -171,7 +174,9 @@ class CapsuleNavBar extends StatelessWidget {
                       ),
                       child: Icon(
                         primaryDest.icon,
-                        color: AppColors.cloudDancer,
+                        color: isDark
+                            ? scheme.onPrimary
+                            : AppColors.cloudDancer,
                         size: 28,
                       ),
                     ),
@@ -199,9 +204,10 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = selected
-        ? AppColors.inkDeep
-        : AppColors.inkDeep.withValues(alpha: 0.38);
+    final scheme = Theme.of(context).colorScheme;
+    final selectedColor = scheme.onSurface;
+    final idleColor = scheme.onSurface.withValues(alpha: 0.38);
+    final iconColor = selected ? selectedColor : idleColor;
 
     return Expanded(
       child: Semantics(
@@ -218,18 +224,13 @@ class _NavTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  destination.icon,
-                  size: 23,
-                  color: iconColor,
-                ),
+                Icon(destination.icon, size: 23, color: iconColor),
                 const SizedBox(height: 3),
                 Text(
                   destination.label,
                   style: TextStyle(
                     fontFamily: AppTypography.uiFontFamily,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w600,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                     fontSize: 10.5,
                     color: iconColor,
                     letterSpacing: 0.02,

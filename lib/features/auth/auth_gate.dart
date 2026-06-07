@@ -47,7 +47,10 @@ class AuthGate extends ConsumerWidget {
     final config = ref.watch(appConfigProvider);
     if (!config.hasSupabase) {
       unawaited(
-        _ensureScopedData(ref, null, l10n.commonHaul).catchError((Object e, StackTrace s) {
+        _ensureScopedData(ref, null, l10n.commonHaul).catchError((
+          Object e,
+          StackTrace s,
+        ) {
           if (config.hasSentry) Sentry.captureException(e, stackTrace: s);
         }),
       );
@@ -60,7 +63,10 @@ class AuthGate extends ConsumerWidget {
         final l10n = AppLocalizations.of(context)!;
         final session = Supabase.instance.client.auth.currentSession;
         unawaited(
-          _ensureScopedData(ref, session?.user.id, l10n.commonHaul).catchError((Object e, StackTrace s) {
+          _ensureScopedData(ref, session?.user.id, l10n.commonHaul).catchError((
+            Object e,
+            StackTrace s,
+          ) {
             if (config.hasSentry) Sentry.captureException(e, stackTrace: s);
           }),
         );
