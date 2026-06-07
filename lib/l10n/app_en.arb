@@ -119,6 +119,11 @@
   "dashboardSeeAll": "See all",
   "dashboardNoDraftsYet": "No drafts yet.",
   "dashboardUntitledDraft": "Untitled draft",
+  "dashboardWeeklySoldPrices": "Weekly sold prices",
+  "dashboardCurrencySek": "kr",
+  "dashboardScanned": "Scanned",
+  "dashboardBought": "Bought",
+  "dashboardSold": "Sold",
 
   "scannerTitle": "Rapid-Fire Scanner",
   "scannerSubtitle": "Capture, store, thumbnail, and queue comps.",

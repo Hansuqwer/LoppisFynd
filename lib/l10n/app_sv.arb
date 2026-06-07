@@ -120,6 +120,11 @@
   "dashboardSeeAll": "Se alla",
   "dashboardNoDraftsYet": "Inga utkast ännu.",
   "dashboardUntitledDraft": "Namnlöst utkast",
+  "dashboardWeeklySoldPrices": "Veckans såldpriser",
+  "dashboardCurrencySek": "kr",
+  "dashboardScanned": "Skannade",
+  "dashboardBought": "Köpta",
+  "dashboardSold": "Sålda",
 
   "scannerTitle": "Snabbskanner",
   "scannerSubtitle": "Fota, spara, skapa miniatyr och köa comps.",

@@ -22,6 +22,26 @@ class ScanItemCompsDao extends DatabaseAccessor<AppDatabase>
     return q.watchSingleOrNull();
   }
 
+  Stream<List<ScanItemComp>> watchByHaulId(String haulId, {String? userId}) {
+    final whereUser = userId == null ? 'i.user_id IS NULL' : 'i.user_id = ?';
+    final variables = <Variable<Object>>[Variable<String>(haulId)];
+    if (userId != null) variables.add(Variable<String>(userId));
+
+    return customSelect(
+      '''
+      SELECT c.*
+      FROM scan_item_comps c
+      INNER JOIN scan_items i ON i.id = c.scan_item_id
+      WHERE i.haul_id = ? AND $whereUser
+      ORDER BY c.fetched_at DESC
+      ''',
+      variables: variables,
+      readsFrom: {scanItemComps, attachedDatabase.scanItems},
+    ).watch().map((rows) {
+      return rows.map((row) => scanItemComps.map(row.data)).toList();
+    });
+  }
+
   Future<void> upsert({
     required String scanItemId,
     required String rawJson,

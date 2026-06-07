@@ -356,6 +356,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardUntitledDraft => 'Untitled draft';
 
   @override
+  String get dashboardWeeklySoldPrices => 'Weekly sold prices';
+
+  @override
+  String get dashboardCurrencySek => 'kr';
+
+  @override
+  String get dashboardScanned => 'Scanned';
+
+  @override
+  String get dashboardBought => 'Bought';
+
+  @override
+  String get dashboardSold => 'Sold';
+
+  @override
   String get scannerTitle => 'Rapid-Fire Scanner';
 
   @override

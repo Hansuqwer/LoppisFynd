@@ -358,6 +358,21 @@ class AppLocalizationsSv extends AppLocalizations {
   String get dashboardUntitledDraft => 'Namnlöst utkast';
 
   @override
+  String get dashboardWeeklySoldPrices => 'Veckans såldpriser';
+
+  @override
+  String get dashboardCurrencySek => 'kr';
+
+  @override
+  String get dashboardScanned => 'Skannade';
+
+  @override
+  String get dashboardBought => 'Köpta';
+
+  @override
+  String get dashboardSold => 'Sålda';
+
+  @override
   String get scannerTitle => 'Snabbskanner';
 
   @override

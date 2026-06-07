@@ -16,6 +16,9 @@ import { Redis } from "npm:@upstash/redis";
 const TRADERA_ENDPOINT = "https://api.tradera.com/v3/searchservice.asmx";
 const SOAP_ACTION = "http://api.tradera.com/SearchAdvanced";
 const APIFY_TRADERA_ACTOR_ID = "ecomscrape~tradera-product-search-scraper";
+const PUBLIC_TRADERA_SEARCH_URL = "https://www.tradera.com/search";
+const PUBLIC_TRADERA_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -334,12 +337,16 @@ async function handleSoapTradera(
   const appKey = (env.get("TRADERA_APP_KEY") ?? "").trim();
   const sandboxStr = env.get("TRADERA_SANDBOX") ?? "0";
   const maxResultAgeStr = env.get("TRADERA_MAX_RESULT_AGE") ?? "0";
+  const publicFallback = (env.get("TRADERA_PUBLIC_FALLBACK") ?? "") === "1";
 
   const appId = Number.parseInt(appIdStr, 10);
   const sandbox = Number.parseInt(sandboxStr, 10);
   const maxResultAge = Number.parseInt(maxResultAgeStr, 10);
 
   if (!Number.isFinite(appId) || appId <= 0 || !appKey) {
+    if (publicFallback) {
+      return await handlePublicTraderaEnded(body, searchWords, doFetch);
+    }
     return errorJson(
       {
         code: "server_not_configured",
@@ -409,6 +416,153 @@ async function handleSoapTradera(
   return json(parsed, 200);
 }
 
+async function handlePublicTraderaEnded(
+  body: TraderaProxyRequest,
+  searchWords: string,
+  doFetch: FetchLike,
+): Promise<Response> {
+  const maxResults = Math.min(Math.max(body.itemsPerPage ?? 50, 1), 100);
+  const url = new URL(PUBLIC_TRADERA_SEARCH_URL);
+  url.searchParams.set("q", searchWords);
+  url.searchParams.set("itemStatus", "Ended");
+
+  let response: Response;
+  try {
+    response = await doFetch(url, {
+      headers: {
+        "User-Agent": PUBLIC_TRADERA_UA,
+        Accept: "text/html,application/xhtml+xml",
+        "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
+      },
+      redirect: "follow",
+    });
+  } catch (e) {
+    return errorJson(
+      {
+        code: "upstream_failed",
+        message: `Tradera public search failed: ${String(e)}`.slice(0, 2000),
+      },
+      502,
+    );
+  }
+
+  const html = await response.text();
+  if (!response.ok) {
+    return errorJson(
+      {
+        code: "upstream_failed",
+        message: `Tradera public search failed (${response.status})`,
+      },
+      502,
+    );
+  }
+
+  const items = parsePublicEndedTraderaHtml(
+    html,
+    maxResults,
+    new Date().toISOString(),
+  );
+  return json(
+    {
+      totalNumberOfItems: items.length,
+      totalNumberOfPages: 1,
+      items,
+    } satisfies TraderaProxyResponse,
+    200,
+  );
+}
+
+export function parsePublicEndedTraderaHtml(
+  html: string,
+  maxResults: number,
+  fetchedAtIso: string,
+): TraderaProxyItem[] {
+  const items: TraderaProxyItem[] = [];
+  const seen = new Set<string>();
+  const blockRegex =
+    /<div id="item-card-(\d+)"[^>]*>([\s\S]*?)(?=<div class="">\s*<div id="item-card-|<\/main>)/gi;
+
+  let match: RegExpExecArray | null;
+  while (
+    (match = blockRegex.exec(html)) !== null && items.length < maxResults
+  ) {
+    const id = Number.parseInt(match[1], 10);
+    const block = match[2];
+    if (!/Avslutad|Såld|S[åa]lda/i.test(block + html.slice(0, 50_000))) {
+      continue;
+    }
+
+    const href = firstMatch(block, /href="(\/item\/[^"]+)"/i);
+    const title = decodeHtml(
+      firstMatch(block, /title="([^"]{2,300})"/i) ??
+        firstMatch(
+          block,
+          /<a[^>]+href="\/item\/[^"]+"[^>]*>([^<]{2,300})<\/a>/i,
+        ) ??
+        "",
+    );
+    const price = parsePublicPrice(
+      firstMatch(
+        block,
+        /data-testid="price"[^>]*>([\s\S]*?)<span class="sr-only">/i,
+      ) ??
+        firstMatch(block, /data-testid="price"[^>]*>([^<]+)/i),
+    );
+
+    if (!Number.isFinite(id) || !href || !title || price == null) continue;
+    const itemLink = `https://www.tradera.com${href}`;
+    const key = `${itemLink}|${price}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    items.push({
+      id,
+      shortDescription: title,
+      endDate: fetchedAtIso,
+      maxBid: price,
+      totalBids: null,
+      hasBids: true,
+      isEnded: true,
+      itemLink,
+      thumbnailLink: firstMatch(block, /<img[^>]+src="([^"]+)"/i),
+    });
+  }
+
+  return items;
+}
+
+function firstMatch(value: string, pattern: RegExp): string | null {
+  return pattern.exec(value)?.[1] ?? null;
+}
+
+function parsePublicPrice(value: string | null): number | null {
+  if (value == null) return null;
+  const parsed = Number.parseFloat(
+    decodeHtml(value).replace(/\s|\u00a0/g, "").replace(",", "."),
+  );
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : null;
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/<[^>]*>/g, "")
+    .replace(/&auml;/gi, "ä")
+    .replace(/&ouml;/gi, "ö")
+    .replace(/&aring;/gi, "å")
+    .replace(/&Auml;/g, "Ä")
+    .replace(/&Ouml;/g, "Ö")
+    .replace(/&Aring;/g, "Å")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 if (import.meta.main) {
   Deno.serve((req) => handleRequest(req));
 }
@@ -466,11 +620,9 @@ function createUpstashRateLimit(
   const token = (env.get("UPSTASH_REDIS_REST_TOKEN") ?? "").trim();
 
   if (!url || !token) {
-    upstashRateLimitOnce = async () => {
-      throw new Error(
-        "server_not_configured: Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Supabase secrets",
-      );
-    };
+    // Local/dev fallback: allow requests when Upstash is intentionally absent.
+    // Production should set UPSTASH_* so the proxy remains abuse-protected.
+    upstashRateLimitOnce = async () => ({ allowed: true });
     return upstashRateLimitOnce;
   }
 

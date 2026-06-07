@@ -734,6 +734,36 @@ abstract class AppLocalizations {
   /// **'Untitled draft'**
   String get dashboardUntitledDraft;
 
+  /// No description provided for @dashboardWeeklySoldPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly sold prices'**
+  String get dashboardWeeklySoldPrices;
+
+  /// No description provided for @dashboardCurrencySek.
+  ///
+  /// In en, this message translates to:
+  /// **'kr'**
+  String get dashboardCurrencySek;
+
+  /// No description provided for @dashboardScanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned'**
+  String get dashboardScanned;
+
+  /// No description provided for @dashboardBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought'**
+  String get dashboardBought;
+
+  /// No description provided for @dashboardSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get dashboardSold;
+
   /// No description provided for @scannerTitle.
   ///
   /// In en, this message translates to:
