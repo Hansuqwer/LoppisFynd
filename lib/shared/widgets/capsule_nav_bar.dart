@@ -223,11 +223,13 @@ class _NavTab extends StatelessWidget {
             height: AppCapsuleNav.barHeight,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(destination.icon, size: 23, color: iconColor),
                 const SizedBox(height: 3),
                 Text(
                   destination.label,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: AppTypography.uiFontFamily,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
