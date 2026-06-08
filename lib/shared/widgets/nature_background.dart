@@ -20,7 +20,7 @@ class NatureBackground extends StatelessWidget {
       children: [
         const AtmosphericBackground(),
         ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          imageFilter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
           child: Image.asset(
             _backgroundImage,
             fit: BoxFit.cover,
