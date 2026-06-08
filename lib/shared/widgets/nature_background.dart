@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import 'atmospheric_background.dart';
@@ -17,10 +19,13 @@ class NatureBackground extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         const AtmosphericBackground(),
-        Image.asset(
-          _backgroundImage,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: Image.asset(
+            _backgroundImage,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+          ),
         ),
       ],
     );
