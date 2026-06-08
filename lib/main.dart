@@ -234,12 +234,12 @@ class _BokfyndAppState extends ConsumerState<BokfyndApp> {
           case '/scan':
             return MaterialPageRoute(
               settings: settings,
-              builder: (_) => const DeepLinkGate(tabIndex: 1),
+              builder: (_) => const DeepLinkGate(tabIndex: 2),
             );
           case '/inventory':
             return MaterialPageRoute(
               settings: settings,
-              builder: (_) => const DeepLinkGate(tabIndex: 2),
+              builder: (_) => const DeepLinkGate(tabIndex: 1),
             );
           case '/history':
             return MaterialPageRoute(

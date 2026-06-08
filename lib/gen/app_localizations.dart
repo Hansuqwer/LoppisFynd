@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hunter Dashboard'**
+  /// **'Dashboard'**
   String get dashboardTitle;
 
   /// No description provided for @dashboardSubtitle.

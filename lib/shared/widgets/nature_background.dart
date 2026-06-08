@@ -8,8 +8,21 @@ import 'atmospheric_background.dart';
 class NatureBackground extends StatelessWidget {
   const NatureBackground({super.key});
 
+  static const _backgroundImage =
+      'Images/Background/5d7e351e-1188-4614-8c22-1bea2cad7d50.png';
+
   @override
   Widget build(BuildContext context) {
-    return const AtmosphericBackground();
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const AtmosphericBackground(),
+        Image.asset(
+          _backgroundImage,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        ),
+      ],
+    );
   }
 }

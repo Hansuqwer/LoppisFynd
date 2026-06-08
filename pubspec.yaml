@@ -98,6 +98,9 @@ flutter:
     - Assets/backgrounds/
     - Assets/textures/
     - Assets/logos/
+    - Images/Background/
+    - Images/Logo/
+    - Images/Textures/
 
   fonts:
     - family: Outfit

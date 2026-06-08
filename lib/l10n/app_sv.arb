@@ -113,7 +113,7 @@
   "historyNoMatchesTitle": "Inga träffar",
   "historyNoMatchesMessage": "Prova att ändra sökningen eller dina filter.",
 
-  "dashboardTitle": "Jagarens tavla",
+  "dashboardTitle": "Fyndöversikt",
   "dashboardSubtitle": "Marknadspuls och senaste fynd.",
   "dashboardQuickScan": "Snabbskanna",
   "dashboardHaulSummary": "Fyndsammanfattning",
@@ -178,7 +178,7 @@
     }
   },
   "settingsModuleSyncDataTitle": "Molnsynk & Data",
-  "settingsModuleSyncDataDescription": "Molnsynk är under utveckling.",
+  "settingsModuleSyncDataDescription": "Synkronisera dina fynd med molnet.",
   "settingsModuleAiModelTitle": "AI & Modell",
   "settingsModulePrivacyTitle": "Integritet",
   "settingsModuleLegalTitle": "Juridik & licenser",

@@ -17,7 +17,7 @@ import 'spring_route.dart';
 import '../../shared/widgets/capsule_nav_bar.dart';
 import '../../shared/widgets/nature_background.dart';
 
-enum AppTab { dashboard, scanner, inventory, history, profile }
+enum AppTab { dashboard, inventory, scanner, history, profile }
 
 class AppNavShell extends ConsumerStatefulWidget {
   const AppNavShell({super.key});
@@ -194,15 +194,15 @@ class _AppNavShellState extends ConsumerState<AppNavShell> {
                 label: AppLocalizations.of(context)!.tabHome,
               ),
               CapsuleNavDestination(
+                key: const Key('nav_inventory'),
+                icon: LucideIcons.library,
+                label: AppLocalizations.of(context)!.tabInventory,
+              ),
+              CapsuleNavDestination(
                 key: const Key('nav_scanner'),
                 icon: LucideIcons.camera,
                 label: AppLocalizations.of(context)!.tabScan,
                 isPrimary: true,
-              ),
-              CapsuleNavDestination(
-                key: const Key('nav_inventory'),
-                icon: LucideIcons.library,
-                label: AppLocalizations.of(context)!.tabInventory,
               ),
               CapsuleNavDestination(
                 key: const Key('nav_history'),

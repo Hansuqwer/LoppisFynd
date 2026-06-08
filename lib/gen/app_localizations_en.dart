@@ -335,7 +335,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyNoMatchesMessage => 'Try changing your search or filters.';
 
   @override
-  String get dashboardTitle => 'Hunter Dashboard';
+  String get dashboardTitle => 'Dashboard';
 
   @override
   String get dashboardSubtitle => 'Market pulse + recent hauls.';

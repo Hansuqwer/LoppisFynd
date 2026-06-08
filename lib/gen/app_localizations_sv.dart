@@ -337,7 +337,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Prova att ändra sökningen eller dina filter.';
 
   @override
-  String get dashboardTitle => 'Jagarens tavla';
+  String get dashboardTitle => 'Fyndöversikt';
 
   @override
   String get dashboardSubtitle => 'Marknadspuls och senaste fynd.';
@@ -512,7 +512,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settingsModuleSyncDataDescription =>
-      'Molnsynk är under utveckling.';
+      'Synkronisera dina fynd med molnet.';
 
   @override
   String get settingsModuleAiModelTitle => 'AI & Modell';
