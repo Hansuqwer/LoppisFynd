@@ -11,7 +11,7 @@ class NatureBackground extends StatelessWidget {
   const NatureBackground({super.key});
 
   static const _backgroundImage =
-      'Images/Background/background_photo.jpg';
+      'Images/Background/background_photo.png';
 
   @override
   Widget build(BuildContext context) {
