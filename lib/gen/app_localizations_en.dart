@@ -596,48 +596,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Offline identification is turned off. Enable it in Settings to run detection.';
 
   @override
-  String get offlineModelCardTitle => 'Offline model';
-
-  @override
-  String offlineModelCardBody(String size) {
-    return 'Download required to run offline identification. Size: $size.';
-  }
-
-  @override
-  String get offlineModelDownloadCta => 'Download';
-
-  @override
-  String get offlineModelDownloadingLabel => 'Downloading…';
-
-  @override
-  String get offlineModelPausedLabel => 'Paused';
-
-  @override
-  String get offlineModelPauseCta => 'Pause';
-
-  @override
-  String get offlineModelResumeCta => 'Resume';
-
-  @override
-  String get offlineModelCancelCta => 'Cancel';
-
-  @override
-  String get offlineModelInstalledLabel => 'Installed.';
-
-  @override
-  String get offlineModelInstalledCta => 'Installed';
-
-  @override
-  String offlineModelFailedLabel(String error) {
-    return 'Download failed: $error';
-  }
-
-  @override
-  String get offlineModelRetryCta => 'Retry';
-
-  @override
   String get settingsLegalDescription =>
-      'Licenses and attributions for Loppisfynd and the optional offline model.';
+      'Licenses and attributions for Loppisfynd.';
 
   @override
   String get settingsOpenLegal => 'Open legal';
@@ -810,44 +770,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legalLicensesTitle => 'Licenses';
 
   @override
-  String get legalLicensesSubtitle =>
-      'Review third-party notices and offline model attributions.';
+  String get legalLicensesSubtitle => 'Review third-party notices.';
 
   @override
   String get legalThirdPartyLicenses => 'Third-party licenses';
-
-  @override
-  String get legalOfflineModelLicenses => 'Offline model licenses';
-
-  @override
-  String get legalOfflineModelLicensesTitle => 'Offline model licenses';
-
-  @override
-  String legalOfflineModelSize(String size) {
-    return 'Download size: $size';
-  }
-
-  @override
-  String get legalOfflineLicenseRuntimeTitle => 'Runtime / inference stack';
-
-  @override
-  String get legalOfflineLicenseRuntimeSummary =>
-      'TensorFlow Lite runtime used for on-device inference (Apache-2.0).';
-
-  @override
-  String get legalOfflineLicenseWeightsTitle => 'Model weights';
-
-  @override
-  String get legalOfflineLicenseWeightsSummary =>
-      'The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).';
-
-  @override
-  String get legalOfflineLicenseDatasetTitle =>
-      'Dataset / training attribution';
-
-  @override
-  String get legalOfflineLicenseDatasetSummary =>
-      'COCO annotations are licensed under CC BY 4.0.';
 
   @override
   String get legalSourceUrlLabel => 'Source URL';

@@ -216,26 +216,7 @@
   "offlineIdentifyNoResults": "Kör offline-identifiering för att se träffar här.",
   "offlineIdentifyDisabledHint": "Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.",
 
-  "offlineModelCardTitle": "Offline-modell",
-  "offlineModelCardBody": "Nedladdning krävs för offline-identifiering. Storlek: {size}.",
-  "@offlineModelCardBody": {
-    "placeholders": {"size": {"type": "String"}}
-  },
-  "offlineModelDownloadCta": "Ladda ner",
-  "offlineModelDownloadingLabel": "Laddar ner…",
-  "offlineModelPausedLabel": "Pausad",
-  "offlineModelPauseCta": "Pausa",
-  "offlineModelResumeCta": "Fortsätt",
-  "offlineModelCancelCta": "Avbryt",
-  "offlineModelInstalledLabel": "Installerad.",
-  "offlineModelInstalledCta": "Installerad",
-  "offlineModelFailedLabel": "Nedladdning misslyckades: {error}",
-  "@offlineModelFailedLabel": {
-    "placeholders": {"error": {"type": "String"}}
-  },
-  "offlineModelRetryCta": "Försök igen",
-
-  "settingsLegalDescription": "Licenser och attributioner för Loppisfynd och den valfria offline-modellen.",
+  "settingsLegalDescription": "Licenser och attributioner för Loppisfynd.",
   "settingsOpenLegal": "Öppna juridik",
 
   "settingsMarketSyncTitle": "Marknadssynk",
@@ -301,20 +282,8 @@
 
   "legalTitle": "Juridik",
   "legalLicensesTitle": "Licenser",
-  "legalLicensesSubtitle": "Granska tredjepartsnotiser och offline-modellens attribution.",
+  "legalLicensesSubtitle": "Granska tredjepartsnotiser.",
   "legalThirdPartyLicenses": "Tredjepartslicenser",
-  "legalOfflineModelLicenses": "Offline-modellens licenser",
-  "legalOfflineModelLicensesTitle": "Offline-modellens licenser",
-  "legalOfflineModelSize": "Nedladdningsstorlek: {size}",
-  "@legalOfflineModelSize": {
-    "placeholders": {"size": {"type": "String"}}
-  },
-  "legalOfflineLicenseRuntimeTitle": "Runtime / inferens",
-  "legalOfflineLicenseRuntimeSummary": "TensorFlow Lite-runtime som används för inferens på enheten (Apache-2.0).",
-  "legalOfflineLicenseWeightsTitle": "Modellvikter",
-  "legalOfflineLicenseWeightsSummary": "Den nedladdade EfficientDet Lite0-viktfilen (Apache-2.0).",
-  "legalOfflineLicenseDatasetTitle": "Dataset / träningsattribution",
-  "legalOfflineLicenseDatasetSummary": "COCO-annoteringar är licensierade under CC BY 4.0.",
   "legalSourceUrlLabel": "Käll-URL",
   "legalCopySourceUrl": "Kopiera URL",
   "legalViewFullLicenseText": "Visa full licenstext",

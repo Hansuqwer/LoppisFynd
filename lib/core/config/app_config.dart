@@ -8,7 +8,6 @@ class AppConfig {
     required this.traderaProxyUrl,
     this.googleBooksApiKey = '',
     this.bokfyndQaStableIsbnData = false,
-    required this.cloudAiProxyUrl,
     required this.supabaseUrl,
     required this.supabaseAnonKey,
     required this.sentryDsn,
@@ -24,7 +23,6 @@ class AppConfig {
   final String traderaProxyUrl;
   final String googleBooksApiKey;
   final bool bokfyndQaStableIsbnData;
-  final String cloudAiProxyUrl;
   final String supabaseUrl;
   final String supabaseAnonKey;
   final String sentryDsn;
@@ -49,10 +47,6 @@ class AppConfig {
       bokfyndQaStableIsbnData: bool.fromEnvironment(
         'BOKFYND_QA_STABLE_ISBN_DATA',
         defaultValue: false,
-      ),
-      cloudAiProxyUrl: String.fromEnvironment(
-        'CLOUD_AI_PROXY_URL',
-        defaultValue: '',
       ),
       supabaseUrl: String.fromEnvironment('SUPABASE_URL', defaultValue: ''),
       supabaseAnonKey: String.fromEnvironment(
@@ -93,8 +87,6 @@ class AppConfig {
 
   bool get useBokFyndQaStableIsbnData =>
       appEnv == 'dev' && bokfyndQaStableIsbnData;
-
-  bool get hasCloudAiProxy => cloudAiProxyUrl.trim().isNotEmpty;
 
   bool get hasSupabase =>
       supabaseUrl.trim().isNotEmpty && supabaseAnonKey.trim().isNotEmpty;

@@ -18,7 +18,6 @@ const _permissionChannel = MethodChannel(
 const _testAppConfig = AppConfig(
   appEnv: 'test',
   traderaProxyUrl: '',
-  cloudAiProxyUrl: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   sentryDsn: '',

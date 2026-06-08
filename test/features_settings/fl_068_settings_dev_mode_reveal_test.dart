@@ -102,7 +102,6 @@ void main() {
     const config = AppConfig(
       appEnv: 'test',
       traderaProxyUrl: 'https://example.invalid/functions/v1/tradera-proxy',
-      cloudAiProxyUrl: '',
       supabaseUrl: '',
       supabaseAnonKey: '',
       sentryDsn: '',

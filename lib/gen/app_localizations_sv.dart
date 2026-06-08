@@ -601,48 +601,8 @@ class AppLocalizationsSv extends AppLocalizations {
       'Offline-identifiering är avstängt. Aktivera i Inställningar för att köra.';
 
   @override
-  String get offlineModelCardTitle => 'Offline-modell';
-
-  @override
-  String offlineModelCardBody(String size) {
-    return 'Nedladdning krävs för offline-identifiering. Storlek: $size.';
-  }
-
-  @override
-  String get offlineModelDownloadCta => 'Ladda ner';
-
-  @override
-  String get offlineModelDownloadingLabel => 'Laddar ner…';
-
-  @override
-  String get offlineModelPausedLabel => 'Pausad';
-
-  @override
-  String get offlineModelPauseCta => 'Pausa';
-
-  @override
-  String get offlineModelResumeCta => 'Fortsätt';
-
-  @override
-  String get offlineModelCancelCta => 'Avbryt';
-
-  @override
-  String get offlineModelInstalledLabel => 'Installerad.';
-
-  @override
-  String get offlineModelInstalledCta => 'Installerad';
-
-  @override
-  String offlineModelFailedLabel(String error) {
-    return 'Nedladdning misslyckades: $error';
-  }
-
-  @override
-  String get offlineModelRetryCta => 'Försök igen';
-
-  @override
   String get settingsLegalDescription =>
-      'Licenser och attributioner för Loppisfynd och den valfria offline-modellen.';
+      'Licenser och attributioner för Loppisfynd.';
 
   @override
   String get settingsOpenLegal => 'Öppna juridik';
@@ -814,43 +774,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get legalLicensesTitle => 'Licenser';
 
   @override
-  String get legalLicensesSubtitle =>
-      'Granska tredjepartsnotiser och offline-modellens attribution.';
+  String get legalLicensesSubtitle => 'Granska tredjepartsnotiser.';
 
   @override
   String get legalThirdPartyLicenses => 'Tredjepartslicenser';
-
-  @override
-  String get legalOfflineModelLicenses => 'Offline-modellens licenser';
-
-  @override
-  String get legalOfflineModelLicensesTitle => 'Offline-modellens licenser';
-
-  @override
-  String legalOfflineModelSize(String size) {
-    return 'Nedladdningsstorlek: $size';
-  }
-
-  @override
-  String get legalOfflineLicenseRuntimeTitle => 'Runtime / inferens';
-
-  @override
-  String get legalOfflineLicenseRuntimeSummary =>
-      'TensorFlow Lite-runtime som används för inferens på enheten (Apache-2.0).';
-
-  @override
-  String get legalOfflineLicenseWeightsTitle => 'Modellvikter';
-
-  @override
-  String get legalOfflineLicenseWeightsSummary =>
-      'Den nedladdade EfficientDet Lite0-viktfilen (Apache-2.0).';
-
-  @override
-  String get legalOfflineLicenseDatasetTitle => 'Dataset / träningsattribution';
-
-  @override
-  String get legalOfflineLicenseDatasetSummary =>
-      'COCO-annoteringar är licensierade under CC BY 4.0.';
 
   @override
   String get legalSourceUrlLabel => 'Käll-URL';

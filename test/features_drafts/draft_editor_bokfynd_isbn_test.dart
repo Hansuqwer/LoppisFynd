@@ -148,7 +148,6 @@ AppConfig _config() {
   return const AppConfig(
     appEnv: 'test',
     traderaProxyUrl: '',
-    cloudAiProxyUrl: '',
     supabaseUrl: '',
     supabaseAnonKey: '',
     sentryDsn: '',

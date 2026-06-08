@@ -15,12 +15,5 @@ const String kCloudIdentificationDisclosureChoiceKeyV1 =
 const String kOfflineIdentificationEnabledKeyV1 =
     'offline_identification_enabled_v1';
 
-/// 0/absent = not shown, 1 = shown.
-///
-/// Used to proactively suggest downloading the offline model once after
-/// enabling offline identification.
-const String kOfflineModelDownloadSuggestionShownKeyV1 =
-    'offline_model_download_suggestion_shown_v1';
-
 /// 0/absent = system, 1 = light, 2 = dark.
 const String kThemeModeKeyV1 = 'theme_mode_v1';

@@ -1148,82 +1148,10 @@ abstract class AppLocalizations {
   /// **'Offline identification is turned off. Enable it in Settings to run detection.'**
   String get offlineIdentifyDisabledHint;
 
-  /// No description provided for @offlineModelCardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline model'**
-  String get offlineModelCardTitle;
-
-  /// No description provided for @offlineModelCardBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Download required to run offline identification. Size: {size}.'**
-  String offlineModelCardBody(String size);
-
-  /// No description provided for @offlineModelDownloadCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get offlineModelDownloadCta;
-
-  /// No description provided for @offlineModelDownloadingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading…'**
-  String get offlineModelDownloadingLabel;
-
-  /// No description provided for @offlineModelPausedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused'**
-  String get offlineModelPausedLabel;
-
-  /// No description provided for @offlineModelPauseCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Pause'**
-  String get offlineModelPauseCta;
-
-  /// No description provided for @offlineModelResumeCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume'**
-  String get offlineModelResumeCta;
-
-  /// No description provided for @offlineModelCancelCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get offlineModelCancelCta;
-
-  /// No description provided for @offlineModelInstalledLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Installed.'**
-  String get offlineModelInstalledLabel;
-
-  /// No description provided for @offlineModelInstalledCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Installed'**
-  String get offlineModelInstalledCta;
-
-  /// No description provided for @offlineModelFailedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Download failed: {error}'**
-  String offlineModelFailedLabel(String error);
-
-  /// No description provided for @offlineModelRetryCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get offlineModelRetryCta;
-
   /// No description provided for @settingsLegalDescription.
   ///
   /// In en, this message translates to:
-  /// **'Licenses and attributions for Loppisfynd and the optional offline model.'**
+  /// **'Licenses and attributions for Loppisfynd.'**
   String get settingsLegalDescription;
 
   /// No description provided for @settingsOpenLegal.
@@ -1535,7 +1463,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalLicensesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Review third-party notices and offline model attributions.'**
+  /// **'Review third-party notices.'**
   String get legalLicensesSubtitle;
 
   /// No description provided for @legalThirdPartyLicenses.
@@ -1543,60 +1471,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Third-party licenses'**
   String get legalThirdPartyLicenses;
-
-  /// No description provided for @legalOfflineModelLicenses.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline model licenses'**
-  String get legalOfflineModelLicenses;
-
-  /// No description provided for @legalOfflineModelLicensesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline model licenses'**
-  String get legalOfflineModelLicensesTitle;
-
-  /// No description provided for @legalOfflineModelSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Download size: {size}'**
-  String legalOfflineModelSize(String size);
-
-  /// No description provided for @legalOfflineLicenseRuntimeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Runtime / inference stack'**
-  String get legalOfflineLicenseRuntimeTitle;
-
-  /// No description provided for @legalOfflineLicenseRuntimeSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'TensorFlow Lite runtime used for on-device inference (Apache-2.0).'**
-  String get legalOfflineLicenseRuntimeSummary;
-
-  /// No description provided for @legalOfflineLicenseWeightsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Model weights'**
-  String get legalOfflineLicenseWeightsTitle;
-
-  /// No description provided for @legalOfflineLicenseWeightsSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).'**
-  String get legalOfflineLicenseWeightsSummary;
-
-  /// No description provided for @legalOfflineLicenseDatasetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Dataset / training attribution'**
-  String get legalOfflineLicenseDatasetTitle;
-
-  /// No description provided for @legalOfflineLicenseDatasetSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'COCO annotations are licensed under CC BY 4.0.'**
-  String get legalOfflineLicenseDatasetSummary;
 
   /// No description provided for @legalSourceUrlLabel.
   ///

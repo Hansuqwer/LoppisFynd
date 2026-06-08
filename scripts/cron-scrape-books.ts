@@ -290,6 +290,46 @@ for (const query of QUERY_POOL) {
 console.log("Enriching with Open Library...");
 await batchEnrich(items);
 
+// ── Persist to Supabase market_prices ─────────────────────────────────────────
+const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+
+if (supabaseUrl && supabaseKey) {
+  const rows = items.map(i => ({
+    isbn: i.isbn ?? null,
+    title: i.title ?? null,
+    source: i.source,
+    price: Math.round(i.soldPrice ?? i.price ?? 0),
+    sold_at: i.soldAt ?? null,
+    scraped_at: startedAt,
+    url: i.url ?? null,
+  })).filter(r => r.price > 0);
+
+  // Batch insert in chunks of 500
+  let inserted = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const chunk = rows.slice(i, i + 500);
+    const res = await fetch(`${supabaseUrl}/rest/v1/market_prices`, {
+      method: "POST",
+      headers: {
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify(chunk),
+    });
+    if (!res.ok) {
+      console.error(`Supabase insert error ${res.status}: ${await res.text()}`);
+    } else {
+      inserted += chunk.length;
+    }
+  }
+  console.log(`Inserted ${inserted} rows into market_prices`);
+} else {
+  console.log("SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY not set — skipping DB insert");
+}
+
 // ── Stats ──────────────────────────────────────────────────────────────────────
 const prices = items.map(i => i.price).filter((p): p is number => p != null).sort((a, b) => a - b);
 const soldPrices = items.map(i => i.soldPrice).filter((p): p is number => p != null).sort((a, b) => a - b);

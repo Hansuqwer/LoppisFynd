@@ -215,26 +215,7 @@
   "offlineIdentifyNoResults": "Run offline identification to see detections here.",
   "offlineIdentifyDisabledHint": "Offline identification is turned off. Enable it in Settings to run detection.",
 
-  "offlineModelCardTitle": "Offline model",
-  "offlineModelCardBody": "Download required to run offline identification. Size: {size}.",
-  "@offlineModelCardBody": {
-    "placeholders": {"size": {"type": "String"}}
-  },
-  "offlineModelDownloadCta": "Download",
-  "offlineModelDownloadingLabel": "Downloading…",
-  "offlineModelPausedLabel": "Paused",
-  "offlineModelPauseCta": "Pause",
-  "offlineModelResumeCta": "Resume",
-  "offlineModelCancelCta": "Cancel",
-  "offlineModelInstalledLabel": "Installed.",
-  "offlineModelInstalledCta": "Installed",
-  "offlineModelFailedLabel": "Download failed: {error}",
-  "@offlineModelFailedLabel": {
-    "placeholders": {"error": {"type": "String"}}
-  },
-  "offlineModelRetryCta": "Retry",
-
-  "settingsLegalDescription": "Licenses and attributions for Loppisfynd and the optional offline model.",
+  "settingsLegalDescription": "Licenses and attributions for Loppisfynd.",
   "settingsOpenLegal": "Open legal",
 
   "settingsMarketSyncTitle": "Market sync",
@@ -300,20 +281,8 @@
 
   "legalTitle": "Legal",
   "legalLicensesTitle": "Licenses",
-  "legalLicensesSubtitle": "Review third-party notices and offline model attributions.",
+  "legalLicensesSubtitle": "Review third-party notices.",
   "legalThirdPartyLicenses": "Third-party licenses",
-  "legalOfflineModelLicenses": "Offline model licenses",
-  "legalOfflineModelLicensesTitle": "Offline model licenses",
-  "legalOfflineModelSize": "Download size: {size}",
-  "@legalOfflineModelSize": {
-    "placeholders": {"size": {"type": "String"}}
-  },
-  "legalOfflineLicenseRuntimeTitle": "Runtime / inference stack",
-  "legalOfflineLicenseRuntimeSummary": "TensorFlow Lite runtime used for on-device inference (Apache-2.0).",
-  "legalOfflineLicenseWeightsTitle": "Model weights",
-  "legalOfflineLicenseWeightsSummary": "The downloaded EfficientDet Lite0 weights artifact (Apache-2.0).",
-  "legalOfflineLicenseDatasetTitle": "Dataset / training attribution",
-  "legalOfflineLicenseDatasetSummary": "COCO annotations are licensed under CC BY 4.0.",
   "legalSourceUrlLabel": "Source URL",
   "legalCopySourceUrl": "Copy URL",
   "legalViewFullLicenseText": "View full license text",

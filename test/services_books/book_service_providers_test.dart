@@ -162,7 +162,6 @@ AppConfig _config({
     traderaProxyUrl: traderaProxyUrl,
     googleBooksApiKey: googleBooksApiKey,
     bokfyndQaStableIsbnData: bokfyndQaStableIsbnData,
-    cloudAiProxyUrl: '',
     supabaseUrl: '',
     supabaseAnonKey: '',
     sentryDsn: '',
