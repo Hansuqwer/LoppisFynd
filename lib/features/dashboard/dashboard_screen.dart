@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/navigation/spring_route.dart';
+import '../../core/text/sek_formatter.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
 import '../../shared/widgets/bars_chart.dart';
@@ -213,8 +214,7 @@ _DashboardMarketSnapshot _dashboardMarketSnapshot(List<ScanItemComp> comps) {
 }
 
 String _formatSek(double value) {
-  final f = intl.NumberFormat.decimalPattern(intl.Intl.getCurrentLocale());
-  return f.format(value.round());
+  return formatSekAmount(value);
 }
 
 // ── Sub-widgets ──────────────────────────────────────────────
@@ -235,7 +235,7 @@ class _ScreenHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'loppisfynd',
+                l10n.dashboardBrandWordmark,
                 style: TextStyle(
                   fontFamily: AppTypography.accentFontFamily,
                   fontSize: 15,

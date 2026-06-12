@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:fynd_loppis/features/analyzer/flip_factor.dart';
 import 'package:fynd_loppis/features/analyzer/profit_calculator.dart';
+import 'package:fynd_loppis/services/books/flip_score.dart';
 
 void main() {
   test('ProfitCalculator grossProfit works', () {
@@ -30,16 +30,22 @@ void main() {
     );
   });
 
-  test('FlipFactor grade buckets', () {
-    expect(FlipFactor.grade(purchasePrice: 100, expectedSalePrice: 90), 'No');
+  test('FlipScore maps price ratios to score buckets', () {
     expect(
-      FlipFactor.grade(purchasePrice: 100, expectedSalePrice: 120),
-      'Maybe',
+      FlipScore.fromPrices(purchasePrice: 100, medianPrice: 90),
+      lessThan(40),
     );
     expect(
-      FlipFactor.grade(purchasePrice: 100, expectedSalePrice: 150),
-      'Good',
+      FlipScore.fromPrices(purchasePrice: 100, medianPrice: 120),
+      inInclusiveRange(40, 68),
     );
-    expect(FlipFactor.grade(purchasePrice: 100, expectedSalePrice: 200), 'Hot');
+    expect(
+      FlipScore.fromPrices(purchasePrice: 100, medianPrice: 150),
+      inInclusiveRange(69, 89),
+    );
+    expect(
+      FlipScore.fromPrices(purchasePrice: 100, medianPrice: 200),
+      greaterThanOrEqualTo(90),
+    );
   });
 }

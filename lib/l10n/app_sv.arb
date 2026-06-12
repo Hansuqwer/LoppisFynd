@@ -607,5 +607,35 @@
   "settingsBulkEnrichFailed": "Misslyckades: {error}",
   "@settingsBulkEnrichFailed": {
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+
+  "dashboardBrandWordmark": "loppisfynd",
+  "findsEyebrow": "värt att leta efter",
+  "findsAveragePrice": "Snitt {price} kr",
+  "@findsAveragePrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailFleaMarketPriceTitle": "Ditt loppispris",
+  "itemDetailAdjustForProfit": "Justera för exakt vinst",
+  "itemDetailNetProfitMetric": "Nettovinst",
+  "itemDetailRoiMetric": "ROI",
+  "itemDetailSellTimeMetric": "Säljtid",
+  "itemDetailMarketPriceTitle": "Marknadspris",
+  "itemDetailRecentlySoldSubtitle": "Senast sålda",
+  "itemDetailAveragePriceLabel": "snittpris",
+  "itemDetailLowestPrice": "Lägst {price} kr",
+  "@itemDetailLowestPrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailHighestPrice": "Högst {price} kr",
+  "@itemDetailHighestPrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailAddAnyway": "Lägg till ändå",
+  "itemDetailBuyFor": "Köp för {price} kr",
+  "@itemDetailBuyFor": {"placeholders": {"price": {"type": "int"}}},
+  "haulEyebrow": "dina fyndresor",
+  "haulActiveRun": "Pågående runda",
+  "haulProjectedCurrencySuffix": "kr proj.",
+  "haulBookCount": "{count, plural, =1{1 bok} other{{count} böcker}}",
+  "@haulBookCount": {"placeholders": {"count": {"type": "int"}}},
+  "haulSpentMetric": "Spenderat",
+  "haulAveragePerBookMetric": "Snitt/bok",
+  "haulMarginMetric": "Marginal",
+  "haulBoughtAveragePrice": "Köpt {purchase} kr → snitt {median} kr",
+  "@haulBoughtAveragePrice": {"placeholders": {"purchase": {"type": "int"}, "median": {"type": "int"}}}
 }

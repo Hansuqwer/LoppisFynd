@@ -1,6 +1,6 @@
-import '../../features/scanner/barcode/mlkit_book_isbn_adapter.dart';
 import 'book_barcode_isbn_handoff_service.dart';
 import 'book_isbn_draft_flow_controller.dart';
+import 'mlkit_book_isbn_adapter.dart';
 
 class BookScannerIsbnHandoffCoordinator {
   const BookScannerIsbnHandoffCoordinator({

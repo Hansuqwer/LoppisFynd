@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../tables/scan_items.dart';
 import '../../text/keyword_query_sanitizer.dart';
-import '../../../services/sync/cloud/entity_keys.dart';
+import '../../sync/entity_keys.dart';
 
 part 'scan_items_dao.g.dart';
 

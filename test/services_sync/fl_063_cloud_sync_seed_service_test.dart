@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:fynd_loppis/core/database/app_database.dart';
 import 'package:fynd_loppis/services/sync/cloud/cloud_sync_seed_service.dart';
-import 'package:fynd_loppis/services/sync/cloud/entity_keys.dart';
+import 'package:fynd_loppis/core/sync/entity_keys.dart';
 
 void main() {
   test('CloudSyncSeedService seeds pending entities once per user', () async {

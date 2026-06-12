@@ -1,5 +1,5 @@
 import '../../../core/database/app_database.dart';
-import '../cloud/entity_keys.dart';
+import '../../../core/sync/entity_keys.dart';
 
 class CloudSyncSeedService {
   CloudSyncSeedService({required AppDatabase db}) : _db = db;

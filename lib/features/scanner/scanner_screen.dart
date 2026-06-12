@@ -18,7 +18,10 @@ import '../../core/navigation/spring_route.dart';
 import '../analyzer/item_detail_screen.dart';
 import '../offline_detection/offline_detection_screen.dart';
 import '../../gen/app_localizations.dart';
-import '../../services/sync/cloud/entity_keys.dart';
+import '../../core/sync/entity_keys.dart';
+import '../../services/books/book_isbn_draft_flow_controller.dart';
+import 'barcode/scanner_book_isbn_handoff_controller.dart';
+import 'barcode/scanner_book_isbn_handoff_feedback.dart';
 import 'widgets/barcode_ar_overlay.dart';
 import 'widgets/batch_tray.dart';
 import 'widgets/scanner_overlay.dart';
@@ -58,12 +61,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   MobileScannerController? _barcodeScanner;
   StreamSubscription<BarcodeCapture>? _barcodeStreamSub;
+  ScannerBookIsbnHandoffController? _isbnHandoff;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _syncOverlayListenable();
+    if (widget.bookDraftScanItemId != null) {
+      _isbnHandoff = ScannerBookIsbnHandoffController(
+        coordinator: ref.read(bookScannerIsbnHandoffCoordinatorProvider),
+      );
+    }
   }
 
   @override
@@ -187,7 +196,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
-  void _handleBarcodes(BarcodeCapture capture) {
+  Future<void> _handleBarcodes(BarcodeCapture capture) async {
     if (!mounted) return;
 
     final barcodes = capture.barcodes;
@@ -214,6 +223,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
 
     _internalOverlay.value = frame;
+
+    final handoff = _isbnHandoff;
+    if (handoff == null) return;
+
+    final result = await handoff.maybeHandoffBarcodes(
+      scanItemId: widget.bookDraftScanItemId,
+      barcodes: capture.barcodes,
+    );
+    if (!mounted) return;
+
+    final feedback = scannerBookIsbnHandoffFeedbackFor(result);
+    if (feedback == null) return; // null = idle/loading/dedup — no feedback needed
+
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(feedback.message(l10n))),
+    );
+
+    if (result is BookIsbnDraftFlowSuccess) {
+      await HapticFeedback.mediumImpact();
+      if (mounted) Navigator.of(context).pop();
+    }
   }
 
   Future<bool> _ensureCameraPermission() async {

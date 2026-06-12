@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:fynd_loppis/features/scanner/isbn/isbn_validator.dart';
+import 'package:fynd_loppis/services/books/isbn_validator.dart';
 
 void main() {
   const validator = IsbnValidator();

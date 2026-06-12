@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/database/app_database.dart';
-import 'cloud/entity_keys.dart';
+import '../../core/sync/entity_keys.dart';
 import 'cloud/conflict_detector.dart';
 
 class CloudMetadataSyncService {

@@ -11,12 +11,14 @@ import '../../core/database/app_database.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
+import '../../services/books/flip_score.dart';
 import '../../shared/widgets/book_cover.dart';
 import '../../shared/widgets/glass_button.dart';
 import '../../shared/widgets/score_ring.dart';
 import '../../shared/widgets/sparkline_chart.dart';
 import '../../shared/widgets/verdict_chip.dart';
 import '../offline_detection/offline_detection_screen.dart';
+import 'profit_calculator.dart';
 import 'widgets/condition_adjuster.dart';
 import 'widgets/market_stats_widget.dart';
 
@@ -73,9 +75,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 ? null
                 : median * item.conditionMultiplier;
 
-            // Fee model: 12% platform fee (matches redesign).
-            final fee = adjusted == null ? 0.0 : adjusted * 0.12;
-            final net = adjusted == null ? 0.0 : adjusted - _cost - fee;
+            final net = ProfitCalculator.netProfit(
+                  purchasePrice: _cost,
+                  expectedSalePrice: adjusted,
+                ) ??
+                0.0;
             final roi = _cost > 0 ? ((net / _cost) * 100).round() : 0;
 
             // Score: derive from flip factor if no explicit score field.
@@ -230,15 +234,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 // ── Helpers ──────────────────────────────────────────────────
 
 int _scoreFromItem(ScanItem item) {
-  final purchase = item.purchasePrice;
-  final median = item.medianPrice;
-  if (purchase == null || median == null || purchase <= 0) return 0;
-  final ratio = median / purchase;
-  // Map ratio to 0–100.
-  if (ratio < 1.0) return ((ratio * 40).clamp(0, 39)).round();
-  if (ratio < 1.3) return (40 + ((ratio - 1.0) / 0.3) * 29).round();
-  if (ratio < 2.0) return (69 + ((ratio - 1.3) / 0.7) * 21).round();
-  return 90 + math.min(10, ((ratio - 2.0) * 5).round());
+  return FlipScore.fromPrices(
+    purchasePrice: item.purchasePrice,
+    medianPrice: item.medianPrice,
+  );
 }
 
 List<double> _soldPrices(ScanItem item) {
@@ -425,6 +424,8 @@ class _CostStepperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -443,7 +444,7 @@ class _CostStepperCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ditt loppispris',
+                      l10n.itemDetailFleaMarketPriceTitle,
                       style: TextStyle(
                         fontFamily: AppTypography.uiFontFamily,
                         fontWeight: FontWeight.w600,
@@ -453,7 +454,7 @@ class _CostStepperCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      'Justera för exakt vinst',
+                      l10n.itemDetailAdjustForProfit,
                       style: TextStyle(
                         fontFamily: AppTypography.uiFontFamily,
                         fontWeight: FontWeight.w500,
@@ -493,19 +494,19 @@ class _CostStepperCard extends StatelessWidget {
             children: [
               _MiniMetric(
                 value: '${net >= 0 ? '+' : ''}${net.round()} kr',
-                label: 'Nettovinst',
+                label: l10n.itemDetailNetProfitMetric,
                 color: net > 0 ? AppColors.sageDeep : AppColors.copperOak,
               ),
               const SizedBox(width: AppSpacing.xs),
               _MiniMetric(
                 value: '$roi%',
-                label: 'ROI',
+                label: l10n.itemDetailRoiMetric,
                 color: AppColors.inkDeep,
               ),
               const SizedBox(width: AppSpacing.xs),
               _MiniMetric(
                 value: item.medianPrice != null ? '~7 dgr' : '—',
-                label: 'Säljtid',
+                label: l10n.itemDetailSellTimeMetric,
                 color: AppColors.atmosphericFog,
               ),
             ],
@@ -616,6 +617,8 @@ class _MarketPriceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -634,7 +637,7 @@ class _MarketPriceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Marknadspris',
+                      l10n.itemDetailMarketPriceTitle,
                       style: TextStyle(
                         fontFamily: AppTypography.uiFontFamily,
                         fontWeight: FontWeight.w700,
@@ -643,7 +646,7 @@ class _MarketPriceCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Senast sålda',
+                      l10n.itemDetailRecentlySoldSubtitle,
                       style: TextStyle(
                         fontFamily: AppTypography.uiFontFamily,
                         fontWeight: FontWeight.w500,
@@ -668,7 +671,7 @@ class _MarketPriceCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'snittpris',
+                    l10n.itemDetailAveragePriceLabel,
                     style: TextStyle(
                       fontFamily: AppTypography.uiFontFamily,
                       fontWeight: FontWeight.w500,
@@ -747,7 +750,7 @@ class _MarketPriceCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Lägst ${low.round()} kr',
+                        l10n.itemDetailLowestPrice(low.round()),
                         style: TextStyle(
                           fontFamily: AppTypography.metricsFontFamily,
                           fontWeight: FontWeight.w500,
@@ -757,7 +760,7 @@ class _MarketPriceCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Högst ${high.round()} kr',
+                        l10n.itemDetailHighestPrice(high.round()),
                         style: TextStyle(
                           fontFamily: AppTypography.metricsFontFamily,
                           fontWeight: FontWeight.w500,
@@ -828,6 +831,7 @@ class _CtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isSkip = verdict == Verdict.skip;
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -863,7 +867,9 @@ class _CtaBar extends StatelessWidget {
             const Icon(Icons.shopping_bag_outlined, size: 21),
             const SizedBox(width: 9),
             Text(
-              isSkip ? 'Lägg till ändå' : 'Köp för ${cost.round()} kr',
+              isSkip
+                  ? l10n.itemDetailAddAnyway
+                  : l10n.itemDetailBuyFor(cost.round()),
               style: const TextStyle(
                 fontFamily: AppTypography.uiFontFamily,
                 fontWeight: FontWeight.w700,

@@ -1580,4 +1580,91 @@ class AppLocalizationsSv extends AppLocalizations {
   String settingsBulkEnrichFailed(String error) {
     return 'Misslyckades: $error';
   }
+
+  @override
+  String get dashboardBrandWordmark => 'loppisfynd';
+
+  @override
+  String get findsEyebrow => 'värt att leta efter';
+
+  @override
+  String findsAveragePrice(int price) {
+    return 'Snitt $price kr';
+  }
+
+  @override
+  String get itemDetailFleaMarketPriceTitle => 'Ditt loppispris';
+
+  @override
+  String get itemDetailAdjustForProfit => 'Justera för exakt vinst';
+
+  @override
+  String get itemDetailNetProfitMetric => 'Nettovinst';
+
+  @override
+  String get itemDetailRoiMetric => 'ROI';
+
+  @override
+  String get itemDetailSellTimeMetric => 'Säljtid';
+
+  @override
+  String get itemDetailMarketPriceTitle => 'Marknadspris';
+
+  @override
+  String get itemDetailRecentlySoldSubtitle => 'Senast sålda';
+
+  @override
+  String get itemDetailAveragePriceLabel => 'snittpris';
+
+  @override
+  String itemDetailLowestPrice(int price) {
+    return 'Lägst $price kr';
+  }
+
+  @override
+  String itemDetailHighestPrice(int price) {
+    return 'Högst $price kr';
+  }
+
+  @override
+  String get itemDetailAddAnyway => 'Lägg till ändå';
+
+  @override
+  String itemDetailBuyFor(int price) {
+    return 'Köp för $price kr';
+  }
+
+  @override
+  String get haulEyebrow => 'dina fyndresor';
+
+  @override
+  String get haulActiveRun => 'Pågående runda';
+
+  @override
+  String get haulProjectedCurrencySuffix => 'kr proj.';
+
+  @override
+  String haulBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count böcker',
+      one: '1 bok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get haulSpentMetric => 'Spenderat';
+
+  @override
+  String get haulAveragePerBookMetric => 'Snitt/bok';
+
+  @override
+  String get haulMarginMetric => 'Marginal';
+
+  @override
+  String haulBoughtAveragePrice(int purchase, int median) {
+    return 'Köpt $purchase kr → snitt $median kr';
+  }
 }

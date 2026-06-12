@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fynd_loppis/core/app/providers.dart';
 import 'package:fynd_loppis/core/config/app_config.dart';
 import 'package:fynd_loppis/core/database/app_database.dart';
-import 'package:fynd_loppis/features/scanner/barcode/mlkit_book_isbn_adapter.dart';
+import 'package:fynd_loppis/services/books/mlkit_book_isbn_adapter.dart';
 import 'package:fynd_loppis/services/books/book_barcode_isbn_handoff_service.dart';
 import 'package:fynd_loppis/services/books/book_isbn_draft_flow_controller.dart';
 import 'package:fynd_loppis/services/books/book_inventory_draft_application_service.dart';

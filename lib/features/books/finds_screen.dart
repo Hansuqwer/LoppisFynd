@@ -6,6 +6,7 @@ import '../../core/database/app_database.dart';
 import '../../core/navigation/spring_route.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
+import '../../services/books/flip_score.dart';
 import '../../shared/widgets/book_cover.dart';
 import '../../shared/widgets/score_ring.dart';
 import '../../shared/widgets/verdict_chip.dart';
@@ -49,7 +50,7 @@ class FindsScreen extends ConsumerWidget {
               children: [
                 // Screen header.
                 Text(
-                  'värt att leta efter',
+                  l10n.findsEyebrow,
                   style: TextStyle(
                     fontFamily: AppTypography.accentFontFamily,
                     fontSize: 15,
@@ -169,7 +170,9 @@ class FindsScreen extends ConsumerWidget {
                                     if (median != null) ...[
                                       const SizedBox(height: 3),
                                       Text(
-                                        'Snitt ${median.round()} kr',
+                                        l10n.findsAveragePrice(
+                                          median.round(),
+                                        ),
                                         style: TextStyle(
                                           fontFamily:
                                               AppTypography.metricsFontFamily,
@@ -209,12 +212,8 @@ class FindsScreen extends ConsumerWidget {
 }
 
 int _score(ScanItem item) {
-  final purchase = item.purchasePrice;
-  final median = item.medianPrice;
-  if (purchase == null || median == null || purchase <= 0) return 0;
-  final ratio = median / purchase;
-  if (ratio < 1.0) return ((ratio * 40).clamp(0, 39)).round();
-  if (ratio < 1.3) return (40 + ((ratio - 1.0) / 0.3) * 29).round();
-  if (ratio < 2.0) return (69 + ((ratio - 1.3) / 0.7) * 21).round();
-  return (90 + (ratio - 2.0) * 5).clamp(0, 100).round();
+  return FlipScore.fromPrices(
+    purchasePrice: item.purchasePrice,
+    medianPrice: item.medianPrice,
+  );
 }

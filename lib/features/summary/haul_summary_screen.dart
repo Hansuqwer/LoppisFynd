@@ -12,7 +12,7 @@ import '../../shared/widgets/empty_state.dart';
 import '../analyzer/item_detail_screen.dart';
 import '../analyzer/profit_calculator.dart';
 import '../drafts/draft_editor_screen.dart';
-import '../../services/sync/cloud/entity_keys.dart';
+import '../../core/sync/entity_keys.dart';
 import 'widgets/haul_stats_widget.dart';
 import 'widgets/inventory_row.dart';
 import 'widgets/summary_card_widget.dart';

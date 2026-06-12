@@ -1,7 +1,7 @@
-import '../../features/scanner/isbn/validated_book_isbn.dart';
 import 'book_isbn_draft_flow_controller.dart';
+import 'validated_book_isbn.dart';
 
-export '../../features/scanner/isbn/validated_book_isbn.dart';
+export 'validated_book_isbn.dart';
 
 abstract class BookBarcodeIsbnHandoff {
   Future<BookIsbnDraftFlowState> handoffValidatedIsbn({

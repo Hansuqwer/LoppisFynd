@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' as intl;
 
 import '../../core/app/providers.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/tables/scan_items.dart';
 import '../../core/navigation/spring_route.dart';
+import '../../core/text/sek_formatter.dart';
 import '../../core/tokens/app_tokens.dart';
 import '../../gen/app_localizations.dart';
 import '../../shared/widgets/book_cover.dart';
@@ -106,8 +106,7 @@ double _totalValue(List<ScanItem> items) {
 }
 
 String _formatSek(double value) {
-  final f = intl.NumberFormat.decimalPattern(intl.Intl.getCurrentLocale());
-  return f.format(value.round());
+  return formatSekAmount(value);
 }
 
 String _statusLabel(AppLocalizations l10n, ScanItemStatus status) {
@@ -132,7 +131,7 @@ class _HaulScreenHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'dina fyndresor',
+          l10n.haulEyebrow,
           style: TextStyle(
             fontFamily: AppTypography.accentFontFamily,
             fontSize: 15,
@@ -172,6 +171,7 @@ class _MonthSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final margin = spent > 0 ? (projected / spent).toStringAsFixed(1) : '—';
+    final l10n = AppLocalizations.of(context)!;
 
     return GestureDetector(
       onTap: onTap,
@@ -200,7 +200,7 @@ class _MonthSummaryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Pågående runda',
+                        l10n.haulActiveRun,
                         style: TextStyle(
                           fontFamily: AppTypography.uiFontFamily,
                           fontWeight: FontWeight.w600,
@@ -227,7 +227,7 @@ class _MonthSummaryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'kr proj.',
+                            l10n.haulProjectedCurrencySuffix,
                             style: TextStyle(
                               fontFamily: AppTypography.metricsFontFamily,
                               fontWeight: FontWeight.w500,
@@ -252,7 +252,7 @@ class _MonthSummaryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
-                    '$itemCount böcker',
+                    l10n.haulBookCount(itemCount),
                     style: const TextStyle(
                       fontFamily: AppTypography.uiFontFamily,
                       fontWeight: FontWeight.w600,
@@ -268,19 +268,19 @@ class _MonthSummaryCard extends StatelessWidget {
               children: [
                 _SummaryMetric(
                   value: '${_formatSek(spent)} kr',
-                  label: 'Spenderat',
+                  label: l10n.haulSpentMetric,
                   color: const Color(0xFFE8CFC6),
                 ),
                 _SummaryMetric(
                   value: spent > 0
                       ? '${_formatSek(spent / (itemCount > 0 ? itemCount : 1))} kr'
                       : '—',
-                  label: 'Snitt/bok',
+                  label: l10n.haulAveragePerBookMetric,
                   color: AppColors.cloudDancer.withValues(alpha: 0.85),
                 ),
                 _SummaryMetric(
                   value: '${margin}x',
-                  label: 'Marginal',
+                  label: l10n.haulMarginMetric,
                   color: const Color(0xFFCFE0D2),
                 ),
               ],
@@ -356,6 +356,8 @@ class _ActiveHaulCardState extends State<_ActiveHaulCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -379,7 +381,7 @@ class _ActiveHaulCardState extends State<_ActiveHaulCard> {
                         Row(
                           children: [
                             Text(
-                              'Pågående runda',
+                              l10n.haulActiveRun,
                               style: const TextStyle(
                                 fontFamily: AppTypography.uiFontFamily,
                                 fontWeight: FontWeight.w700,
@@ -409,7 +411,7 @@ class _ActiveHaulCardState extends State<_ActiveHaulCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${widget.items.length} böcker',
+                          l10n.haulBookCount(widget.items.length),
                           style: TextStyle(
                             fontFamily: AppTypography.uiFontFamily,
                             fontWeight: FontWeight.w500,
@@ -560,7 +562,10 @@ class _HaulBookRow extends StatelessWidget {
                   ),
                   if (purchase != null && median != null)
                     Text(
-                      'Köpt ${purchase.round()} kr → snitt ${median.round()} kr',
+                      l10n.haulBoughtAveragePrice(
+                        purchase.round(),
+                        median.round(),
+                      ),
                       style: TextStyle(
                         fontFamily: AppTypography.metricsFontFamily,
                         fontWeight: FontWeight.w500,

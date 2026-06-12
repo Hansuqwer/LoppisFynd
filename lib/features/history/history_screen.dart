@@ -15,7 +15,7 @@ import '../../shared/widgets/glass_surface.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../gen/app_localizations.dart';
 import '../analyzer/profit_calculator.dart';
-import '../../services/sync/cloud/entity_keys.dart';
+import '../../core/sync/entity_keys.dart';
 import 'widgets/haul_pins_map.dart';
 import 'widgets/coffee_cup_empty_state.dart';
 import 'history_filtering.dart';

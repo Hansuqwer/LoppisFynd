@@ -2941,6 +2941,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed: {error}'**
   String settingsBulkEnrichFailed(String error);
+
+  /// No description provided for @dashboardBrandWordmark.
+  ///
+  /// In en, this message translates to:
+  /// **'loppisfynd'**
+  String get dashboardBrandWordmark;
+
+  /// No description provided for @findsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'worth looking for'**
+  String get findsEyebrow;
+
+  /// No description provided for @findsAveragePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg {price} kr'**
+  String findsAveragePrice(int price);
+
+  /// No description provided for @itemDetailFleaMarketPriceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flea market price'**
+  String get itemDetailFleaMarketPriceTitle;
+
+  /// No description provided for @itemDetailAdjustForProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust for exact profit'**
+  String get itemDetailAdjustForProfit;
+
+  /// No description provided for @itemDetailNetProfitMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Net profit'**
+  String get itemDetailNetProfitMetric;
+
+  /// No description provided for @itemDetailRoiMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'ROI'**
+  String get itemDetailRoiMetric;
+
+  /// No description provided for @itemDetailSellTimeMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell time'**
+  String get itemDetailSellTimeMetric;
+
+  /// No description provided for @itemDetailMarketPriceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Market price'**
+  String get itemDetailMarketPriceTitle;
+
+  /// No description provided for @itemDetailRecentlySoldSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently sold'**
+  String get itemDetailRecentlySoldSubtitle;
+
+  /// No description provided for @itemDetailAveragePriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'average price'**
+  String get itemDetailAveragePriceLabel;
+
+  /// No description provided for @itemDetailLowestPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Low {price} kr'**
+  String itemDetailLowestPrice(int price);
+
+  /// No description provided for @itemDetailHighestPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'High {price} kr'**
+  String itemDetailHighestPrice(int price);
+
+  /// No description provided for @itemDetailAddAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Add anyway'**
+  String get itemDetailAddAnyway;
+
+  /// No description provided for @itemDetailBuyFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy for {price} kr'**
+  String itemDetailBuyFor(int price);
+
+  /// No description provided for @haulEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'your treasure runs'**
+  String get haulEyebrow;
+
+  /// No description provided for @haulActiveRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Active run'**
+  String get haulActiveRun;
+
+  /// No description provided for @haulProjectedCurrencySuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'kr proj.'**
+  String get haulProjectedCurrencySuffix;
+
+  /// No description provided for @haulBookCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 book} other{{count} books}}'**
+  String haulBookCount(int count);
+
+  /// No description provided for @haulSpentMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get haulSpentMetric;
+
+  /// No description provided for @haulAveragePerBookMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg/book'**
+  String get haulAveragePerBookMetric;
+
+  /// No description provided for @haulMarginMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin'**
+  String get haulMarginMetric;
+
+  /// No description provided for @haulBoughtAveragePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought {purchase} kr → avg {median} kr'**
+  String haulBoughtAveragePrice(int purchase, int median);
 }
 
 class _AppLocalizationsDelegate

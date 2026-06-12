@@ -606,5 +606,35 @@
   "settingsBulkEnrichFailed": "Failed: {error}",
   "@settingsBulkEnrichFailed": {
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+
+  "dashboardBrandWordmark": "loppisfynd",
+  "findsEyebrow": "worth looking for",
+  "findsAveragePrice": "Avg {price} kr",
+  "@findsAveragePrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailFleaMarketPriceTitle": "Your flea market price",
+  "itemDetailAdjustForProfit": "Adjust for exact profit",
+  "itemDetailNetProfitMetric": "Net profit",
+  "itemDetailRoiMetric": "ROI",
+  "itemDetailSellTimeMetric": "Sell time",
+  "itemDetailMarketPriceTitle": "Market price",
+  "itemDetailRecentlySoldSubtitle": "Recently sold",
+  "itemDetailAveragePriceLabel": "average price",
+  "itemDetailLowestPrice": "Low {price} kr",
+  "@itemDetailLowestPrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailHighestPrice": "High {price} kr",
+  "@itemDetailHighestPrice": {"placeholders": {"price": {"type": "int"}}},
+  "itemDetailAddAnyway": "Add anyway",
+  "itemDetailBuyFor": "Buy for {price} kr",
+  "@itemDetailBuyFor": {"placeholders": {"price": {"type": "int"}}},
+  "haulEyebrow": "your treasure runs",
+  "haulActiveRun": "Active run",
+  "haulProjectedCurrencySuffix": "kr proj.",
+  "haulBookCount": "{count, plural, =1{1 book} other{{count} books}}",
+  "@haulBookCount": {"placeholders": {"count": {"type": "int"}}},
+  "haulSpentMetric": "Spent",
+  "haulAveragePerBookMetric": "Avg/book",
+  "haulMarginMetric": "Margin",
+  "haulBoughtAveragePrice": "Bought {purchase} kr → avg {median} kr",
+  "@haulBoughtAveragePrice": {"placeholders": {"purchase": {"type": "int"}, "median": {"type": "int"}}}
 }

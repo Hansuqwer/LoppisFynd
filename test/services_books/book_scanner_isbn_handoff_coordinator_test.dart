@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import 'package:fynd_loppis/features/scanner/barcode/mlkit_book_isbn_adapter.dart';
+import 'package:fynd_loppis/services/books/mlkit_book_isbn_adapter.dart';
 import 'package:fynd_loppis/services/books/book_barcode_isbn_handoff_service.dart';
 import 'package:fynd_loppis/services/books/book_isbn_draft_flow_controller.dart';
 import 'package:fynd_loppis/services/books/book_scanner_isbn_handoff_coordinator.dart';

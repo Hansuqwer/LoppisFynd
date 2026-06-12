@@ -1,4 +1,4 @@
-import '../isbn/validated_book_isbn.dart';
+import 'validated_book_isbn.dart';
 
 class MlKitBookIsbnAdapter {
   const MlKitBookIsbnAdapter();

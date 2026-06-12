@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../app_database.dart';
 import '../tables/hauls.dart';
-import '../../../services/sync/cloud/entity_keys.dart';
+import '../../sync/entity_keys.dart';
 
 part 'hauls_dao.g.dart';
 

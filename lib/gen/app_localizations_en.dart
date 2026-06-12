@@ -1578,4 +1578,91 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsBulkEnrichFailed(String error) {
     return 'Failed: $error';
   }
+
+  @override
+  String get dashboardBrandWordmark => 'loppisfynd';
+
+  @override
+  String get findsEyebrow => 'worth looking for';
+
+  @override
+  String findsAveragePrice(int price) {
+    return 'Avg $price kr';
+  }
+
+  @override
+  String get itemDetailFleaMarketPriceTitle => 'Your flea market price';
+
+  @override
+  String get itemDetailAdjustForProfit => 'Adjust for exact profit';
+
+  @override
+  String get itemDetailNetProfitMetric => 'Net profit';
+
+  @override
+  String get itemDetailRoiMetric => 'ROI';
+
+  @override
+  String get itemDetailSellTimeMetric => 'Sell time';
+
+  @override
+  String get itemDetailMarketPriceTitle => 'Market price';
+
+  @override
+  String get itemDetailRecentlySoldSubtitle => 'Recently sold';
+
+  @override
+  String get itemDetailAveragePriceLabel => 'average price';
+
+  @override
+  String itemDetailLowestPrice(int price) {
+    return 'Low $price kr';
+  }
+
+  @override
+  String itemDetailHighestPrice(int price) {
+    return 'High $price kr';
+  }
+
+  @override
+  String get itemDetailAddAnyway => 'Add anyway';
+
+  @override
+  String itemDetailBuyFor(int price) {
+    return 'Buy for $price kr';
+  }
+
+  @override
+  String get haulEyebrow => 'your treasure runs';
+
+  @override
+  String get haulActiveRun => 'Active run';
+
+  @override
+  String get haulProjectedCurrencySuffix => 'kr proj.';
+
+  @override
+  String haulBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get haulSpentMetric => 'Spent';
+
+  @override
+  String get haulAveragePerBookMetric => 'Avg/book';
+
+  @override
+  String get haulMarginMetric => 'Margin';
+
+  @override
+  String haulBoughtAveragePrice(int purchase, int median) {
+    return 'Bought $purchase kr → avg $median kr';
+  }
 }

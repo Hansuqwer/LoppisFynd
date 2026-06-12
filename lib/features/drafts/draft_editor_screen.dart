@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -582,9 +583,11 @@ class _BokFyndManualIsbnPanel extends StatelessWidget {
                     onPressed: loading
                         ? null
                         : () {
-                            flowController.createDraft(
-                              scanItemId: scanItemId,
-                              isbn: controller.text,
+                            unawaited(
+                              flowController.createDraft(
+                                scanItemId: scanItemId,
+                                isbn: controller.text,
+                              ),
                             );
                           },
                   ),
